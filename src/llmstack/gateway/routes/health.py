@@ -1,4 +1,4 @@
-"""GET /healthz — gateway health check."""
+"""GET /healthz — gateway health check with full system status."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ import os
 
 import httpx
 from fastapi import APIRouter
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, PlainTextResponse
 
 router = APIRouter()
 
@@ -38,11 +38,36 @@ async def healthz():
     if QDRANT_URL:
         checks["qdrant"] = await _check_url(f"{QDRANT_URL}/healthz")
 
+    if REDIS_URL:
+        try:
+            import redis.asyncio as aioredis
+            r = aioredis.from_url(REDIS_URL, socket_connect_timeout=3)
+            await r.ping()
+            checks["redis"] = True
+            await r.aclose()
+        except Exception:
+            checks["redis"] = False
+
     all_ok = all(checks.values()) if checks else True
     status_code = 200 if all_ok else 503
 
+    # Include circuit breaker and cache stats
+    extras = {}
+    try:
+        from llmstack.gateway.circuit_breaker import get_inference_breaker
+        extras["circuit_breaker"] = get_inference_breaker().metrics()
+    except Exception:
+        pass
+
+    try:
+        from llmstack.gateway.cache import _cache
+        if _cache is not None:
+            extras["cache"] = _cache.stats.to_dict()
+    except Exception:
+        pass
+
     return JSONResponse(
-        content={"status": "ok" if all_ok else "degraded", "services": checks},
+        content={"status": "ok" if all_ok else "degraded", "services": checks, **extras},
         status_code=status_code,
     )
 
@@ -50,7 +75,6 @@ async def healthz():
 @router.get("/metrics")
 async def metrics():
     from llmstack.gateway.middleware.metrics import get_prometheus_metrics
-    from fastapi.responses import PlainTextResponse
     return PlainTextResponse(
         content=get_prometheus_metrics(),
         media_type="text/plain; version=0.0.4; charset=utf-8",

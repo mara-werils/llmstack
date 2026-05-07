@@ -1,5 +1,39 @@
 # Changelog
 
+## [0.3.0] - 2026-05-07
+
+### Added
+- **RAG Pipeline** — real retrieval-augmented generation with Qdrant
+  - `POST /v1/rag/ingest` — chunk, embed, and store documents in Qdrant
+  - `POST /v1/rag/query` — semantic search + LLM generation with source citations
+  - `DELETE /v1/rag/documents/{source}` — delete documents by source
+  - `GET /v1/rag/status` — collection statistics
+  - Streaming support for RAG queries via SSE
+- **Semantic Response Cache** — Redis-backed LLM response caching
+  - SHA-256 hash of (model + messages) for deterministic cache keys
+  - Only caches low-temperature requests (≤0.1) for correctness
+  - TTL-based expiration with configurable duration
+  - Cache hit/miss metrics exposed in `/healthz`
+  - `X-Cache: HIT/MISS` response headers
+- **Token Bucket Rate Limiter** — Redis-backed with Lua script for atomicity
+  - Configurable via `rate_limit` in llmstack.yaml (e.g., `100/min`, `10/sec`)
+  - Per-API-key rate limiting with IP fallback
+  - In-memory fallback when Redis is unavailable
+  - Standard `X-RateLimit-*` and `Retry-After` headers
+  - Atomic Lua script prevents race conditions in distributed setup
+- **Circuit Breaker** — resilience pattern for inference backend
+  - Three-state machine: CLOSED → OPEN → HALF_OPEN → CLOSED
+  - Exponential backoff on recovery timeout (capped)
+  - Fail-fast with `503 Service Unavailable` when circuit is open
+  - Metrics exposed in `/healthz` (state, failure count, rejections)
+- **Structured Logging** — JSON request logs with correlation IDs
+  - `X-Request-ID` header propagation
+  - Per-request structured JSON with method, path, status, duration, client IP
+  - Configurable log level and format (JSON / text)
+- Token usage extraction from inference responses into Prometheus metrics
+- Redis health check in `/healthz` endpoint
+- 50 new unit tests (95 total) covering cache, circuit breaker, rate limiter, RAG
+
 ## [0.2.0] - 2026-05-07
 
 ### Added
