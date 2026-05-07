@@ -7,6 +7,7 @@ import secrets
 from rich.console import Console
 from rich.table import Table
 
+from llmstack.config.loader import save_config
 from llmstack.config.schema import StackConfig
 from llmstack.core.hardware import detect_hardware
 from llmstack.core.health import wait_healthy
@@ -112,7 +113,9 @@ class Stack:
         if self.config.gateway.auth == "api_key" and not self.config.gateway.api_keys:
             key = f"sk-llmstack-{secrets.token_urlsafe(24)}"
             self.config.gateway.api_keys = [key]
-            console.print(f"\n[bold green]Generated API key:[/] {key}\n")
+            save_config(self.config)
+            console.print(f"\n[bold green]Generated API key:[/] {key}")
+            console.print("[dim]Saved to llmstack.yaml[/]\n")
 
         for svc in self._services:
             console.print(f"  [cyan]Starting {svc.name}...[/]", end="")
