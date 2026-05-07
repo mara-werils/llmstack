@@ -1,5 +1,5 @@
 # VHS tape for recording llmstack demo GIF
-# Install VHS: https://github.com/charmbracelet/vhs
+# Pre-requisite: cp scripts/fake-llmstack /tmp/llmstack
 # Run: vhs demo.tape
 
 Output demo.gif
@@ -9,33 +9,43 @@ Set Width 1200
 Set Height 800
 Set Theme "Catppuccin Mocha"
 Set Padding 20
+Set TypingSpeed 40ms
+Set Shell "bash"
+
+# Set PATH so /tmp/llmstack is found, then clear screen
+Hide
+Type "export PATH=/tmp:$PATH"
+Enter
+Sleep 300ms
+Type "export PS1='$ '"
+Enter
+Sleep 300ms
+Type "clear"
+Enter
+Sleep 500ms
+Show
 
 # --- Scene 1: Show version ---
 Type "llmstack --version"
 Enter
-Sleep 1s
+Sleep 1.5s
 
 # --- Scene 2: Initialize with RAG preset ---
 Type "llmstack init --preset rag"
 Enter
 Sleep 3s
 
-# --- Scene 3: Show generated config ---
-Type "cat llmstack.yaml"
-Enter
-Sleep 3s
-
-# --- Scene 4: Start the stack ---
+# --- Scene 3: Start the stack ---
 Type "llmstack up"
 Enter
-Sleep 5s
+Sleep 4s
 
-# --- Scene 5: Check status ---
+# --- Scene 4: Check status ---
 Type "llmstack status"
 Enter
 Sleep 3s
 
-# --- Scene 6: Tear down ---
+# --- Scene 5: Tear down ---
 Type "llmstack down"
 Enter
 Sleep 3s

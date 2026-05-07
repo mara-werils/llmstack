@@ -1,0 +1,94 @@
+#!/usr/bin/env bash
+# Fake llmstack binary for demo GIF recording
+
+CMD="${1:-}"
+PRESET=""
+
+# Parse args
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --version|-V) CMD="version"; shift ;;
+    --preset|-p) PRESET="$2"; shift 2 ;;
+    --attach|-a) shift ;;
+    init|up|down|status|logs|doctor) CMD="$1"; shift ;;
+    *) shift ;;
+  esac
+done
+
+case "$CMD" in
+  version)
+    echo "llmstack 0.1.0"
+    ;;
+  init)
+    echo ""
+    printf "\033[36mHardware detected:\033[0m\n"
+    echo "  CPU: 10 cores"
+    echo "  RAM: 32 GB"
+    echo "  GPU: Apple M2 Pro (16 GB VRAM)"
+    echo ""
+    printf "\033[36mUsing preset:\033[0m rag\n"
+    printf "  Backend: \033[32mOllama\033[0m\n"
+    echo ""
+    printf "\033[32mCreated llmstack.yaml\033[0m\n"
+    echo "Next: edit the config if needed, then run llmstack up"
+    ;;
+  up)
+    echo ""
+    printf "\033[1mStarting LLMStack...\033[0m\n"
+    echo ""
+    sleep 0.3
+    printf "  \033[32m✓\033[0m qdrant        running   :6333\n"
+    sleep 0.2
+    printf "  \033[32m✓\033[0m redis         running   :6379\n"
+    sleep 0.2
+    printf "  \033[32m✓\033[0m ollama        running   :11434\n"
+    sleep 0.3
+    printf "  \033[32m✓\033[0m tei           running   :8002\n"
+    sleep 0.2
+    printf "  \033[32m✓\033[0m gateway       running   :8000\n"
+    sleep 0.2
+    printf "  \033[32m✓\033[0m prometheus    running   :9090\n"
+    sleep 0.2
+    printf "  \033[32m✓\033[0m grafana       running   :8080\n"
+    echo ""
+    printf "\033[32mStack is ready!\033[0m 7 services running.\n"
+    echo "API: http://localhost:8000/v1"
+    echo "Dashboard: http://localhost:8080"
+    ;;
+  status)
+    echo ""
+    printf "\033[1m            LLMStack Status\033[0m\n"
+    echo "┌─────────────┬──────────┬─────────┬──────────────┐"
+    echo "│ Service     │ Container│ Status  │ Ports        │"
+    echo "├─────────────┼──────────┼─────────┼──────────────┤"
+    printf "│ qdrant      │ a3f1..   │ \033[32mrunning\033[0m │ 6333->6333   │\n"
+    printf "│ redis       │ b7e2..   │ \033[32mrunning\033[0m │ 6379->6379   │\n"
+    printf "│ ollama      │ c9d4..   │ \033[32mrunning\033[0m │ 11434->11434 │\n"
+    printf "│ tei         │ d2a8..   │ \033[32mrunning\033[0m │ 8002->8002   │\n"
+    printf "│ gateway     │ e5c1..   │ \033[32mrunning\033[0m │ 8000->8000   │\n"
+    printf "│ prometheus  │ f8b3..   │ \033[32mrunning\033[0m │ 9090->9090   │\n"
+    printf "│ grafana     │ 1a7e..   │ \033[32mrunning\033[0m │ 8080->8080   │\n"
+    echo "└─────────────┴──────────┴─────────┴──────────────┘"
+    ;;
+  down)
+    echo ""
+    echo "Stopping LLMStack..."
+    echo ""
+    sleep 0.2
+    printf "  \033[32m✓\033[0m grafana       stopped\n"
+    sleep 0.2
+    printf "  \033[32m✓\033[0m prometheus    stopped\n"
+    sleep 0.2
+    printf "  \033[32m✓\033[0m gateway       stopped\n"
+    sleep 0.2
+    printf "  \033[32m✓\033[0m tei           stopped\n"
+    sleep 0.2
+    printf "  \033[32m✓\033[0m ollama        stopped\n"
+    sleep 0.2
+    printf "  \033[32m✓\033[0m redis         stopped\n"
+    sleep 0.2
+    printf "  \033[32m✓\033[0m qdrant        stopped\n"
+    echo ""
+    printf "\033[32mAll services stopped.\033[0m\n"
+    ;;
+esac
