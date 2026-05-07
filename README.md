@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <a href="https://pypi.org/project/llmstack/"><img src="https://img.shields.io/pypi/v/llmstack?color=blue" alt="PyPI"></a>
+  <a href="https://pypi.org/project/llmstack-cli/"><img src="https://img.shields.io/pypi/v/llmstack-cli?color=blue" alt="PyPI"></a>
   <a href="https://github.com/mara-werils/llmstack/actions/workflows/ci.yml"><img src="https://github.com/mara-werils/llmstack/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="https://github.com/mara-werils/llmstack/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-green" alt="License"></a>
   <a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-3.11+-blue" alt="Python"></a>
@@ -16,7 +16,7 @@
 **llmstack** spins up a production-grade LLM stack locally with a single command. It auto-detects your hardware, picks the optimal inference backend, and wires everything together.
 
 ```bash
-pip install llmstack
+pip install llmstack-cli
 llmstack init
 llmstack up
 ```
@@ -174,7 +174,7 @@ Access at `http://localhost:8080` (login: admin / llmstack)
 Extend llmstack with new backends via pip:
 
 ```bash
-pip install llmstack-plugin-chromadb
+pip install llmstack-cli-plugin-chromadb
 # Now: vectors.provider: chromadb in llmstack.yaml
 ```
 

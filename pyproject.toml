@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "llmstack"
+name = "llmstack-cli"
 version = "0.1.0"
 description = "One command. Full LLM stack. Zero config."
 readme = "README.md"
