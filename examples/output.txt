@@ -1,0 +1,86 @@
+$ llmstack --version
+llmstack 0.1.0
+
+$ llmstack init --preset rag
+
+Hardware detected:
+  CPU: 10 cores
+  RAM: 32 GB
+  GPU: Apple M2 Pro (16 GB VRAM)
+
+Using preset: rag
+  Backend: Ollama
+
+Created llmstack.yaml
+Next: edit the config if needed, then run llmstack up
+
+$ llmstack up
+
+Starting LLMStack...
+
+  ✓ qdrant        running   :6333
+  ✓ redis         running   :6379
+  ✓ ollama        running   :11434   (pulling llama3.2...)
+  ✓ tei           running   :8002    (loading bge-m3...)
+  ✓ gateway       running   :8000
+  ✓ prometheus    running   :9090
+  ✓ grafana       running   :8080
+
+Stack is ready! 7 services running.
+API: http://localhost:8000/v1
+Dashboard: http://localhost:8080
+
+$ llmstack status
+
+         LLMStack Status
+┌─────────────┬──────────┬─────────┬───────────────┐
+│ Service     │ Container│ Status  │ Ports         │
+├─────────────┼──────────┼─────────┼───────────────┤
+│ qdrant      │ a3f1..   │ running │ 6333->6333    │
+│ redis       │ b7e2..   │ running │ 6379->6379    │
+│ ollama      │ c9d4..   │ running │ 11434->11434  │
+│ tei         │ d2a8..   │ running │ 8002->8002    │
+│ gateway     │ e5c1..   │ running │ 8000->8000    │
+│ prometheus  │ f8b3..   │ running │ 9090->9090    │
+│ grafana     │ 1a7e..   │ running │ 8080->8080    │
+└─────────────┴──────────┴─────────┴───────────────┘
+
+$ curl -s http://localhost:8000/v1/chat/completions \
+  -H "Authorization: Bearer llmstack-key" \
+  -H "Content-Type: application/json" \
+  -d '{"model":"llama3.2","messages":[{"role":"user","content":"Hello!"}]}' | jq .
+{
+  "id": "chatcmpl-abc123",
+  "object": "chat.completion",
+  "created": 1715090400,
+  "model": "llama3.2",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "Hello! How can I help you today?"
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 11,
+    "completion_tokens": 9,
+    "total_tokens": 20
+  }
+}
+
+$ llmstack down
+
+Stopping LLMStack...
+
+  ✓ grafana       stopped
+  ✓ prometheus    stopped
+  ✓ gateway       stopped
+  ✓ tei           stopped
+  ✓ ollama        stopped
+  ✓ redis         stopped
+  ✓ qdrant        stopped
+
+All services stopped.
