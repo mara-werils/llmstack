@@ -114,10 +114,10 @@ class Stack:
             if svc.category != "cache":
                 healthy = await wait_healthy(svc.health_url(), timeout=180)
                 if not healthy:
-                    console.print(f" [red]FAILED[/]")
+                    console.print(" [red]FAILED[/]")
                     raise RuntimeError(f"Service {svc.name} failed to start")
 
-            console.print(f" [green]ready[/]")
+            console.print(" [green]ready[/]")
 
             # Post-start hook (e.g., pull model)
             if svc.category == "inference":
@@ -125,7 +125,7 @@ class Stack:
                 console.print(f"  [cyan]Pulling model {model_name}...[/]", end="")
             await svc.post_start()
             if svc.category == "inference":
-                console.print(f" [green]done[/]")
+                console.print(" [green]done[/]")
 
         # Print summary
         self._print_summary()
@@ -198,7 +198,7 @@ class Stack:
             for suffix in ["/healthz", "/health", "/api/tags"]:
                 base = base.replace(suffix, "")
             model = self.config.models.chat.name
-            console.print(f"\n[bold]Try it:[/]")
+            console.print("\n[bold]Try it:[/]")
             console.print(
                 f"  curl {base}/v1/chat/completions \\\n"
                 f"    -H 'Content-Type: application/json' \\\n"

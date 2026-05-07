@@ -20,6 +20,6 @@ def down(
             console.print(f"  [info]Stopped {name}[/]")
         if volumes:
             console.print("[warning]Volumes removed.[/]")
-        console.print(f"\n[success]All services stopped.[/]")
+        console.print("\n[success]All services stopped.[/]")
     else:
         console.print("[info]No llmstack services are running.[/]")

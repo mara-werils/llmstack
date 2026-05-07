@@ -1,7 +1,5 @@
 """Tests for config schema and loader."""
 
-import tempfile
-from pathlib import Path
 
 import yaml
 import pytest

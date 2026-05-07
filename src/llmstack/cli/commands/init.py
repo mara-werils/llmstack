@@ -33,13 +33,13 @@ def init(
 
     # Detect hardware
     hw = detect_hardware()
-    console.print(f"\n[info]Hardware detected:[/]")
+    console.print("\n[info]Hardware detected:[/]")
     console.print(f"  CPU: {hw.cpu_cores} cores")
     console.print(f"  RAM: {hw.ram_mb // 1024} GB")
     if hw.gpu_vendor != "none":
         console.print(f"  GPU: {hw.gpu_name} ({hw.gpu_vram_mb // 1024} GB VRAM)")
     else:
-        console.print(f"  GPU: none (will use CPU inference)")
+        console.print("  GPU: none (will use CPU inference)")
 
     # Pick config
     if preset and preset in PRESETS:
@@ -50,17 +50,17 @@ def init(
         raise typer.Exit(1)
     else:
         config = StackConfig()
-        console.print(f"\n[info]Using default configuration[/]")
+        console.print("\n[info]Using default configuration[/]")
 
     # Auto-resolve backend hint
     if hw.gpu_vendor == "nvidia" and hw.gpu_vram_mb >= 16_000:
         config.models.chat.backend = "vllm"
-        console.print(f"  Backend: [success]vLLM[/] (NVIDIA GPU detected)")
+        console.print("  Backend: [success]vLLM[/] (NVIDIA GPU detected)")
     else:
         config.models.chat.backend = "ollama"
-        console.print(f"  Backend: [success]Ollama[/]")
+        console.print("  Backend: [success]Ollama[/]")
 
     # Save
     path = save_config(config, target)
     console.print(f"\n[success]Created {path}[/]")
-    console.print(f"Next: edit the config if needed, then run [bold]llmstack up[/]")
+    console.print("Next: edit the config if needed, then run [bold]llmstack up[/]")

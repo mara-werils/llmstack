@@ -54,4 +54,4 @@ class VllmService(ServiceBase):
         return f"http://localhost:{self.host_port}/health"
 
     def openai_base_url(self) -> str:
-        return f"http://llmstack-vllm:8000/v1"
+        return "http://llmstack-vllm:8000/v1"

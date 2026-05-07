@@ -69,4 +69,4 @@ def doctor() -> None:
     if issues:
         console.print(f"\n[error]{issues} issue(s) found.[/]")
     else:
-        console.print(f"\n[success]All checks passed![/]")
+        console.print("\n[success]All checks passed![/]")
