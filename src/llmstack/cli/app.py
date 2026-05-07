@@ -81,6 +81,24 @@ def logs(
 
 
 @app.command()
+def chat(
+    model: str = typer.Option(None, "--model", "-m", help="Model name to chat with"),
+) -> None:
+    """Interactive chat with your local LLM."""
+    from llmstack.cli.commands.chat import chat as _chat
+    _chat(model=model)
+
+
+@app.command()
+def export(
+    output: str = typer.Option("docker-compose.yml", "--output", "-o", help="Output file path"),
+) -> None:
+    """Export llmstack.yaml as a standalone docker-compose.yml."""
+    from llmstack.cli.commands.export import export as _export
+    _export(output=output)
+
+
+@app.command()
 def doctor() -> None:
     """Check system requirements and diagnose issues."""
     from llmstack.cli.commands.doctor import doctor as _doctor
