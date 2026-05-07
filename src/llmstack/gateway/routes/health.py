@@ -31,7 +31,9 @@ async def healthz():
     checks = {}
 
     if INFERENCE_URL:
-        checks["inference"] = await _check_url(INFERENCE_URL.replace("/v1", "/health"))
+        # Ollama uses / as health, vLLM uses /health
+        health_url = INFERENCE_URL.replace("/v1", "")
+        checks["inference"] = await _check_url(health_url) or await _check_url(health_url + "/health")
 
     if QDRANT_URL:
         checks["qdrant"] = await _check_url(f"{QDRANT_URL}/healthz")
