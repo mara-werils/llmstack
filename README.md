@@ -29,23 +29,35 @@ llmstack up
 That's it. You now have **7 services** running: inference, embeddings, vector DB, cache, API gateway, Prometheus, and Grafana.
 
 ```bash
-# Test it immediately
+# Chat completion (OpenAI-compatible)
 curl http://localhost:8000/v1/chat/completions \
   -H "Authorization: Bearer YOUR_KEY" \
   -H "Content-Type: application/json" \
   -d '{"model":"llama3.2","messages":[{"role":"user","content":"Hello!"}]}'
+
+# Ingest a document for RAG
+curl http://localhost:8000/v1/rag/ingest \
+  -H "Authorization: Bearer YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"text":"LLMStack is an open-source tool for...","source":"docs.txt"}'
+
+# Query with RAG
+curl http://localhost:8000/v1/rag/query \
+  -H "Authorization: Bearer YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"question":"What is LLMStack?"}'
 ```
 
 Works with **any OpenAI-compatible client**: LangChain, LlamaIndex, Vercel AI SDK, openai-python.
 
 ## Who is this for?
 
-- **AI app developers** who want local inference without Docker boilerplate
+- **AI app developers** who want local inference + RAG without Docker boilerplate
 - **Teams** who need an OpenAI-compatible API backed by local models
 - **Hobbyists** running LLMs locally who want vector search, caching, and monitoring out of the box
 - **Anyone** tired of writing 200+ lines of docker-compose.yml every time
 
-## What you get
+## Architecture
 
 ```
                          llmstack up
@@ -57,28 +69,85 @@ Works with **any OpenAI-compatible client**: LangChain, LlamaIndex, Vercel AI SD
                               |
               +-------+-------+-------+-------+
               |       |       |       |       |
-         +----v--+ +--v---+ +v-----+ +v----+ +v--------+
-         |Qdrant | |Redis | |Ollama| | TEI | | Gateway  |
-         |Vector | |Cache | | or   | |Embed| | FastAPI  |
-         |  DB   | |      | | vLLM | |     | | OpenAI   |
-         +-------+ +------+ +------+ +-----+ |compatible|
-              :6333   :6379   :11434   :8002  +----+-----+
-                                                   |:8000
-                                              +----v-----+
-                                              |Prometheus |
-                                              | + Grafana |
-                                              +----------+
-                                                   :8080
+         +----v--+ +--v---+ +v-----+ +v----+ +v-----------+
+         |Qdrant | |Redis | |Ollama| | TEI | |  Gateway    |
+         |Vector | |Cache | | or   | |Embed| |  FastAPI    |
+         |  DB   | |+ Rate| | vLLM | |     | |  + RAG      |
+         |       | | Limit| |      | |     | |  + Cache    |
+         +-------+ +------+ +------+ +-----+ |  + Breaker  |
+              :6333   :6379   :11434   :8002  |  + Metrics  |
+                                              +-----+------+
+                                                    |:8000
+                                              +-----v------+
+                                              | Prometheus  |
+                                              |  + Grafana  |
+                                              +------------+
+                                                    :8080
 ```
 
-| Layer | Service | Default | Port |
-|-------|---------|---------|------|
-| Inference | Ollama / vLLM (auto) | llama3.2 | 11434 |
-| Embeddings | TEI / Ollama (auto) | bge-m3 | 8002 |
-| Vector DB | Qdrant | - | 6333 |
-| Cache | Redis | 256MB LRU | 6379 |
-| API Gateway | FastAPI (OpenAI-compatible) | auth + rate limit | 8000 |
-| Dashboard | Grafana + Prometheus | pre-built panels | 8080 |
+| Layer | Service | What it does | Port |
+|-------|---------|-------------|------|
+| Inference | Ollama / vLLM (auto) | LLM chat completions | 11434 |
+| Embeddings | TEI / Ollama (auto) | Text embeddings for RAG | 8002 |
+| Vector DB | Qdrant | Document storage + semantic search | 6333 |
+| Cache | Redis | Response cache + rate limit state | 6379 |
+| API Gateway | FastAPI | Routing, auth, caching, RAG, circuit breaker | 8000 |
+| Dashboard | Grafana + Prometheus | Request rate, latency, tokens, errors | 8080 |
+
+## Gateway Features
+
+The gateway is not a simple proxy — it's a production-grade API layer:
+
+### Semantic Response Cache (Redis)
+```
+Request → SHA-256(model + messages) → Redis lookup
+  HIT  → Return cached response (< 1ms)
+  MISS → Forward to inference → Cache result → Return
+```
+- Only caches deterministic requests (temperature <= 0.1)
+- TTL-based expiration (default: 1 hour)
+- `X-Cache: HIT/MISS` response headers
+- Cache stats in `/healthz`
+
+### Token Bucket Rate Limiter (Redis + Lua)
+```
+Request → Extract API key/IP → Redis EVALSHA (atomic Lua) → Allow/Reject
+```
+- Configurable: `100/min`, `10/sec`, `3600/hour`
+- Per-API-key rate limiting with IP fallback
+- Atomic Lua script prevents race conditions
+- In-memory fallback if Redis is unavailable
+- Standard `X-RateLimit-*` and `Retry-After` headers
+
+### Circuit Breaker (Inference Resilience)
+```
+CLOSED ──[5 failures]──> OPEN ──[timeout]──> HALF_OPEN ──[success]──> CLOSED
+                           |                      |
+                           └──[reject fast]       └──[failure]──> OPEN (backoff x2)
+```
+- Prevents cascading failures when inference is down
+- Exponential backoff on recovery timeout
+- Fail-fast with `503 Service Unavailable`
+- Metrics: state, failure count, rejections, time in state
+
+### RAG Pipeline (Qdrant + Embeddings)
+```
+Ingest: Document → Chunk (512 words, 64 overlap) → Embed → Qdrant
+Query:  Question → Embed → Qdrant search → Build context → LLM generate
+```
+- `POST /v1/rag/ingest` — chunk, embed, and store documents
+- `POST /v1/rag/query` — semantic search + augmented generation
+- Source citations in responses
+- Streaming support via SSE
+- Deterministic chunk IDs (deduplication)
+
+### Structured Logging
+```json
+{"ts":"2026-05-07T14:23:01","level":"INFO","msg":"POST /v1/chat/completions 200 1234.5ms","request_id":"a1b2c3d4","method":"POST","path":"/v1/chat/completions","status":200,"duration_ms":1234.5,"client_ip":"10.0.0.1"}
+```
+- `X-Request-ID` correlation headers
+- JSON structured output for log aggregation
+- Configurable level and format
 
 ## How it works
 
@@ -90,6 +159,7 @@ llmstack up         # Boots services in order with health checks:
                     # Qdrant -> Redis -> Inference -> Embeddings -> Gateway -> Metrics
 
 llmstack status     # Shows health of all running services
+llmstack chat       # Interactive terminal chat with streaming
 llmstack logs ollama # Stream inference logs
 llmstack down       # Stops everything
 ```
@@ -145,6 +215,32 @@ observe:
   dashboard_port: 8080
 ```
 
+## API Reference
+
+### OpenAI-compatible endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/v1/chat/completions` | POST | Chat completion (streaming + non-streaming) |
+| `/v1/embeddings` | POST | Text embeddings |
+| `/v1/models` | GET | List available models |
+
+### RAG endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/v1/rag/ingest` | POST | Ingest a document (chunk + embed + store) |
+| `/v1/rag/query` | POST | Query with retrieval-augmented generation |
+| `/v1/rag/documents/{source}` | DELETE | Delete documents by source |
+| `/v1/rag/status` | GET | Collection statistics |
+
+### System endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/healthz` | GET | Health check with circuit breaker + cache stats |
+| `/metrics` | GET | Prometheus metrics |
+
 ## Interactive Chat
 
 ```bash
@@ -163,11 +259,7 @@ You: /clear
 Conversation cleared.
 ```
 
-Streaming responses, conversation history, works with any model in your stack.
-
 ## Export to Docker Compose
-
-Don't want to install llmstack? Generate a standalone `docker-compose.yml`:
 
 ```bash
 llmstack export
@@ -183,10 +275,37 @@ Share the generated file with your team — no llmstack dependency required.
 from openai import OpenAI
 
 client = OpenAI(base_url="http://localhost:8000/v1", api_key="YOUR_KEY")
+
+# Chat completion
 response = client.chat.completions.create(
     model="llama3.2",
     messages=[{"role": "user", "content": "Explain quantum computing"}]
 )
+
+# Embeddings
+embeddings = client.embeddings.create(
+    model="bge-m3",
+    input=["Hello world"]
+)
+```
+
+```python
+import httpx
+
+# RAG: Ingest documents
+httpx.post("http://localhost:8000/v1/rag/ingest", json={
+    "text": open("whitepaper.txt").read(),
+    "source": "whitepaper.txt",
+}, headers={"Authorization": "Bearer YOUR_KEY"})
+
+# RAG: Query
+response = httpx.post("http://localhost:8000/v1/rag/query", json={
+    "question": "What are the key findings?",
+    "top_k": 5,
+}, headers={"Authorization": "Bearer YOUR_KEY"})
+
+print(response.json()["answer"])
+print(response.json()["sources"])
 ```
 
 ## CLI
@@ -210,35 +329,24 @@ When `observe.metrics: true`, llmstack boots Prometheus + Grafana with a pre-bui
 - **Latency** p50 / p99 histograms
 - **Token throughput** (input + output)
 - **Error rate** (4xx / 5xx)
-- **Service health** (up/down)
+- **Cache hit rate**
+- **Circuit breaker state**
+- **Rate limit rejections**
 
 Access at `http://localhost:8080` (login: admin / llmstack)
-
-## Why not just Docker Compose?
-
-Here's what llmstack replaces:
-
-```yaml
-# Without llmstack: ~200 lines of docker-compose.yml
-# You have to configure each service, write health checks,
-# set up networking, manage GPU passthrough, create Prometheus
-# scrape configs, provision Grafana dashboards...
-
-# With llmstack:
-llmstack init && llmstack up
-```
 
 ## Comparison
 
 | | llmstack | Ollama | LocalAI | AnythingLLM | LiteLLM |
 |---|---|---|---|---|---|
-| One-command full stack | **Yes** | No (inference only) | No | Partial | No (proxy only) |
+| One-command full stack | **Yes** | No | No | Partial | No |
+| Built-in RAG pipeline | **Yes** | No | No | Bundled | No |
+| Response caching | **Yes** | No | No | No | No |
+| Circuit breaker | **Yes** | No | No | No | No |
+| Rate limiting (Redis) | **Yes** | No | No | Yes | Yes |
 | Auto hardware detection | **Yes** | No | No | No | No |
 | OpenAI-compatible API | **Yes** | Yes | Yes | No | Yes |
 | Built-in vector DB | **Yes** | No | No | Bundled | No |
-| Built-in embeddings | **Yes** | No | No | Bundled | No |
-| Caching (Redis) | **Yes** | No | No | No | No |
-| Auth + rate limiting | **Yes** | No | No | Yes | Yes |
 | Observability dashboard | **Yes** | No | Partial | No | Partial |
 | Plugin ecosystem | **Yes** | No | No | No | No |
 
@@ -257,8 +365,11 @@ Create your own: implement `ServiceBase`, register via entry_points. See [CONTRI
 
 - **CLI**: [Typer](https://typer.tiangolo.com/) + [Rich](https://rich.readthedocs.io/)
 - **Config**: [Pydantic v2](https://docs.pydantic.dev/)
-- **Gateway**: [FastAPI](https://fastapi.tiangolo.com/)
+- **Gateway**: [FastAPI](https://fastapi.tiangolo.com/) + Redis + Qdrant
 - **Containers**: [Docker SDK for Python](https://docker-py.readthedocs.io/)
+- **Cache**: Redis with semantic hashing
+- **Rate Limiting**: Token bucket with Redis Lua scripts
+- **Resilience**: Circuit breaker with exponential backoff
 - **Metrics**: Prometheus + Grafana
 
 ## Requirements

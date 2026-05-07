@@ -6,7 +6,9 @@ RUN pip install --no-cache-dir \
     fastapi>=0.115 \
     uvicorn[standard]>=0.30 \
     httpx>=0.27 \
-    starlette>=0.40
+    starlette>=0.40 \
+    redis>=5.0 \
+    pydantic>=2.0
 
 COPY src/llmstack/__init__.py /app/llmstack/__init__.py
 COPY src/llmstack/gateway/ /app/llmstack/gateway/
