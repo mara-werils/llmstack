@@ -35,6 +35,11 @@ class DockerManager:
         except NotFound:
             self.client.networks.create(self.network_name, driver="bridge")
 
+    def build_image(self, path: str, dockerfile: str, tag: str) -> str:
+        """Build a Docker image from a local Dockerfile. Returns the image tag."""
+        self.client.images.build(path=path, dockerfile=dockerfile, tag=tag, rm=True)
+        return tag
+
     def run_service(self, service: ServiceBase) -> Container:
         """Start a container for a service. Removes any existing container with the same name."""
         spec = service.container_spec()

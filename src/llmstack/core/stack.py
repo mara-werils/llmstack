@@ -100,6 +100,14 @@ class Stack:
         self._services = self._build_services()
         self.docker.ensure_network()
 
+        # Build local images if needed
+        for svc in self._services:
+            if hasattr(svc, "build_info") and svc.build_info():
+                info = svc.build_info()
+                console.print(f"  [cyan]Building {svc.name} image...[/]", end="")
+                self.docker.build_image(**info)
+                console.print(" [green]done[/]")
+
         # Generate API key if needed
         if self.config.gateway.auth == "api_key" and not self.config.gateway.api_keys:
             key = f"sk-llmstack-{secrets.token_urlsafe(24)}"

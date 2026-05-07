@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
 from llmstack.config.schema import GatewayConfig
 from llmstack.services.base import ServiceBase
+
+IMAGE_TAG = "llmstack-gateway:local"
 
 
 class GatewayService(ServiceBase):
@@ -26,9 +29,21 @@ class GatewayService(ServiceBase):
         self.qdrant_url = qdrant_url
         self.redis_url = redis_url
 
+    def build_info(self) -> dict[str, str] | None:
+        """Return build context for the gateway Docker image."""
+        import llmstack
+        pkg_dir = Path(llmstack.__file__).resolve().parent
+        project_root = pkg_dir.parent.parent  # src/llmstack -> src -> project root
+        dockerfile = str(pkg_dir / "gateway" / "Dockerfile")
+        return {
+            "path": str(project_root),
+            "dockerfile": dockerfile,
+            "tag": IMAGE_TAG,
+        }
+
     def container_spec(self) -> dict[str, Any]:
         return {
-            "image": "ghcr.io/mara-werils/llmstack-gateway:latest",
+            "image": IMAGE_TAG,
             "name": "llmstack-gateway",
             "ports": {"8000/tcp": self.config.port},
             "environment": {
