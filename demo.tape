@@ -35,18 +35,7 @@ Type "llmstack status"
 Enter
 Sleep 3s
 
-# --- Scene 6: Send a request ---
-Type@50ms "curl -s http://localhost:8000/v1/chat/completions \\"
-Enter
-Type@50ms '  -H "Authorization: Bearer llmstack-key" \\'
-Enter
-Type@50ms '  -H "Content-Type: application/json" \\'
-Enter
-Type@50ms '  -d '\''{"model":"llama3.2","messages":[{"role":"user","content":"Hello!"}]}'\'' | jq .'
-Enter
-Sleep 4s
-
-# --- Scene 7: Tear down ---
+# --- Scene 6: Tear down ---
 Type "llmstack down"
 Enter
 Sleep 3s
