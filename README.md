@@ -13,6 +13,10 @@
 
 ---
 
+<p align="center">
+  <img src="demo.gif" alt="llmstack demo" width="800">
+</p>
+
 **llmstack** spins up a production-grade LLM stack locally with a single command. It auto-detects your hardware, picks the optimal inference backend, and wires everything together.
 
 ```bash
