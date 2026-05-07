@@ -16,7 +16,7 @@ async def wait_healthy(url: str, timeout: int = 120, interval: float = 2.0) -> b
                 resp = await client.get(url)
                 if resp.status_code == 200:
                     return True
-            except (httpx.ConnectError, httpx.ReadTimeout, httpx.ConnectTimeout):
+            except httpx.HTTPError:
                 pass
             await asyncio.sleep(interval)
             elapsed += interval
