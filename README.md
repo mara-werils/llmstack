@@ -145,6 +145,38 @@ observe:
   dashboard_port: 8080
 ```
 
+## Interactive Chat
+
+```bash
+llmstack chat
+```
+
+```
+LLMStack Chat — model: llama3.2
+Type 'exit' or Ctrl+C to quit. '/clear' to reset conversation.
+
+You: What is quantum computing?
+Assistant: Quantum computing uses quantum mechanical phenomena like
+superposition and entanglement to process information...
+
+You: /clear
+Conversation cleared.
+```
+
+Streaming responses, conversation history, works with any model in your stack.
+
+## Export to Docker Compose
+
+Don't want to install llmstack? Generate a standalone `docker-compose.yml`:
+
+```bash
+llmstack export
+# Exported 7 services to docker-compose.yml
+# Run with: docker compose up -d
+```
+
+Share the generated file with your team — no llmstack dependency required.
+
 ## Use the API
 
 ```python
@@ -165,6 +197,8 @@ response = client.chat.completions.create(
 | `llmstack up [--attach]` | Start all services |
 | `llmstack down [--volumes]` | Stop and clean up |
 | `llmstack status` | Health check all services |
+| `llmstack chat [--model]` | Interactive terminal chat |
+| `llmstack export [--output]` | Generate docker-compose.yml |
 | `llmstack logs <service>` | Stream service logs |
 | `llmstack doctor` | Diagnose system issues |
 
