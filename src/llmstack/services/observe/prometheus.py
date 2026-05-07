@@ -3,31 +3,38 @@
 from __future__ import annotations
 
 import json
+import os
+from pathlib import Path
 from typing import Any
+
+import yaml
 
 from llmstack.config.schema import ObserveConfig
 from llmstack.services.base import ServiceBase
 
+CONFIG_DIR = Path.home() / ".llmstack" / "config"
 
 # Prometheus config that scrapes the gateway /metrics endpoint
-PROMETHEUS_CONFIG = """
-global:
-  scrape_interval: 15s
-  evaluation_interval: 15s
-
-scrape_configs:
-  - job_name: 'llmstack-gateway'
-    metrics_path: '/metrics'
-    static_configs:
-      - targets: ['llmstack-gateway:8000']
-    scrape_interval: 5s
-
-  - job_name: 'qdrant'
-    metrics_path: '/metrics'
-    static_configs:
-      - targets: ['llmstack-qdrant:6333']
-    scrape_interval: 15s
-"""
+PROMETHEUS_CONFIG = {
+    "global": {
+        "scrape_interval": "15s",
+        "evaluation_interval": "15s",
+    },
+    "scrape_configs": [
+        {
+            "job_name": "llmstack-gateway",
+            "metrics_path": "/metrics",
+            "static_configs": [{"targets": ["llmstack-gateway:8000"]}],
+            "scrape_interval": "5s",
+        },
+        {
+            "job_name": "qdrant",
+            "metrics_path": "/metrics",
+            "static_configs": [{"targets": ["llmstack-qdrant:6333"]}],
+            "scrape_interval": "15s",
+        },
+    ],
+}
 
 # Grafana datasource provisioning
 GRAFANA_DATASOURCE = {
@@ -47,7 +54,7 @@ GRAFANA_DASHBOARD_PROVIDER = {
     "providers": [{
         "name": "LLMStack",
         "type": "file",
-        "options": {"path": "/var/lib/grafana/dashboards"},
+        "options": {"path": "/opt/grafana/dashboards"},
     }],
 }
 
@@ -97,6 +104,12 @@ GRAFANA_DASHBOARD = {
 }
 
 
+def _write_file(path: Path, content: str) -> None:
+    """Write content to file, creating parent dirs as needed."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(content)
+
+
 class PrometheusService(ServiceBase):
     name = "prometheus"
     category = "observe"
@@ -105,7 +118,14 @@ class PrometheusService(ServiceBase):
         self.config = config
         self.host_port = 9090
 
+    def _prepare_config(self) -> str:
+        """Write prometheus.yml to ~/.llmstack/config/prometheus/ and return the dir path."""
+        config_dir = CONFIG_DIR / "prometheus"
+        _write_file(config_dir / "prometheus.yml", yaml.dump(PROMETHEUS_CONFIG, default_flow_style=False))
+        return str(config_dir)
+
     def container_spec(self) -> dict[str, Any]:
+        config_dir = self._prepare_config()
         return {
             "image": "prom/prometheus:latest",
             "name": "llmstack-prometheus",
@@ -116,7 +136,7 @@ class PrometheusService(ServiceBase):
                 "--web.enable-lifecycle",
             ],
             "volumes": {
-                "llmstack_prometheus_config": {"bind": "/etc/prometheus", "mode": "rw"},
+                config_dir: {"bind": "/etc/prometheus", "mode": "ro"},
                 "llmstack_prometheus_data": {"bind": "/prometheus", "mode": "rw"},
             },
             "environment": {},
@@ -127,7 +147,7 @@ class PrometheusService(ServiceBase):
 
     def get_config_yaml(self) -> str:
         """Return the prometheus.yml content."""
-        return PROMETHEUS_CONFIG
+        return yaml.dump(PROMETHEUS_CONFIG, default_flow_style=False)
 
 
 class GrafanaService(ServiceBase):
@@ -138,7 +158,32 @@ class GrafanaService(ServiceBase):
         self.config = config
         self.host_port = config.dashboard_port
 
+    def _prepare_provisioning(self) -> str:
+        """Write Grafana provisioning files to ~/.llmstack/config/grafana/ and return the dir."""
+        base = CONFIG_DIR / "grafana"
+
+        # Datasource provisioning
+        _write_file(
+            base / "provisioning" / "datasources" / "datasource.yml",
+            yaml.dump(GRAFANA_DATASOURCE, default_flow_style=False),
+        )
+
+        # Dashboard provider provisioning
+        _write_file(
+            base / "provisioning" / "dashboards" / "provider.yml",
+            yaml.dump(GRAFANA_DASHBOARD_PROVIDER, default_flow_style=False),
+        )
+
+        # Dashboard JSON
+        _write_file(
+            base / "dashboards" / "llmstack.json",
+            json.dumps(GRAFANA_DASHBOARD, indent=2),
+        )
+
+        return str(base)
+
     def container_spec(self) -> dict[str, Any]:
+        base = self._prepare_provisioning()
         return {
             "image": "grafana/grafana:latest",
             "name": "llmstack-grafana",
@@ -148,10 +193,18 @@ class GrafanaService(ServiceBase):
                 "GF_SECURITY_ADMIN_PASSWORD": "llmstack",
                 "GF_AUTH_ANONYMOUS_ENABLED": "true",
                 "GF_AUTH_ANONYMOUS_ORG_ROLE": "Viewer",
-                "GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH": "/var/lib/grafana/dashboards/llmstack.json",
+                "GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH": "/opt/grafana/dashboards/llmstack.json",
             },
             "volumes": {
-                "llmstack_grafana_data": {"bind": "/var/lib/grafana", "mode": "rw"},
+                os.path.join(base, "provisioning", "datasources"): {
+                    "bind": "/etc/grafana/provisioning/datasources", "mode": "ro",
+                },
+                os.path.join(base, "provisioning", "dashboards"): {
+                    "bind": "/etc/grafana/provisioning/dashboards", "mode": "ro",
+                },
+                os.path.join(base, "dashboards"): {
+                    "bind": "/opt/grafana/dashboards", "mode": "ro",
+                },
             },
         }
 

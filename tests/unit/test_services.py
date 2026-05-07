@@ -110,8 +110,21 @@ def test_gateway_spec():
         embeddings_url="http://ollama:11434/v1",
     )
     spec = svc.container_spec()
+    assert spec["image"] == "llmstack-gateway:local"
     assert spec["ports"]["8000/tcp"] == 8000
     assert "sk-test" in spec["environment"]["LLMSTACK_API_KEYS"]
+
+
+def test_gateway_build_info():
+    svc = GatewayService(
+        config=GatewayConfig(port=8000),
+        inference_url="", embeddings_url="",
+    )
+    info = svc.build_info()
+    assert info is not None
+    assert "path" in info
+    assert "dockerfile" in info
+    assert info["tag"] == "llmstack-gateway:local"
 
 
 def test_gateway_health():
@@ -129,6 +142,10 @@ def test_prometheus_spec():
     spec = svc.container_spec()
     assert "prometheus" in spec["image"]
     assert "9090/tcp" in spec["ports"]
+    # Config should be bind-mounted from a real directory
+    volumes = spec["volumes"]
+    bind_paths = [v for v in volumes if not v.startswith("llmstack_")]
+    assert len(bind_paths) >= 1, "Prometheus should have a bind mount for config"
 
 
 def test_grafana_spec():
@@ -136,6 +153,10 @@ def test_grafana_spec():
     spec = svc.container_spec()
     assert "grafana" in spec["image"]
     assert spec["ports"]["3000/tcp"] == 3000
+    # Should have bind mounts for provisioning
+    volumes = spec["volumes"]
+    bind_paths = [v for v in volumes if not v.startswith("llmstack_")]
+    assert len(bind_paths) >= 3, "Grafana should have bind mounts for datasources, dashboards, provider"
 
 
 def test_prometheus_config_yaml():

@@ -8,7 +8,9 @@ RUN pip install --no-cache-dir \
     httpx>=0.27 \
     starlette>=0.40
 
-COPY . /app/llmstack/gateway/
+COPY src/llmstack/__init__.py /app/llmstack/__init__.py
+COPY src/llmstack/gateway/ /app/llmstack/gateway/
+
 ENV PYTHONPATH=/app
 
 EXPOSE 8000

@@ -35,6 +35,11 @@ class DockerManager:
         except NotFound:
             self.client.networks.create(self.network_name, driver="bridge")
 
+    def build_image(self, path: str, dockerfile: str, tag: str) -> str:
+        """Build a Docker image from a local Dockerfile. Returns the image tag."""
+        self.client.images.build(path=path, dockerfile=dockerfile, tag=tag, rm=True)
+        return tag
+
     def run_service(self, service: ServiceBase) -> Container:
         """Start a container for a service. Removes any existing container with the same name."""
         spec = service.container_spec()
@@ -53,13 +58,24 @@ class DockerManager:
             self.LABEL_SERVICE: service.name,
         }
 
-        container = self.client.containers.run(
-            detach=True,
-            name=name,
-            network=self.network_name,
-            labels=labels,
-            **spec,
-        )
+        try:
+            container = self.client.containers.run(
+                detach=True,
+                name=name,
+                network=self.network_name,
+                labels=labels,
+                **spec,
+            )
+        except APIError as exc:
+            msg = str(exc)
+            if "port is already allocated" in msg or "address already in use" in msg:
+                ports = spec.get("ports", {})
+                port = next(iter(ports.values()), "unknown") if ports else "unknown"
+                raise SystemExit(
+                    f"Port {port} is already in use. "
+                    f"Stop the conflicting service or change the port in llmstack.yaml."
+                ) from exc
+            raise
         return container
 
     def stop_service(self, service_name: str) -> None:
