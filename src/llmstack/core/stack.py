@@ -19,6 +19,7 @@ from llmstack.services.embeddings.tei import TEIService
 from llmstack.services.vectordb.qdrant import QdrantService
 from llmstack.services.cache.redis import RedisService
 from llmstack.services.gateway.service import GatewayService
+from llmstack.services.observe.prometheus import PrometheusService, GrafanaService
 
 console = Console()
 
@@ -70,6 +71,11 @@ class Stack:
             qdrant_url=qdrant_url,
             redis_url=redis_url,
         ))
+
+        # 6. Observability (optional)
+        if self.config.observe.metrics:
+            services.append(PrometheusService(self.config.observe))
+            services.append(GrafanaService(self.config.observe))
 
         return services
 

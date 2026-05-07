@@ -47,5 +47,9 @@ async def healthz():
 
 @router.get("/metrics")
 async def metrics():
-    from llmstack.gateway.middleware.metrics import get_metrics
-    return JSONResponse(content=get_metrics())
+    from llmstack.gateway.middleware.metrics import get_prometheus_metrics
+    from fastapi.responses import PlainTextResponse
+    return PlainTextResponse(
+        content=get_prometheus_metrics(),
+        media_type="text/plain; version=0.0.4; charset=utf-8",
+    )
