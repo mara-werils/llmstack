@@ -33,10 +33,9 @@ class GatewayService(ServiceBase):
         """Return build context for the gateway Docker image."""
         import llmstack
         pkg_dir = Path(llmstack.__file__).resolve().parent
-        project_root = pkg_dir.parent.parent  # src/llmstack -> src -> project root
         dockerfile = str(pkg_dir / "gateway" / "Dockerfile")
         return {
-            "path": str(project_root),
+            "path": str(pkg_dir),
             "dockerfile": dockerfile,
             "tag": IMAGE_TAG,
         }
