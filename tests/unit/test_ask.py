@@ -2,17 +2,14 @@
 
 from __future__ import annotations
 
-import asyncio
 import json
 import textwrap
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
 
 import numpy as np
 import pytest
 
 from llmstack.ask.parsers import TextChunk, parse_file, collect_files
-from llmstack.ask.embeddings import LocalEmbeddings
 from llmstack.ask.engine import AskEngine, AskResult, SourceRef, _build_context, _build_sources
 
 

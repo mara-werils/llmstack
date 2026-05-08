@@ -6,20 +6,10 @@ import json
 import textwrap
 from pathlib import Path
 
-import pytest
 
 from llmstack.ask.parsers import (
-    TextChunk,
     collect_files,
     parse_file,
-    SUPPORTED_EXTS,
-    SKIP_DIRS,
-    _parse_plain_text,
-    _parse_code,
-    _parse_config,
-    _parse_csv,
-    _parse_markup,
-    _parse_log,
     _lines_to_chunks,
 )
 
