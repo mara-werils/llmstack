@@ -4,7 +4,6 @@ Configures three model tiers (small / medium / large) and enables the
 smart model router to automatically select the optimal model per query.
 """
 
-from llmstack.config.schema import StackConfig, ModelsConfig, ModelSpec, EmbeddingSpec
 
 
 def router_preset() -> dict:

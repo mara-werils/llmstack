@@ -7,7 +7,7 @@ structure, and intent. No ML models required — all pattern-based.
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 
 @dataclass
@@ -127,7 +127,6 @@ class QueryClassifier:
         # Separate system prompt and user/assistant messages
         system_msgs = [m for m in messages if m.get("role") == "system"]
         user_msgs = [m for m in messages if m.get("role") == "user"]
-        all_content = " ".join(m.get("content", "") for m in messages if m.get("content"))
         last_user = user_msgs[-1].get("content", "") if user_msgs else ""
 
         # --- Factor 1: Token count (approximate by whitespace split) ---

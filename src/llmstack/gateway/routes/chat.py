@@ -23,7 +23,7 @@ def _try_route(payload: dict) -> tuple[dict, str | None, str | None]:
     in-place only when the router selects a different model.
     """
     try:
-        from llmstack.gateway.router._state import get_router, get_stats
+        from llmstack.gateway.router._state import get_router
     except Exception:
         return payload, None, None
 
@@ -68,7 +68,7 @@ def _record_stats(model: str | None, tier: str | None, latency_ms: float) -> Non
     if model is None:
         return
     try:
-        from llmstack.gateway.router._state import get_router, get_stats
+        from llmstack.gateway.router._state import get_stats
         from llmstack.gateway.router.router import RoutingDecision
         from llmstack.gateway.router.classifier import QueryProfile
 

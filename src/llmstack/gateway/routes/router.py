@@ -11,7 +11,6 @@ router = APIRouter()
 @router.get("/router/stats")
 async def router_stats(request: Request):
     """Return routing statistics (model distribution, savings, latencies)."""
-    from llmstack.gateway.router import _stats  # noqa: WPS433
 
     stats = _get_stats()
     if stats is None:
@@ -29,7 +28,6 @@ async def router_classify(request: Request):
     Body: ``{"messages": [...]}``
     Returns the QueryProfile.
     """
-    from llmstack.gateway.router import _router  # noqa: WPS433
 
     rtr = _get_router()
     if rtr is None:
