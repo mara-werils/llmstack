@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+from typing import Optional
+
 import typer
 
 from llmstack import __version__
@@ -114,3 +117,26 @@ def bench(
     """Benchmark models and show comparative performance results."""
     from llmstack.cli.commands.bench import bench as _bench
     _bench(model=model, suite=suite, output=output)
+
+
+@app.command()
+def ask(
+    question: str = typer.Argument(..., help="Question to ask about your files"),
+    files: list[Path] = typer.Argument(None, help="Files or directories to search"),
+    model: str = typer.Option("llama3.2", "--model", "-m", help="LLM model for generation"),
+    embed_model: str = typer.Option("nomic-embed-text", "--embed-model", help="Embedding model"),
+    top_k: int = typer.Option(5, "--top-k", "-k", help="Number of relevant chunks"),
+    ollama_url: str = typer.Option("http://localhost:11434", "--ollama-url", help="Ollama API URL"),
+    show_sources: bool = typer.Option(True, "--sources/--no-sources", help="Show source citations"),
+) -> None:
+    """Ask questions about local files using a local LLM."""
+    from llmstack.cli.commands.ask import ask as _ask
+    _ask(
+        question=question,
+        files=files,
+        model=model,
+        embed_model=embed_model,
+        top_k=top_k,
+        ollama_url=ollama_url,
+        show_sources=show_sources,
+    )
