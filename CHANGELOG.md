@@ -1,5 +1,36 @@
 # Changelog
 
+## [0.5.0] - 2026-05-08
+
+### Added
+- **Smart Model Router** — automatically routes queries to the optimal model
+  - Heuristic classifier scoring on 7 factors (token count, task markers, code detection, conversation depth, system prompt complexity, language mix, question complexity)
+  - 4 routing strategies: `cost`, `quality`, `balanced`, `latency`
+  - Response headers: `X-Model-Router`, `X-Query-Tier`
+  - `GET /v1/router/stats` — routing analytics endpoint
+  - `POST /v1/router/classify` — debug endpoint for query classification
+  - Router stats in `/healthz` response
+  - `--preset router` — multi-model preset (1B + 8B + 70B)
+- **`llmstack bench`** — model benchmarking CLI command
+  - 5 benchmark suites (simple, reasoning, coding, long_context, creative)
+  - Measures TTFT, tokens/sec, total generation time
+  - Rich tables with visual score bars
+  - Multi-model comparison with router savings estimate
+  - JSON export with `--output`
+- **Web UI router integration**
+  - "Auto (Smart Router)" option in model selector
+  - Tier badges on assistant messages (simple/medium/complex)
+  - Router dashboard card with tier distribution bar
+  - Sidebar router status indicator
+- **README rewrite** — "Stop running 70B for Hello" positioning
+  - Benchmarks section with concrete numbers
+  - Routing diagram and classifier explanation
+  - Updated comparison table
+
+### Changed
+- Project tagline: "Stop running 70B for 'Hello'" (was "One command. Full LLM stack. Zero config.")
+- Version bump to 0.5.0
+
 ## [0.4.0] - 2026-05-08
 
 ### Added
