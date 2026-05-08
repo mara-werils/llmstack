@@ -1,0 +1,94 @@
+site_name: llmstack
+site_url: https://mara-werils.github.io/llmstack
+site_description: "One command. Full LLM stack. Zero config."
+site_author: mara-werils
+repo_name: mara-werils/llmstack
+repo_url: https://github.com/mara-werils/llmstack
+edit_uri: edit/main/docs/
+
+copyright: Copyright &copy; 2026 mara-werils
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+  icon:
+    repo: fontawesome/brands/github
+  font:
+    text: Inter
+    code: JetBrains Mono
+
+plugins:
+  - search
+  - minify:
+      minify_html: true
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.details
+  - admonition
+  - tables
+  - attr_list
+  - md_in_html
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Installation: getting-started/installation.md
+    - Quickstart: getting-started/quickstart.md
+    - Configuration: getting-started/configuration.md
+  - Guide:
+    - Architecture: guide/architecture.md
+    - Hardware Detection: guide/hardware-detection.md
+    - Gateway: guide/gateway.md
+    - Observability: guide/observability.md
+    - Plugins: guide/plugins.md
+    - Web UI: guide/web-ui.md
+    - Python SDK: guide/sdk.md
+  - API Reference:
+    - OpenAI-Compatible: api/openai-compatible.md
+    - RAG: api/rag.md
+    - System: api/system.md
+  - CLI Reference: cli.md
+  - Examples: examples.md
+  - Changelog: changelog.md
+  - Contributing: contributing.md
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/mara-werils/llmstack
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/llmstack-cli/
