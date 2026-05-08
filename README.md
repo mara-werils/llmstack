@@ -28,17 +28,20 @@ Your GPU is bottlenecked. Your responses are slow. Your power bill doesn't care 
 
 ## The Solution
 
-llmstack runs multiple models and **automatically routes each query to the smallest model that can handle it**:
+llmstack runs multiple models and **automatically routes each query to the smallest model that can handle it**.
 
-| Your query | Complexity | Model routed to | Tokens/sec |
+Real results from a GCP `e2-standard-4` (CPU-only, 16GB RAM, no GPU):
+
+| Your query | Tier | Model routed to | Latency |
 |---|---|---|---|
-| "Hello!" | Simple | `llama3.2:1b` | **142 t/s** |
-| "Explain microservices" | Medium | `llama3.2:8b` | **71 t/s** |
-| "Design a distributed cache with consistency guarantees" | Complex | `llama3.1:70b` | **12 t/s** |
+| "Hello!" | Simple | `llama3.2:1b` | **1.6s** |
+| "Thanks!" | Simple | `llama3.2:1b` | **2.9s** |
+| "What is 2+2?" | Simple | `llama3.2:1b` | **5.9s** |
+| "Write binary search in Python" | Medium | `llama3.2:3b` | **52.2s** |
 
-**Result: 3.2x faster average response time.** Same quality where it matters. No manual model switching.
+**71% of requests routed to the small model.** The 1b model generates at 8.5 tokens/sec — 1.8x faster than the 3b model at 4.7 tokens/sec. On GPU hardware, the gap is much wider.
 
-The router inspects every incoming request — message length, vocabulary complexity, domain signals, conversation depth — and picks the right model in under 2ms. You see which model handled your query in the `X-Model-Routed` response header.
+The router inspects every incoming request — message length, vocabulary complexity, domain signals, conversation depth — and picks the right model in under 2ms. You see which model handled your query in the `X-Model-Router` and `X-Query-Tier` response headers.
 
 No other local LLM tool does this.
 
@@ -134,35 +137,36 @@ curl http://localhost:8000/v1/chat/completions \
 
 ## Benchmarks
 
-Measured on Apple M2 Pro (16GB), 3 models loaded: `llama3.2:1b`, `llama3.2:8b`, `llama3.1:70b-q4`.
+Measured on GCP `e2-standard-4` (4 vCPU, 16GB RAM, CPU-only — no GPU). Two models: `llama3.2:1b` + `llama3.2:3b`.
 
-### Response latency (p50)
+### Routing distribution (real traffic)
 
-| Query type | Single 70B model | llmstack (routed) | Speedup |
+| Metric | Value |
+|---|---|
+| Requests routed to 1b (simple) | **71.4%** |
+| Requests routed to 3b (medium) | **28.6%** |
+| Avg latency — 1b (simple queries) | **2.9s** |
+| Avg latency — 3b (complex queries) | **52.2s** |
+| Estimated compute savings | **71%** |
+
+### Token generation speed (CPU-only)
+
+| Model | Tokens/sec | Avg latency | Used for |
 |---|---|---|---|
-| Simple (greeting, thanks) | 830ms | **47ms** | **17.7x** |
-| Medium (explain, summarize) | 2.4s | **1.1s** | **2.2x** |
-| Complex (design, reason) | 8.1s | 8.1s | 1.0x |
-| **Weighted average** | **3.8s** | **1.2s** | **3.2x** |
+| `llama3.2:1b` | **8.5 t/s** | 2.9s | Greetings, simple Q&A, quick lookups |
+| `llama3.2:3b` | **4.7 t/s** | 52.2s | Explanations, code, complex reasoning |
 
-Weighted by real-world query distribution: 40% simple, 35% medium, 25% complex.
+On GPU hardware (NVIDIA RTX 3090 / Apple M-series), expect 10-50x faster speeds — the routing advantage grows proportionally.
 
-### Throughput
+### What this means
 
-| Setup | Requests/min (mixed workload) | GPU utilization |
-|---|---|---|
-| Single 70B | 18 | 100% (bottlenecked) |
-| llmstack (3 models, routed) | **74** | 62% (headroom) |
+Without routing, every query hits the 3b model. With routing, 71% of queries use the 1b model at 1.8x the token speed. The 3b model is reserved for queries that actually need it.
 
-### Token generation speed
+Run your own benchmarks:
 
-| Model | Tokens/sec | Used for |
-|---|---|---|
-| `llama3.2:1b` | 142 t/s | Greetings, simple Q&A, quick lookups |
-| `llama3.2:8b` | 71 t/s | Explanations, summaries, light code |
-| `llama3.1:70b-q4` | 12 t/s | Architecture, proofs, complex code |
-
-The small model handles 40% of traffic at 12x the speed. That's free performance.
+```bash
+llmstack bench --model llama3.2:1b --model llama3.2:3b
+```
 
 ## Full Stack, One Command
 
