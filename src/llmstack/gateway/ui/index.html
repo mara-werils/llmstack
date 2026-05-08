@@ -902,6 +902,86 @@ a { color: var(--accent); text-decoration: none; }
 .msg-content strong { font-weight: 600; }
 .msg-content em { font-style: italic; }
 
+/* Tier badges */
+.tier-badge {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  vertical-align: middle;
+  margin-left: 4px;
+}
+
+.tier-badge.simple { background: var(--green-dim); color: var(--green); }
+.tier-badge.medium { background: var(--yellow-dim); color: var(--yellow); }
+.tier-badge.complex { background: rgba(168, 85, 247, 0.15); color: #a855f7; }
+
+/* Router sidebar indicator */
+.router-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  margin: 4px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-tertiary);
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+.router-indicator .status-dot {
+  width: 6px;
+  height: 6px;
+}
+
+.router-indicator.active { color: var(--green); }
+.router-indicator.inactive { color: var(--text-tertiary); }
+
+/* Router tier distribution bar */
+.tier-bar {
+  display: flex;
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--bg-tertiary);
+  margin: 8px 0;
+}
+
+.tier-bar-segment {
+  height: 100%;
+  transition: width var(--transition-normal);
+}
+
+.tier-bar-segment.simple { background: var(--green); }
+.tier-bar-segment.medium { background: var(--yellow); }
+.tier-bar-segment.complex { background: #a855f7; }
+
+.tier-legend {
+  display: flex;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.tier-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.tier-legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+}
+
+.tier-legend-dot.simple { background: var(--green); }
+.tier-legend-dot.medium { background: var(--yellow); }
+.tier-legend-dot.complex { background: #a855f7; }
+
 .msg-content table {
   border-collapse: collapse;
   margin: 10px 0;
@@ -963,9 +1043,14 @@ a { color: var(--accent); text-decoration: none; }
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
         Settings
       </div>
+
+      <div class="router-indicator inactive" id="routerIndicator">
+        <span class="status-dot"></span>
+        <span id="routerIndicatorText">Router: checking...</span>
+      </div>
     </nav>
 
-    <div class="sidebar-footer">
+    <div class="sidebar-footer" id="sidebarFooter">
       LLMStack Gateway v0.4.0
     </div>
   </aside>
@@ -979,6 +1064,7 @@ a { color: var(--accent); text-decoration: none; }
         <div class="panel-title">Chat</div>
         <div style="display:flex;gap:8px;align-items:center;">
           <select class="model-select" id="chatModelSelect">
+            <option value="__auto__">Auto (Smart Router)</option>
             <option value="llama3.2">Loading models...</option>
           </select>
           <button class="btn-secondary" style="padding:6px 12px;font-size:12px;" onclick="clearChat()">Clear</button>
@@ -1162,6 +1248,7 @@ document.addEventListener('DOMContentLoaded', () => {
   applySettings();
   fetchModels();
   refreshDashboard();
+  fetchRouterStats();
   document.getElementById('chatInput').focus();
 });
 
@@ -1249,13 +1336,23 @@ async function fetchModels() {
     selects.forEach(sel => {
       const current = sel.value;
       sel.innerHTML = '';
+
+      // Add Auto (Smart Router) as first option for chat model selector
+      if (sel.id === 'chatModelSelect') {
+        const autoOpt = document.createElement('option');
+        autoOpt.value = '__auto__';
+        autoOpt.textContent = 'Auto (Smart Router)';
+        sel.appendChild(autoOpt);
+      }
+
       models.forEach(m => {
         const opt = document.createElement('option');
         opt.value = m;
         opt.textContent = m;
         sel.appendChild(opt);
       });
-      if (models.includes(current)) sel.value = current;
+      if (current === '__auto__' && sel.id === 'chatModelSelect') sel.value = '__auto__';
+      else if (models.includes(current)) sel.value = current;
       else if (models.includes(settings.model)) sel.value = settings.model;
     });
   } catch(e) {
@@ -1341,7 +1438,8 @@ async function sendMessage() {
   const text = input.value.trim();
   if (!text || isStreaming) return;
 
-  const model = document.getElementById('chatModelSelect').value;
+  const selectedModel = document.getElementById('chatModelSelect').value;
+  const isAutoRouter = selectedModel === '__auto__';
 
   // Add user message
   chatHistory.push({ role: 'user', content: text });
@@ -1368,17 +1466,22 @@ async function sendMessage() {
 
   abortController = new AbortController();
 
+  // Build request body: omit model field when Auto Router is selected
+  const requestBody = {
+    messages: messages,
+    stream: true,
+    temperature: settings.temperature,
+    max_tokens: settings.maxTokens,
+  };
+  if (!isAutoRouter) {
+    requestBody.model = selectedModel;
+  }
+
   try {
     const resp = await fetch(apiBase() + '/v1/chat/completions', {
       method: 'POST',
       headers: apiHeaders(),
-      body: JSON.stringify({
-        model: model,
-        messages: messages,
-        stream: true,
-        temperature: settings.temperature,
-        max_tokens: settings.maxTokens,
-      }),
+      body: JSON.stringify(requestBody),
       signal: abortController.signal,
     });
 
@@ -1388,6 +1491,8 @@ async function sendMessage() {
     }
 
     const cacheStatus = resp.headers.get('X-Cache') || '';
+    const routerModel = resp.headers.get('X-Model-Router') || '';
+    const queryTier = resp.headers.get('X-Query-Tier') || '';
     const reader = resp.body.getReader();
     const decoder = new TextDecoder();
     let buffer = '';
@@ -1420,9 +1525,14 @@ async function sendMessage() {
     }
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-    let metaText = `${model} | ${elapsed}s`;
+    const displayModel = routerModel || (isAutoRouter ? 'auto' : selectedModel);
+    let metaText = displayModel;
+    if (queryTier) {
+      metaText += ` | <span class="tier-badge ${queryTier}">${queryTier}</span>`;
+    }
+    metaText += ` | ${elapsed}s`;
     if (cacheStatus) metaText += ` | Cache: ${cacheStatus}`;
-    metaEl.textContent = metaText;
+    metaEl.innerHTML = metaText;
 
     chatHistory.push({ role: 'assistant', content: fullContent });
 
@@ -1654,10 +1764,27 @@ function renderDashboard(data) {
       </div>`;
   }
 
+  // Router Card placeholder (filled async)
+  html += `
+    <div class="dash-card" id="dashRouterCard">
+      <div class="dash-card-header">
+        <div class="dash-card-title">Smart Router</div>
+        <div class="dash-card-icon" style="background:var(--accent-glow);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+        </div>
+      </div>
+      <div class="empty-state" style="padding:12px 0;">
+        <div class="loading-spinner"></div>
+        <div style="font-size:12px;">Loading router stats...</div>
+      </div>
+    </div>`;
+
   grid.innerHTML = html;
 
   // Fetch rate limit info via a lightweight request
   fetchRateLimitInfo();
+  // Fetch router stats
+  fetchRouterStats();
 }
 
 async function fetchRateLimitInfo() {
@@ -1672,6 +1799,86 @@ async function fetchRateLimitInfo() {
       if (maxEl) maxEl.textContent = limit + '/window';
     }
   } catch(e) {}
+}
+
+async function fetchRouterStats() {
+  const card = document.getElementById('dashRouterCard');
+  const indicator = document.getElementById('routerIndicator');
+  const indicatorText = document.getElementById('routerIndicatorText');
+  const footer = document.getElementById('sidebarFooter');
+
+  try {
+    const resp = await fetch(apiBase() + '/v1/router/stats', { headers: apiHeaders() });
+    if (!resp.ok) {
+      // Router not enabled or endpoint not found
+      if (card) {
+        card.querySelector('.dash-card-header + *').outerHTML = `
+          <div class="empty-state" style="padding:12px 0;">
+            <div style="font-size:12px;color:var(--text-tertiary);">Router not enabled</div>
+          </div>`;
+      }
+      indicator.className = 'router-indicator inactive';
+      indicatorText.textContent = 'Router: inactive';
+      footer.innerHTML = 'LLMStack Gateway v0.4.0';
+      return;
+    }
+
+    const data = await resp.json();
+    const totalRequests = data.total_requests || 0;
+    const tiers = data.tier_distribution || {};
+    const simple = tiers.simple || 0;
+    const medium = tiers.medium || 0;
+    const complex = tiers.complex || 0;
+    const total = simple + medium + complex || 1;
+    const speedup = data.estimated_speedup || 0;
+    const mostUsed = data.most_used_model || '--';
+
+    // Update sidebar indicator
+    indicator.className = 'router-indicator active';
+    indicatorText.textContent = 'Router: active';
+    footer.innerHTML = `Router: active | ${speedup.toFixed(1)}x speedup`;
+
+    if (!card) return;
+
+    let cardHtml = `
+      <div class="dash-card-header">
+        <div class="dash-card-title">Smart Router</div>
+        <div class="dash-card-icon" style="background:var(--accent-glow);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+        </div>
+      </div>
+      <div class="dash-card-value">${totalRequests}</div>
+      <div class="dash-card-sub">Total requests routed</div>
+      <div class="dash-divider"></div>
+      <div style="font-size:12px;color:var(--text-secondary);margin-bottom:4px;">Tier distribution</div>
+      <div class="tier-bar">
+        <div class="tier-bar-segment simple" style="width:${(simple / total * 100).toFixed(1)}%"></div>
+        <div class="tier-bar-segment medium" style="width:${(medium / total * 100).toFixed(1)}%"></div>
+        <div class="tier-bar-segment complex" style="width:${(complex / total * 100).toFixed(1)}%"></div>
+      </div>
+      <div class="tier-legend">
+        <div class="tier-legend-item"><span class="tier-legend-dot simple"></span>Simple ${simple}</div>
+        <div class="tier-legend-item"><span class="tier-legend-dot medium"></span>Medium ${medium}</div>
+        <div class="tier-legend-item"><span class="tier-legend-dot complex"></span>Complex ${complex}</div>
+      </div>
+      <div class="dash-divider"></div>
+      <div class="dash-stat-row"><span class="dash-stat-label">Est. Speedup</span><span class="dash-stat-value" style="color:var(--green);">${speedup.toFixed(1)}x</span></div>
+      <div class="dash-stat-row"><span class="dash-stat-label">Most Used Model</span><span class="dash-stat-value">${escapeHtml(mostUsed)}</span></div>`;
+
+    card.innerHTML = cardHtml;
+
+  } catch(e) {
+    // Network error or router not available
+    if (card) {
+      card.querySelector('.dash-card-header + *').outerHTML = `
+        <div class="empty-state" style="padding:12px 0;">
+          <div style="font-size:12px;color:var(--text-tertiary);">Router not available</div>
+        </div>`;
+    }
+    indicator.className = 'router-indicator inactive';
+    indicatorText.textContent = 'Router: inactive';
+    footer.innerHTML = 'LLMStack Gateway v0.4.0';
+  }
 }
 
 function renderMarkdown(text) {
