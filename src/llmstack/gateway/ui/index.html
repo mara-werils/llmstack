@@ -5,9 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LLMStack Gateway</title>
 <style>
-/* ================================================================
-   CSS Variables / Theme
-   ================================================================ */
 :root {
   --bg-primary: #0d0d0d;
   --bg-secondary: #171717;
@@ -49,9 +46,6 @@
   --sidebar-width: 260px;
 }
 
-/* ================================================================
-   Reset / Base
-   ================================================================ */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html, body {
@@ -99,9 +93,6 @@ a { color: var(--accent); text-decoration: none; }
 ::-webkit-scrollbar-thumb { background: var(--border-primary); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--text-tertiary); }
 
-/* ================================================================
-   Layout
-   ================================================================ */
 #app {
   display: flex;
   height: 100vh;
@@ -249,9 +240,6 @@ a { color: var(--accent); text-decoration: none; }
   padding: 24px;
 }
 
-/* ================================================================
-   Mobile sidebar toggle
-   ================================================================ */
 .sidebar-toggle {
   display: none;
   position: fixed;
@@ -281,9 +269,6 @@ a { color: var(--accent); text-decoration: none; }
   .panel-header { padding-left: 56px; }
 }
 
-/* ================================================================
-   Chat Panel
-   ================================================================ */
 .chat-container {
   flex: 1;
   display: flex;
@@ -511,9 +496,6 @@ a { color: var(--accent); text-decoration: none; }
   margin-top: 8px;
 }
 
-/* ================================================================
-   RAG Panel
-   ================================================================ */
 .rag-layout {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -611,9 +593,6 @@ a { color: var(--accent); text-decoration: none; }
   font-weight: 500;
 }
 
-/* ================================================================
-   Dashboard Panel
-   ================================================================ */
 .dashboard-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -745,9 +724,6 @@ a { color: var(--accent); text-decoration: none; }
   to { transform: rotate(360deg); }
 }
 
-/* ================================================================
-   Settings Panel
-   ================================================================ */
 .settings-form {
   max-width: 560px;
 }
@@ -859,9 +835,6 @@ a { color: var(--accent); text-decoration: none; }
   to   { opacity: 0; transform: translateY(-8px); }
 }
 
-/* ================================================================
-   Model selector in header
-   ================================================================ */
 .model-select {
   padding: 6px 28px 6px 10px;
   background: var(--bg-tertiary);
@@ -876,9 +849,6 @@ a { color: var(--accent); text-decoration: none; }
   cursor: pointer;
 }
 
-/* ================================================================
-   Empty / Loading states
-   ================================================================ */
 .empty-state {
   display: flex;
   flex-direction: column;
@@ -907,9 +877,6 @@ a { color: var(--accent); text-decoration: none; }
   margin: 0 auto;
 }
 
-/* ================================================================
-   Markdown rendering in messages
-   ================================================================ */
 .msg-content h1, .msg-content h2, .msg-content h3 {
   margin: 14px 0 8px;
   font-weight: 600;
@@ -968,7 +935,7 @@ a { color: var(--accent); text-decoration: none; }
       <div class="sidebar-logo">L</div>
       <div>
         <div class="sidebar-title">LLMStack</div>
-        <div class="sidebar-subtitle">Gateway v0.3</div>
+        <div class="sidebar-subtitle">Gateway v0.4</div>
       </div>
     </div>
 
@@ -999,7 +966,7 @@ a { color: var(--accent); text-decoration: none; }
     </nav>
 
     <div class="sidebar-footer">
-      LLMStack Gateway v0.3.0
+      LLMStack Gateway v0.4.0
     </div>
   </aside>
 
@@ -1174,9 +1141,6 @@ a { color: var(--accent); text-decoration: none; }
 <div class="toast-container" id="toastContainer"></div>
 
 <script>
-/* ================================================================
-   State
-   ================================================================ */
 const DEFAULT_SETTINGS = {
   endpoint: '',
   apiKey: '',
@@ -1193,9 +1157,6 @@ let chatHistory = []; // {role, content}
 let isStreaming = false;
 let abortController = null;
 
-/* ================================================================
-   Init
-   ================================================================ */
 document.addEventListener('DOMContentLoaded', () => {
   loadSettings();
   applySettings();
@@ -1204,9 +1165,6 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('chatInput').focus();
 });
 
-/* ================================================================
-   Navigation
-   ================================================================ */
 function switchPanel(name) {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -1224,9 +1182,6 @@ function toggleSidebar() {
   document.getElementById('sidebar').classList.toggle('open');
 }
 
-/* ================================================================
-   Settings
-   ================================================================ */
 function loadSettings() {
   try {
     const saved = localStorage.getItem('llmstack_settings');
@@ -1267,9 +1222,6 @@ function resetSettings() {
   toast('Settings reset to defaults', 'info');
 }
 
-/* ================================================================
-   API Helpers
-   ================================================================ */
 function apiBase() {
   if (settings.endpoint) return settings.endpoint.replace(/\/+$/, '');
   return window.location.origin;
@@ -1281,9 +1233,6 @@ function apiHeaders() {
   return h;
 }
 
-/* ================================================================
-   Models
-   ================================================================ */
 async function fetchModels() {
   try {
     const resp = await fetch(apiBase() + '/v1/models', { headers: apiHeaders() });
@@ -1314,9 +1263,6 @@ async function fetchModels() {
   }
 }
 
-/* ================================================================
-   Chat
-   ================================================================ */
 function handleChatKey(e) {
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
@@ -1494,9 +1440,6 @@ async function sendMessage() {
   }
 }
 
-/* ================================================================
-   RAG
-   ================================================================ */
 async function ingestDocument() {
   const text = document.getElementById('ragIngestText').value.trim();
   const source = document.getElementById('ragIngestSource').value.trim() || 'untitled';
@@ -1579,9 +1522,6 @@ async function queryRAG() {
   }
 }
 
-/* ================================================================
-   Dashboard
-   ================================================================ */
 async function refreshDashboard() {
   const btn = document.getElementById('dashRefreshBtn');
   btn.classList.add('spinning');
@@ -1734,9 +1674,6 @@ async function fetchRateLimitInfo() {
   } catch(e) {}
 }
 
-/* ================================================================
-   Markdown Rendering (lightweight, no deps)
-   ================================================================ */
 function renderMarkdown(text) {
   if (!text) return '';
 
@@ -1798,9 +1735,6 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
-/* ================================================================
-   Utils
-   ================================================================ */
 function formatDuration(seconds) {
   if (seconds < 60) return Math.round(seconds) + 's';
   if (seconds < 3600) return Math.floor(seconds / 60) + 'm ' + Math.round(seconds % 60) + 's';
