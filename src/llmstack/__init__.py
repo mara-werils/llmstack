@@ -1,6 +1,6 @@
 """LLMStack — One command. Full LLM stack. Zero config."""
 
-__version__ = "0.3.0"
+__version__ = "0.4.0"
 
 from llmstack.sdk import Client, AsyncClient
 
