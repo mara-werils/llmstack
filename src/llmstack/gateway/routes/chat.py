@@ -34,14 +34,17 @@ def _try_route(payload: dict) -> tuple[dict, str | None, str | None]:
     messages = payload.get("messages", [])
     request_model = payload.get("model")
 
+    # "auto" or empty model means "let the router decide"
+    known_models = {m.name for m in rtr.models}
+    is_auto = not request_model or request_model == "auto"
+
     # If the user explicitly set a model that is NOT in our tier list,
     # pass through without routing.
-    known_models = {m.name for m in rtr.models}
-    if request_model and request_model not in known_models:
+    if not is_auto and request_model not in known_models:
         return payload, None, None
 
     # If user explicitly picked a known model, set override for this request
-    if request_model and request_model in known_models:
+    if not is_auto and request_model in known_models:
         rtr.override(request_model)
 
     decision = rtr.route(messages)
