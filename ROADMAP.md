@@ -36,12 +36,18 @@
 - [ ] Conversation history persistence
 - [ ] Model download progress UI
 
-## v0.5 — Multi-Model & Routing
+## v0.5 — Ask, Multi-Model & Routing (Shipped)
 
-- [ ] Run multiple models simultaneously
-- [ ] Smart request routing (fast model for simple queries, large for complex)
+- [x] **`llmstack ask`** — ask questions about local files using a local LLM
+  - Supports PDF, DOCX, Markdown, 20+ code and text file types
+  - In-memory RAG: parse, chunk, embed, search, generate — no Docker needed
+  - Streaming answers with source citations
+  - Stdin piping support
+  - Configurable: `--model`, `--embed-model`, `--top-k`, `--chunk-size`
+- [x] Run multiple models simultaneously
+- [x] Smart request routing (fast model for simple queries, large for complex)
+- [x] Model performance benchmarking (`llmstack bench`)
 - [ ] A/B testing between models
-- [ ] Model performance benchmarking
 - [ ] Cost tracking per model/request
 
 ## v0.6 — Production Hardening

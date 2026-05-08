@@ -2,6 +2,71 @@
 
 llmstack provides a command-line interface built with [Typer](https://typer.tiangolo.com/) and [Rich](https://rich.readthedocs.io/). All commands are available under the `llmstack` binary after installation.
 
+## `llmstack ask`
+
+Ask questions about local files and directories using a local LLM. No Docker, no server, no config needed -- just Ollama running locally.
+
+```bash
+llmstack ask <question> [path] [OPTIONS]
+```
+
+**Arguments**
+
+| Argument | Required | Description |
+|---|---|---|
+| `QUESTION` | Yes | The question to ask about the file(s) |
+| `PATH` | No | File or directory to analyze. Omit if piping via stdin. |
+
+**Options**
+
+| Option | Default | Description |
+|---|---|---|
+| `--model` | `llama3.2` | Chat model to use for generation |
+| `--embed-model` | `nomic-embed-text` | Embedding model for semantic search |
+| `--top-k` | `5` | Number of most relevant chunks to include |
+| `--chunk-size` | `1000` | Chunk size in characters |
+| `--chunk-overlap` | `200` | Overlap between adjacent chunks in characters |
+| `--no-stream` | `false` | Disable streaming (print full answer at once) |
+
+**What It Does**
+
+1. Scans the target file or directory for supported file types
+2. Parses and chunks the content
+3. Embeds all chunks locally via Ollama
+4. Finds the top-K most relevant chunks using cosine similarity
+5. Sends the relevant chunks + your question to the chat model
+6. Streams the answer to your terminal with source citations
+
+**Supported File Types**
+
+PDF, DOCX, Markdown, plain text, HTML, CSV, Python, JavaScript, TypeScript, Go, Rust, Java, C/C++, Ruby, PHP, Swift, Kotlin, Shell, JSON, YAML, TOML, XML, log files, and more. See the [full ask guide](guide/ask.md) for the complete list.
+
+**Examples**
+
+```bash
+# Ask about a single file
+llmstack ask "Summarize the key findings" report.pdf
+
+# Ask about a directory
+llmstack ask "How does authentication work?" ./src/
+
+# Use a larger model for complex questions
+llmstack ask "Find security vulnerabilities" ./src/ --model llama3.1:70b
+
+# Include more context
+llmstack ask "Explain the full request lifecycle" ./src/ --top-k 10
+
+# Pipe from stdin
+cat contract.pdf | llmstack ask "Are there any risks?"
+git diff HEAD~5 | llmstack ask "Summarize these changes"
+```
+
+**Requirements**
+
+Only [Ollama](https://ollama.com) running locally. No Docker, Redis, Qdrant, or config file needed.
+
+---
+
 ## `llmstack init`
 
 Initialize a new `llmstack.yaml` configuration file with smart defaults.

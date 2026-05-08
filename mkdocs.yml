@@ -1,6 +1,6 @@
 site_name: llmstack
 site_url: https://mara-werils.github.io/llmstack
-site_description: "One command. Full LLM stack. Zero config."
+site_description: "Ask your files anything. Locally. Privately. One command."
 site_author: mara-werils
 repo_name: mara-werils/llmstack
 repo_url: https://github.com/mara-werils/llmstack
@@ -70,6 +70,7 @@ nav:
     - Quickstart: getting-started/quickstart.md
     - Configuration: getting-started/configuration.md
   - Guide:
+    - Ask Your Files: guide/ask.md
     - Architecture: guide/architecture.md
     - Hardware Detection: guide/hardware-detection.md
     - Gateway: guide/gateway.md

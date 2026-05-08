@@ -3,6 +3,14 @@
 ## [0.5.0] - 2026-05-08
 
 ### Added
+- **`llmstack ask`** — ask questions about local files using a local LLM
+  - One command: `llmstack ask "question" file-or-directory`
+  - Supports 20+ file types: PDF, DOCX, Markdown, Python, JS, TS, Go, Rust, Java, JSON, YAML, CSV, HTML, logs, and more
+  - In-memory RAG pipeline: parse, chunk, embed, semantic search, generate — no Docker or external services needed
+  - Streaming answers with source file and line citations
+  - Stdin piping: `cat file.pdf | llmstack ask "question"`
+  - Configurable: `--model`, `--embed-model`, `--top-k`, `--chunk-size`, `--chunk-overlap`, `--no-stream`
+  - Only requires Ollama running locally
 - **Smart Model Router** — automatically routes queries to the optimal model
   - Heuristic classifier scoring on 7 factors (token count, task markers, code detection, conversation depth, system prompt complexity, language mix, question complexity)
   - 4 routing strategies: `cost`, `quality`, `balanced`, `latency`
