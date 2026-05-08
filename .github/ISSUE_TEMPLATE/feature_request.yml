@@ -1,23 +1,73 @@
 name: Feature Request
 description: Suggest a new feature or improvement
+title: "[Feature]: "
 labels: ["enhancement"]
 body:
+  - type: markdown
+    attributes:
+      value: |
+        Have an idea for llmstack? We'd love to hear it. Please describe the feature and why it matters.
+
   - type: textarea
     id: problem
     attributes:
-      label: Problem
-      description: What problem does this solve? What's your use case?
+      label: Problem or use case
+      description: What problem does this solve? What are you trying to accomplish?
+      placeholder: "I'm trying to ... but currently ..."
     validations:
       required: true
+
   - type: textarea
     id: solution
     attributes:
       label: Proposed solution
-      description: How would you like this to work?
+      description: How would you like this to work? Include example commands, API calls, or config snippets if applicable.
     validations:
       required: true
+
   - type: textarea
     id: alternatives
     attributes:
       label: Alternatives considered
-      description: Any other approaches you've considered?
+      description: Any other approaches you've thought about or tried?
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      description: Which part of llmstack would this affect?
+      options:
+        - CLI
+        - Gateway / API
+        - RAG pipeline
+        - Cache
+        - Rate limiter / Circuit breaker
+        - Observability
+        - Configuration
+        - SDK / Client libraries
+        - Documentation
+        - New service / plugin
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: How important is this to you?
+      options:
+        - Nice to have
+        - Important — affects my workflow
+        - Critical — blocking my use case
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre-submission checklist
+      options:
+        - label: I have searched existing issues and the [roadmap](https://github.com/mara-werils/llmstack/blob/main/ROADMAP.md) for duplicates
+          required: true
+        - label: I am willing to contribute this feature via a pull request
+          required: false

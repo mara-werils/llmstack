@@ -1,14 +1,21 @@
 name: Bug Report
 description: Report a bug or unexpected behavior
-labels: ["bug"]
+title: "[Bug]: "
+labels: ["bug", "triage"]
 body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. Please fill out the form below so we can investigate.
+
   - type: textarea
     id: description
     attributes:
       label: What happened?
-      description: A clear description of the bug.
+      description: A clear description of the bug. Include any error messages you saw.
     validations:
       required: true
+
   - type: textarea
     id: reproduce
     attributes:
@@ -17,22 +24,69 @@ body:
       placeholder: |
         1. llmstack init --preset rag
         2. llmstack up
-        3. ...
+        3. curl http://localhost:8000/v1/chat/completions ...
+        4. See error
     validations:
       required: true
+
   - type: textarea
     id: expected
     attributes:
       label: Expected behavior
-      description: What did you expect to happen?
+      description: What did you expect to happen instead?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      description: Which part of llmstack is affected?
+      options:
+        - CLI (init, up, down, status, etc.)
+        - Gateway (API proxy, auth, streaming)
+        - RAG pipeline (ingest, query)
+        - Cache (Redis, semantic cache)
+        - Rate limiter
+        - Circuit breaker
+        - Observability (Prometheus, Grafana)
+        - Configuration (llmstack.yaml)
+        - Docker / containers
+        - Other
+    validations:
+      required: true
+
   - type: textarea
     id: environment
     attributes:
       label: Environment
-      description: Paste the output of `llmstack doctor`
+      description: Paste the output of `llmstack doctor`. If unavailable, list your OS, Python version, Docker version, and GPU.
       render: shell
+    validations:
+      required: true
+
   - type: input
     id: version
     attributes:
       label: llmstack version
-      placeholder: "0.1.0"
+      description: Output of `llmstack --version`
+      placeholder: "0.3.0"
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: Paste any relevant log output (use `llmstack logs <service>` or check the gateway output).
+      render: shell
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre-submission checklist
+      options:
+        - label: I have searched existing issues for duplicates
+          required: true
+        - label: I am using the latest version of llmstack
+          required: false
