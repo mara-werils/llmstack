@@ -66,6 +66,19 @@ async def healthz():
     except Exception:
         pass
 
+    try:
+        from llmstack.gateway.router._state import get_stats
+        stats = get_stats()
+        if stats is not None:
+            summary = stats.summary()
+            extras["router"] = {
+                "total_requests": summary["total_requests"],
+                "tier_distribution": summary["tier_distribution"],
+                "estimated_savings_pct": summary["estimated_savings_pct"],
+            }
+    except Exception:
+        pass
+
     return JSONResponse(
         content={"status": "ok" if all_ok else "degraded", "services": checks, **extras},
         status_code=status_code,
