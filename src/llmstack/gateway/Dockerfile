@@ -10,8 +10,8 @@ RUN pip install --no-cache-dir \
     redis>=5.0 \
     pydantic>=2.0
 
-COPY __init__.py /app/llmstack/__init__.py
 COPY gateway/ /app/llmstack/gateway/
+RUN echo '__version__ = "0.5.0"' > /app/llmstack/__init__.py
 
 ENV PYTHONPATH=/app
 
