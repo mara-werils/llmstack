@@ -14,7 +14,8 @@ from llmstack.gateway.cache import get_cache
 from llmstack.gateway.circuit_breaker import get_inference_breaker
 from llmstack.gateway.middleware.metrics import record_tokens
 
-INFERENCE_URL = os.getenv("LLMSTACK_INFERENCE_URL", "http://llmstack-ollama:11434/v1")
+_raw_inference = os.getenv("LLMSTACK_INFERENCE_URL", "http://llmstack-ollama:11434/v1")
+INFERENCE_URL = _raw_inference.rstrip("/") if _raw_inference.rstrip("/").endswith("/v1") else _raw_inference.rstrip("/") + "/v1"
 EMBEDDINGS_URL = os.getenv("LLMSTACK_EMBEDDINGS_URL", "")
 
 # Timeout for inference (can be long for large models)
