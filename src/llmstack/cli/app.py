@@ -103,3 +103,14 @@ def doctor() -> None:
     """Check system requirements and diagnose issues."""
     from llmstack.cli.commands.doctor import doctor as _doctor
     _doctor()
+
+
+@app.command()
+def bench(
+    model: str = typer.Option(None, "--model", "-m", help="Model name(s), comma-separated"),
+    suite: str = typer.Option("all", "--suite", "-s", help="Benchmark suite(s): simple,reasoning,coding,long_context,creative,all"),
+    output: str = typer.Option(None, "--output", "-o", help="Export results to JSON file"),
+) -> None:
+    """Benchmark models and show comparative performance results."""
+    from llmstack.cli.commands.bench import bench as _bench
+    _bench(model=model, suite=suite, output=output)
