@@ -4,9 +4,12 @@ from __future__ import annotations
 
 import os
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from llmstack.gateway.routes.chat import router as chat_router
 from llmstack.gateway.routes.embeddings import router as embeddings_router
@@ -17,6 +20,8 @@ from llmstack.gateway.middleware.auth import AuthMiddleware
 from llmstack.gateway.middleware.metrics import MetricsMiddleware
 from llmstack.gateway.middleware.rate_limit import RateLimitMiddleware
 from llmstack.gateway.middleware.logging import LoggingMiddleware
+
+_UI_DIR = Path(__file__).resolve().parent / "ui"
 
 
 @asynccontextmanager
@@ -68,6 +73,14 @@ def create_app() -> FastAPI:
     app.include_router(models_router, prefix="/v1")
     app.include_router(rag_router, prefix="/v1")
     app.include_router(health_router)
+
+    # Serve Web UI
+    if _UI_DIR.is_dir():
+        @app.get("/", include_in_schema=False)
+        async def serve_ui():
+            return FileResponse(_UI_DIR / "index.html", media_type="text/html")
+
+        app.mount("/ui", StaticFiles(directory=str(_UI_DIR)), name="ui")
 
     return app
 

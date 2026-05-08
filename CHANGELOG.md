@@ -1,5 +1,35 @@
 # Changelog
 
+## [0.4.0] - 2026-05-08
+
+### Added
+- **Web UI** — built-in chat interface served at `http://localhost:8000`
+  - Chat panel with streaming, model selector, conversation history
+  - RAG panel for document ingestion and knowledge base queries
+  - Dashboard with health status, cache stats, circuit breaker state
+  - Settings panel with localStorage persistence
+  - Dark theme, zero external dependencies, fully self-contained
+- **Python SDK** — `from llmstack import Client`
+  - Sync `Client` and async `AsyncClient` with full API coverage
+  - Chat, embeddings, RAG ingest/query, models, health
+  - Streaming support via generators
+  - Context manager support
+- **Integration examples** — ready-to-run code for popular frameworks
+  - LangChain (chat, chains, RAG)
+  - LlamaIndex (indexing, chat engine)
+  - OpenAI Python SDK (drop-in replacement)
+  - Vercel AI SDK (TypeScript/Next.js)
+  - FastAPI app template
+  - SDK quickstart
+- **Documentation site** — MkDocs Material with full docs
+  - Getting started, architecture, API reference, CLI reference
+  - Gateway features guide, observability guide, plugin guide
+  - Dark/light theme toggle, search, code highlighting
+- **ROADMAP.md** — public roadmap through v1.0
+- **Improved GitHub templates** — YAML-based issue forms with dropdowns
+- **GitHub Sponsors** — FUNDING.yml
+- **CI docs job** — `mkdocs build --strict` in CI pipeline
+
 ## [0.3.0] - 2026-05-07
 
 ### Added

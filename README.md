@@ -26,7 +26,7 @@ llmstack init --preset rag
 llmstack up
 ```
 
-That's it. You now have **7 services** running: inference, embeddings, vector DB, cache, API gateway, Prometheus, and Grafana.
+That's it. You now have **7 services** running: inference, embeddings, vector DB, cache, API gateway, Prometheus, and Grafana — plus a **built-in Web UI** at `http://localhost:8000`.
 
 ```bash
 # Chat completion (OpenAI-compatible)
@@ -34,21 +34,20 @@ curl http://localhost:8000/v1/chat/completions \
   -H "Authorization: Bearer YOUR_KEY" \
   -H "Content-Type: application/json" \
   -d '{"model":"llama3.2","messages":[{"role":"user","content":"Hello!"}]}'
-
-# Ingest a document for RAG
-curl http://localhost:8000/v1/rag/ingest \
-  -H "Authorization: Bearer YOUR_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"text":"LLMStack is an open-source tool for...","source":"docs.txt"}'
-
-# Query with RAG
-curl http://localhost:8000/v1/rag/query \
-  -H "Authorization: Bearer YOUR_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"question":"What is LLMStack?"}'
 ```
 
-Works with **any OpenAI-compatible client**: LangChain, LlamaIndex, Vercel AI SDK, openai-python.
+```python
+# Or use the Python SDK
+from llmstack import Client
+
+with Client(api_key="YOUR_KEY") as llm:
+    response = llm.chat([{"role": "user", "content": "Hello!"}])
+    print(response.choices[0].message.content)
+```
+
+Works with **any OpenAI-compatible client**: LangChain, LlamaIndex, Vercel AI SDK, openai-python — or use the **built-in Python SDK**.
+
+> **[Documentation](https://mara-werils.github.io/llmstack)** | **[Examples](examples/)** | **[Roadmap](ROADMAP.md)** | **[Contributing](CONTRIBUTING.md)**
 
 ## Who is this for?
 
@@ -241,7 +240,47 @@ observe:
 | `/healthz` | GET | Health check with circuit breaker + cache stats |
 | `/metrics` | GET | Prometheus metrics |
 
-## Interactive Chat
+## Web UI
+
+Open `http://localhost:8000` after `llmstack up` — a full chat interface is built in:
+
+- **Chat** — streaming responses, model selector, conversation history
+- **RAG** — paste or upload documents, query your knowledge base
+- **Dashboard** — health status, cache hit rate, circuit breaker state, rate limits
+- **Settings** — API key, model, temperature, persisted in browser
+
+No extra install. No extra container. It's part of the gateway.
+
+## Python SDK
+
+```bash
+pip install llmstack-cli
+```
+
+```python
+from llmstack import Client
+
+with Client(api_key="YOUR_KEY") as llm:
+    # Chat
+    response = llm.chat([{"role": "user", "content": "Hello!"}])
+    print(response.choices[0].message.content)
+
+    # Streaming
+    for chunk in llm.chat([{"role": "user", "content": "Tell me a story"}], stream=True):
+        print(chunk.content, end="", flush=True)
+
+    # Embeddings
+    embeddings = llm.embed(["Hello world"])
+
+    # RAG
+    llm.rag_ingest("Your document text here...", source="doc.txt")
+    answer = llm.rag_query("What does the document say?")
+    print(answer.answer, answer.sources)
+```
+
+Async version available: `from llmstack import AsyncClient`
+
+## Interactive Chat (Terminal)
 
 ```bash
 llmstack chat
@@ -254,9 +293,6 @@ Type 'exit' or Ctrl+C to quit. '/clear' to reset conversation.
 You: What is quantum computing?
 Assistant: Quantum computing uses quantum mechanical phenomena like
 superposition and entanglement to process information...
-
-You: /clear
-Conversation cleared.
 ```
 
 ## Export to Docker Compose
@@ -269,44 +305,20 @@ llmstack export
 
 Share the generated file with your team — no llmstack dependency required.
 
-## Use the API
+## Use with OpenAI SDK
 
 ```python
 from openai import OpenAI
 
 client = OpenAI(base_url="http://localhost:8000/v1", api_key="YOUR_KEY")
 
-# Chat completion
 response = client.chat.completions.create(
     model="llama3.2",
     messages=[{"role": "user", "content": "Explain quantum computing"}]
 )
-
-# Embeddings
-embeddings = client.embeddings.create(
-    model="bge-m3",
-    input=["Hello world"]
-)
 ```
 
-```python
-import httpx
-
-# RAG: Ingest documents
-httpx.post("http://localhost:8000/v1/rag/ingest", json={
-    "text": open("whitepaper.txt").read(),
-    "source": "whitepaper.txt",
-}, headers={"Authorization": "Bearer YOUR_KEY"})
-
-# RAG: Query
-response = httpx.post("http://localhost:8000/v1/rag/query", json={
-    "question": "What are the key findings?",
-    "top_k": 5,
-}, headers={"Authorization": "Bearer YOUR_KEY"})
-
-print(response.json()["answer"])
-print(response.json()["sources"])
-```
+See [examples/](examples/) for LangChain, LlamaIndex, Vercel AI SDK, and FastAPI integrations.
 
 ## CLI
 
@@ -340,6 +352,8 @@ Access at `http://localhost:8080` (login: admin / llmstack)
 | | llmstack | Ollama | LocalAI | AnythingLLM | LiteLLM |
 |---|---|---|---|---|---|
 | One-command full stack | **Yes** | No | No | Partial | No |
+| Built-in Web UI | **Yes** | No | No | Bundled | No |
+| Python SDK | **Yes** | Yes | No | No | Yes |
 | Built-in RAG pipeline | **Yes** | No | No | Bundled | No |
 | Response caching | **Yes** | No | No | No | No |
 | Circuit breaker | **Yes** | No | No | No | No |

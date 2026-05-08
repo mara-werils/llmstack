@@ -105,7 +105,7 @@ class _InMemoryBucket:
 class RateLimitMiddleware(BaseHTTPMiddleware):
     """Token bucket rate limiter with Redis backend and in-memory fallback."""
 
-    SKIP_PATHS = {"/healthz", "/metrics", "/docs", "/openapi.json"}
+    SKIP_PATHS = {"/healthz", "/metrics", "/docs", "/openapi.json", "/"}
 
     def __init__(self, app, rate_limit: str = RATE_LIMIT):
         super().__init__(app)
@@ -151,7 +151,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         return f"{_RATE_PREFIX}ip:{ip}"
 
     async def dispatch(self, request: Request, call_next):
-        if request.url.path in self.SKIP_PATHS:
+        if request.url.path in self.SKIP_PATHS or request.url.path.startswith("/ui"):
             return await call_next(request)
 
         client_key = self._get_client_key(request)
