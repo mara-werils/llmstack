@@ -13,8 +13,8 @@ class AuthMiddleware(BaseHTTPMiddleware):
         self.api_keys = set(k.strip() for k in api_keys if k.strip())
 
     async def dispatch(self, request: Request, call_next):
-        # Skip auth for health checks and docs
-        if request.url.path in ("/healthz", "/metrics", "/docs", "/openapi.json"):
+        # Skip auth for health checks, docs, and UI
+        if request.url.path in ("/healthz", "/metrics", "/docs", "/openapi.json", "/") or request.url.path.startswith("/ui"):
             return await call_next(request)
 
         if not self.api_keys:
