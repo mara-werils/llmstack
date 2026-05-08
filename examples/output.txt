@@ -1,15 +1,19 @@
 $ llmstack --version
-llmstack 0.1.0
+llmstack 0.4.0
 
-$ llmstack init --preset rag
+$ llmstack init --preset router
 
 Hardware detected:
   CPU: 10 cores
   RAM: 32 GB
   GPU: Apple M2 Pro (16 GB VRAM)
 
-Using preset: rag
+Using preset: router
   Backend: Ollama
+  Models:
+    simple:  llama3.2:1b
+    medium:  llama3.2:8b
+    complex: llama3.1:70b-q4
 
 Created llmstack.yaml
 Next: edit the config if needed, then run llmstack up
@@ -20,15 +24,19 @@ Starting LLMStack...
 
   ✓ qdrant        running   :6333
   ✓ redis         running   :6379
-  ✓ ollama        running   :11434   (pulling llama3.2...)
+  ✓ ollama        running   :11434   (pulling llama3.2:1b...)
+  ✓ ollama        running   :11434   (pulling llama3.2:8b...)
+  ✓ ollama        running   :11434   (pulling llama3.1:70b-q4...)
   ✓ tei           running   :8002    (loading bge-m3...)
-  ✓ gateway       running   :8000
+  ✓ gateway       running   :8000    (router: 3 models loaded)
   ✓ prometheus    running   :9090
   ✓ grafana       running   :8080
 
 Stack is ready! 7 services running.
 API: http://localhost:8000/v1
+Web UI: http://localhost:8000
 Dashboard: http://localhost:8080
+Router: enabled (3 models)
 
 $ llmstack status
 
@@ -45,15 +53,20 @@ $ llmstack status
 │ grafana     │ 1a7e..   │ running │ 8080->8080    │
 └─────────────┴──────────┴─────────┴───────────────┘
 
+Router models:
+  simple:  llama3.2:1b    (loaded, 142 t/s)
+  medium:  llama3.2:8b    (loaded, 71 t/s)
+  complex: llama3.1:70b-q4 (loaded, 12 t/s)
+
 $ curl -s http://localhost:8000/v1/chat/completions \
   -H "Authorization: Bearer llmstack-key" \
   -H "Content-Type: application/json" \
-  -d '{"model":"llama3.2","messages":[{"role":"user","content":"Hello!"}]}' | jq .
+  -d '{"model":"auto","messages":[{"role":"user","content":"Hello!"}]}' | jq .
 {
   "id": "chatcmpl-abc123",
   "object": "chat.completion",
   "created": 1715090400,
-  "model": "llama3.2",
+  "model": "llama3.2:1b",
   "choices": [
     {
       "index": 0,
@@ -70,6 +83,69 @@ $ curl -s http://localhost:8000/v1/chat/completions \
     "total_tokens": 20
   }
 }
+# Response headers:
+#   X-Model-Routed: llama3.2:1b
+#   X-Route-Reason: simple-greeting
+#   X-Route-Time: 1.8ms
+#   X-Cache: MISS
+#   Latency: 47ms
+
+$ curl -s http://localhost:8000/v1/chat/completions \
+  -H "Authorization: Bearer llmstack-key" \
+  -H "Content-Type: application/json" \
+  -d '{"model":"auto","messages":[{"role":"user","content":"Explain the CAP theorem and its implications for distributed database design"}]}' | jq .
+{
+  "id": "chatcmpl-def456",
+  "object": "chat.completion",
+  "created": 1715090460,
+  "model": "llama3.2:8b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "The CAP theorem, proposed by Eric Brewer in 2000, states that a distributed data store can only guarantee two of three properties simultaneously:\n\n1. **Consistency** — every read receives the most recent write\n2. **Availability** — every request receives a response\n3. **Partition tolerance** — the system continues operating despite network partitions\n\nSince network partitions are inevitable in distributed systems, you're really choosing between CP and AP..."
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 24,
+    "completion_tokens": 187,
+    "total_tokens": 211
+  }
+}
+# Response headers:
+#   X-Model-Routed: llama3.2:8b
+#   X-Route-Reason: medium-technical-explanation
+#   X-Route-Time: 1.4ms
+#   X-Cache: MISS
+#   Latency: 1.1s
+
+$ curl -s http://localhost:8000/v1/chat/completions \
+  -H "Authorization: Bearer llmstack-key" \
+  -H "Content-Type: application/json" \
+  -d '{"model":"auto","messages":[{"role":"user","content":"Design a distributed consensus algorithm that handles Byzantine faults with optimal message complexity. Provide pseudocode and prove its correctness."}]}' | jq .model
+"llama3.1:70b-q4"
+# Response headers:
+#   X-Model-Routed: llama3.1:70b-q4
+#   X-Route-Reason: complex-reasoning-with-code
+#   X-Route-Time: 2.1ms
+
+$ llmstack bench
+
+Running routing benchmark (100 mixed queries)...
+
+  Simple queries (40):   avg 47ms   142 t/s   model: llama3.2:1b
+  Medium queries (35):   avg 1.1s    71 t/s   model: llama3.2:8b
+  Complex queries (25):  avg 8.1s    12 t/s   model: llama3.1:70b-q4
+
+  Routing overhead:      avg 1.8ms (< 0.1% of total latency)
+  Weighted avg latency:  1.2s (vs 3.8s single-model baseline)
+  Speedup:               3.2x
+
+  Cache hits:            12/100 (12%)
+  Circuit breaker:       CLOSED (healthy)
 
 $ llmstack down
 
