@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 import sys
 
-from llmstack.cli.console import console
 
 
 def mcp_serve(

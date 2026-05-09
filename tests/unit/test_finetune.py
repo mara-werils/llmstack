@@ -23,7 +23,6 @@ from llmstack.finetune.data import (
     _row_to_chat,
 )
 from llmstack.finetune.hyperparams import (
-    TrainHyperparams,
     auto_hyperparams,
     estimate_model_size,
 )

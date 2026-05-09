@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import hashlib
 import time
-from collections import defaultdict
 from dataclasses import dataclass, field
 from threading import Lock
 

@@ -221,7 +221,6 @@ def _print_loss_curve(values: list[float]) -> None:
     if span < 1e-8:
         return
 
-    height = 8
     bars = " ▁▂▃▄▅▆▇█"
 
     # Normalize to bar height
@@ -233,6 +232,6 @@ def _print_loss_curve(values: list[float]) -> None:
         idx = max(0, min(len(bars) - 1, idx))
         bar_chars.append(bars[idx])
 
-    curve = "".join(bar_chars)
+    "".join(bar_chars)
     console.print(f"\n  Loss curve: {max_val:.4f} {''.join(bar_chars)} {min_val:.4f}")
     console.print(f"  {'':>14}{'start':}<{len(bar_chars) - 3}s{'end'}")

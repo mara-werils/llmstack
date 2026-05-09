@@ -228,12 +228,12 @@ def chat_engine_example():
     print("[Chat engine with memory]")
     # Turn 1
     response1 = chat_engine.chat("How does rate limiting work in llmstack?")
-    print(f"User:      How does rate limiting work in llmstack?")
+    print("User:      How does rate limiting work in llmstack?")
     print(f"Assistant: {response1}\n")
 
     # Turn 2 — follow-up referencing previous context
     response2 = chat_engine.chat("What about caching? How is that different?")
-    print(f"User:      What about caching? How is that different?")
+    print("User:      What about caching? How is that different?")
     print(f"Assistant: {response2}\n")
 
 
@@ -281,7 +281,7 @@ def directory_reader_example():
 
     print("[Directory reader index]")
     response = query_engine.query("How do I install and start llmstack?")
-    print(f"Q: How do I install and start llmstack?")
+    print("Q: How do I install and start llmstack?")
     print(f"A: {response}\n")
 
 

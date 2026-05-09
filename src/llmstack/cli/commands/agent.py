@@ -37,11 +37,8 @@ async def _agent_async(
     from pathlib import Path
 
     import httpx
-    from rich.live import Live
     from rich.markdown import Markdown
     from rich.panel import Panel
-    from rich.table import Table
-    from rich.text import Text
 
     from llmstack.agent.loop import AgentConfig, AgentLoop
     from llmstack.agent.tools import create_default_registry

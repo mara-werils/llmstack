@@ -6,13 +6,11 @@ Tools are designed to be safe by default with configurable sandboxing.
 
 from __future__ import annotations
 
-import json
 import os
 import subprocess
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
 
 
 @dataclass
@@ -100,9 +98,9 @@ class ReadFileTool(Tool):
                 start_idx = max(0, start_line - 1)
                 end_idx = end_line if end_line > 0 else len(lines)
                 lines = lines[start_idx:end_idx]
-                numbered = [f"{start_idx + i + 1}\t{l}" for i, l in enumerate(lines)]
+                numbered = [f"{start_idx + i + 1}\t{ln}" for i, ln in enumerate(lines)]
             else:
-                numbered = [f"{i + 1}\t{l}" for i, l in enumerate(lines)]
+                numbered = [f"{i + 1}\t{ln}" for i, ln in enumerate(lines)]
             return ToolResult(output="\n".join(numbered))
         except Exception as exc:
             return ToolResult(output="", success=False, error=str(exc))

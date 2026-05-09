@@ -166,7 +166,6 @@ class Trainer:
         from unsloth import FastLanguageModel
         from trl import SFTTrainer
         from transformers import TrainingArguments
-        from datasets import Dataset
 
         hp = self.config.hyperparams
 
@@ -285,7 +284,6 @@ class Trainer:
             AutoModelForCausalLM, AutoTokenizer, TrainingArguments,
             BitsAndBytesConfig,
         )
-        from datasets import Dataset
 
         hp = self.config.hyperparams
 

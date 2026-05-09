@@ -6,7 +6,6 @@ A/B testing, alerts, and config schema.
 
 from __future__ import annotations
 
-import time
 
 import pytest
 

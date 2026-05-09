@@ -5,16 +5,10 @@ Covers tools, tool registry, agent loop, MCP protocol, and config schema.
 
 from __future__ import annotations
 
-import json
-import os
-import tempfile
-from pathlib import Path
 
 import pytest
 
 from llmstack.agent.tools import (
-    Tool,
-    ToolParam,
     ToolRegistry,
     ToolResult,
     ReadFileTool,
@@ -22,7 +16,6 @@ from llmstack.agent.tools import (
     ListDirectoryTool,
     GrepTool,
     ShellTool,
-    HttpGetTool,
     create_default_registry,
 )
 from llmstack.agent.loop import AgentConfig, AgentEvent, AgentLoop
@@ -368,7 +361,7 @@ class TestAgentLoop:
 
         # We can't easily mock the LLM here without httpx mock,
         # but we can test the config is respected
-        agent = AgentLoop(config=config, tools=tools)
+        AgentLoop(config=config, tools=tools)
         assert config.max_steps == 2
 
 
