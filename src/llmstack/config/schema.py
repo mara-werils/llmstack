@@ -57,6 +57,10 @@ class ObserveConfig(BaseModel):
     metrics: bool = True
     dashboard_port: int = 8080
     retention: str = "7d"
+    quality_tracking: bool = True        # enable AI quality scoring
+    alert_threshold: float = 0.4         # fire alert below this quality score
+    drift_threshold: float = -0.1        # fire alert on quality drift
+    trace_store_size: int = 5000         # max traces in memory
 
 
 class DockerConfig(BaseModel):

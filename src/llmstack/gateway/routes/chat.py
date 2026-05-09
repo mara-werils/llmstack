@@ -85,6 +85,77 @@ def _resolve_provider_for_model(model_id: str) -> str | None:
         return None
 
 
+def _record_trace(
+    payload: dict, result: dict, model: str, provider: str | None,
+    tier: str | None, latency_ms: float, cost_usd: float,
+    cached: bool = False,
+) -> None:
+    """Record a trace with quality scoring for observability."""
+    try:
+        from llmstack.observe._state import get_trace_store, get_scorer, get_tracker
+        from llmstack.observe.traces import Trace
+
+        store = get_trace_store()
+        scorer = get_scorer()
+        if store is None:
+            return
+
+        # Extract response content
+        response_text = ""
+        finish_reason = ""
+        if isinstance(result, dict):
+            choices = result.get("choices", [])
+            if choices:
+                response_text = choices[0].get("message", {}).get("content", "")
+                finish_reason = choices[0].get("finish_reason", "")
+
+        # Extract usage
+        usage = result.get("usage", {}) if isinstance(result, dict) else {}
+        input_tokens = usage.get("prompt_tokens", 0)
+        output_tokens = usage.get("completion_tokens", 0)
+
+        # Extract query for scoring
+        messages = payload.get("messages", [])
+        query = ""
+        for m in reversed(messages):
+            if m.get("role") == "user":
+                query = m.get("content", "")
+                break
+
+        # Score quality
+        quality = {}
+        if scorer and response_text:
+            score = scorer.score(query, response_text)
+            quality = score.to_dict()
+
+        trace = Trace(
+            model=model,
+            provider=provider or "local",
+            messages=messages,
+            temperature=payload.get("temperature", 0.0),
+            stream=payload.get("stream", False),
+            routed_model=model,
+            routed_tier=tier or "",
+            response=response_text[:500],
+            finish_reason=finish_reason,
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
+            latency_ms=latency_ms,
+            cost_usd=cost_usd,
+            cached=cached,
+            quality=quality,
+        )
+        store.add(trace)
+
+        # Track quality for drift detection
+        tracker = get_tracker()
+        if tracker and quality:
+            tracker.record(quality, model=model, provider=provider or "local")
+
+    except Exception:
+        pass
+
+
 def _record_stats(
     model: str | None, tier: str | None, latency_ms: float,
     provider: str | None = None, cost_usd: float = 0.0,
@@ -149,6 +220,13 @@ async def chat_completions(request: Request):
                 cost_usd = x_info.get("cost_usd", 0.0)
 
             _record_stats(routed_model, tier, elapsed_ms, provider, cost_usd)
+
+            # Trace and quality scoring
+            _record_trace(
+                payload, result, routed_model or payload.get("model", ""),
+                provider, tier, elapsed_ms, cost_usd,
+                cached=isinstance(result, dict) and result.get("_cached", False),
+            )
 
             # Indicate cache hit in response headers
             response = JSONResponse(content=result)
