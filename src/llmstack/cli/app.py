@@ -141,6 +141,37 @@ def ask(
     )
 
 
+@app.command()
+def finetune(
+    data: str = typer.Argument(..., help="Path to training data (CSV, JSON, JSONL, TXT, Parquet)"),
+    base_model: str = typer.Option(
+        "unsloth/llama-3.2-1b-instruct-bnb-4bit", "--base", "-b", help="Base model name or path",
+    ),
+    method: str = typer.Option("qlora", "--method", help="Training method: qlora, lora, full"),
+    output: str = typer.Option("./finetune-output", "--output", "-o", help="Output directory"),
+    epochs: int = typer.Option(None, "--epochs", "-e", help="Number of training epochs (auto if unset)"),
+    lr: float = typer.Option(None, "--lr", help="Learning rate (auto if unset)"),
+    batch_size: int = typer.Option(None, "--batch-size", help="Batch size (auto if unset)"),
+    lora_r: int = typer.Option(None, "--lora-r", help="LoRA rank (auto if unset)"),
+    max_seq_length: int = typer.Option(2048, "--max-seq-length", help="Maximum sequence length"),
+    eval_split: float = typer.Option(0.1, "--eval-split", help="Fraction of data for evaluation"),
+    export_gguf: bool = typer.Option(False, "--export-gguf", help="Export model to GGUF format"),
+    export_ollama: str = typer.Option(None, "--export-ollama", help="Create Ollama model with this name"),
+    quantization: str = typer.Option("q4_k_m", "--quant", "-q", help="GGUF quantization: q4_k_m, q5_k_m, q8_0, f16"),
+    system_prompt: str = typer.Option("", "--system", "-s", help="System prompt for all examples"),
+    resume: str = typer.Option(None, "--resume", help="Resume from checkpoint path"),
+) -> None:
+    """Fine-tune a model on your data with LoRA/QLoRA. One command, zero boilerplate."""
+    from llmstack.cli.commands.finetune import finetune as _finetune
+    _finetune(
+        data=data, base_model=base_model, method=method, output=output,
+        epochs=epochs, lr=lr, batch_size=batch_size, lora_r=lora_r,
+        max_seq_length=max_seq_length, eval_split=eval_split,
+        export_gguf=export_gguf, export_ollama=export_ollama,
+        quantization=quantization, system_prompt=system_prompt, resume=resume,
+    )
+
+
 @app.command(name="agent")
 def agent_cmd(
     task: str = typer.Argument(..., help="Task for the agent to complete"),

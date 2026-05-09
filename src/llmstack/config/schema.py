@@ -144,6 +144,26 @@ class MCPConfig(BaseModel):
     ])
 
 
+# ---------------------------------------------------------------------------
+# Fine-tuning configuration
+# ---------------------------------------------------------------------------
+
+class FinetuneConfig(BaseModel):
+    """Fine-tuning pipeline configuration."""
+
+    base_model: str = "unsloth/llama-3.2-1b-instruct-bnb-4bit"
+    method: Literal["qlora", "lora", "full"] = "qlora"
+    output_dir: str = "./finetune-output"
+    lora_r: int = 16
+    lora_alpha: int = 32
+    epochs: int = 0                      # 0 = auto
+    batch_size: int = 0                  # 0 = auto
+    learning_rate: float = 0.0           # 0.0 = auto
+    max_seq_length: int = 2048
+    eval_split: float = 0.1
+    quantization: str = "q4_k_m"         # for GGUF export
+
+
 class StackConfig(BaseModel):
     """Root config — 1:1 mapping with llmstack.yaml."""
 
@@ -156,3 +176,4 @@ class StackConfig(BaseModel):
     providers: ProvidersConfig = Field(default_factory=ProvidersConfig)
     agents: AgentsConfig = Field(default_factory=AgentsConfig)
     mcp: MCPConfig = Field(default_factory=MCPConfig)
+    finetune: FinetuneConfig = Field(default_factory=FinetuneConfig)
