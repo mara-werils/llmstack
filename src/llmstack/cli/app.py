@@ -120,13 +120,16 @@ def bench(
 
 @app.command()
 def ask(
-    question: str = typer.Argument(..., help="Question to ask about your files"),
+    question: str = typer.Argument("", help="Question to ask (omit for interactive mode)"),
     files: list[Path] = typer.Argument(None, help="Files or directories to search"),
     model: str = typer.Option("llama3.2", "--model", "-m", help="LLM model for generation"),
     embed_model: str = typer.Option("nomic-embed-text", "--embed-model", help="Embedding model"),
     top_k: int = typer.Option(5, "--top-k", "-k", help="Number of relevant chunks"),
     ollama_url: str = typer.Option("http://localhost:11434", "--ollama-url", help="Ollama API URL"),
     show_sources: bool = typer.Option(True, "--sources/--no-sources", help="Show source citations"),
+    interactive: bool = typer.Option(False, "--interactive", "-i", help="Interactive conversation mode"),
+    no_cache: bool = typer.Option(False, "--no-cache", help="Disable persistent index, re-index from scratch"),
+    git: bool = typer.Option(True, "--git/--no-git", help="Include git context (branch, recent commits)"),
 ) -> None:
     """Ask questions about local files using a local LLM."""
     from llmstack.cli.commands.ask import ask as _ask
@@ -138,6 +141,9 @@ def ask(
         top_k=top_k,
         ollama_url=ollama_url,
         show_sources=show_sources,
+        interactive=interactive or not question,
+        no_cache=no_cache,
+        use_git=git,
     )
 
 
