@@ -23,7 +23,7 @@ class LocalEmbeddings:
         self.model = model
         self._embeddings: np.ndarray | None = None
         self._chunks: list[TextChunk] = []
-        self._client = httpx.AsyncClient(timeout=httpx.Timeout(120, connect=10))
+        self._client = httpx.AsyncClient(timeout=httpx.Timeout(300, connect=10))
 
     async def _ensure_model(self) -> None:
         """Pull the embedding model if it is not already available."""
@@ -53,7 +53,7 @@ class LocalEmbeddings:
         """
         await self._ensure_model()
 
-        batch_size = 32
+        batch_size = 16
         all_embeddings: list[list[float]] = []
 
         for i in range(0, len(texts), batch_size):
