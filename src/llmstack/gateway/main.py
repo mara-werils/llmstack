@@ -77,6 +77,9 @@ def _init_router() -> None:
             max_context=m.get("max_context", 8192),
             speed_score=m.get("speed_score", 1.0),
             quality_score=m.get("quality_score", 1.0),
+            provider=m.get("provider", "local"),
+            cost_per_m_input=m.get("cost_per_m_input", 0.0),
+            cost_per_m_output=m.get("cost_per_m_output", 0.0),
         )
         for m in model_defs
     ]
@@ -96,12 +99,100 @@ def _init_router() -> None:
     )
 
 
+def _init_providers() -> None:
+    """Initialise the provider registry from env config (if provided).
+
+    The provider config is passed via ``LLMSTACK_PROVIDERS_CONFIG`` env var
+    as a JSON string, e.g.::
+
+        {
+            "enabled": true,
+            "providers": [
+                {"name": "openai", "api_key": "sk-...", "models": [...]},
+                {"name": "anthropic", "api_key": "sk-ant-...", "models": [...]}
+            ]
+        }
+    """
+    raw = os.getenv("LLMSTACK_PROVIDERS_CONFIG", "")
+    if not raw:
+        return
+
+    try:
+        cfg = json.loads(raw)
+    except (json.JSONDecodeError, TypeError):
+        logger.warning("LLMSTACK_PROVIDERS_CONFIG is set but not valid JSON — providers disabled")
+        return
+
+    if not cfg.get("enabled", False):
+        return
+
+    from llmstack.gateway.providers.registry import ProviderRegistry, init_registry
+    from llmstack.gateway.providers.local import LocalProvider
+    from llmstack.gateway.providers.openai_provider import OpenAIProvider
+    from llmstack.gateway.providers.anthropic_provider import AnthropicProvider
+    from llmstack.gateway.providers.google_provider import GoogleProvider
+    from llmstack.gateway.providers.openai_compat import (
+        GroqProvider, TogetherProvider, MistralProvider,
+    )
+
+    _PROVIDER_CLASSES = {
+        "local": LocalProvider,
+        "openai": OpenAIProvider,
+        "anthropic": AnthropicProvider,
+        "google": GoogleProvider,
+        "groq": GroqProvider,
+        "together": TogetherProvider,
+        "mistral": MistralProvider,
+    }
+
+    registry = ProviderRegistry()
+
+    # Always register local provider
+    registry.register(LocalProvider())
+
+    provider_defs = cfg.get("providers", [])
+    for pdef in provider_defs:
+        name = pdef.get("name", "")
+        if name not in _PROVIDER_CLASSES:
+            logger.warning("Unknown provider '%s' — skipping", name)
+            continue
+        if not pdef.get("enabled", True):
+            continue
+
+        # Resolve API key: explicit value or env var
+        api_key = pdef.get("api_key", "")
+        if not api_key:
+            env_var = pdef.get("api_key_env", "")
+            if env_var:
+                api_key = os.getenv(env_var, "")
+
+        cls = _PROVIDER_CLASSES[name]
+        provider = cls(api_key=api_key, base_url=pdef.get("base_url", ""))
+        registry.register(provider)
+
+        # Register explicit models
+        for mdef in pdef.get("models", []):
+            registry.register_model(mdef.get("name", ""), name)
+
+        # Set up fallback chain
+        fallbacks = pdef.get("fallback", [])
+        if fallbacks:
+            registry.set_fallbacks(name, fallbacks)
+
+        logger.info("Provider '%s' initialised with %d models", name, len(pdef.get("models", [])))
+
+    init_registry(registry)
+    total = sum(len(p.get("models", [])) for p in provider_defs)
+    logger.info("Provider registry initialised: %d providers, %d models", len(provider_defs), total)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Startup: connect cache, init router. Shutdown: close connections."""
+    """Startup: connect cache, init router and providers. Shutdown: close connections."""
     from llmstack.gateway.cache import get_cache
     cache = await get_cache()
     _init_router()
+    _init_providers()
     yield
     await cache.close()
 

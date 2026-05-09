@@ -65,6 +65,42 @@ class DockerConfig(BaseModel):
     data_dir: str = "~/.llmstack/data"
 
 
+# ---------------------------------------------------------------------------
+# Provider configuration (Universal Gateway)
+# ---------------------------------------------------------------------------
+
+class ProviderModelConfig(BaseModel):
+    """A model exposed through a provider, with optional tier and cost overrides."""
+
+    name: str                            # model ID, e.g. "gpt-4o"
+    tier: Literal["simple", "medium", "complex"] = "medium"
+    context_length: int = 128_000
+    cost_per_m_input: float = 0.0        # $ per 1M input tokens
+    cost_per_m_output: float = 0.0       # $ per 1M output tokens
+    speed_score: float = 1.0
+    quality_score: float = 1.0
+
+
+class ProviderConfig(BaseModel):
+    """Configuration for a single LLM provider."""
+
+    name: str                            # "openai", "anthropic", "google", etc.
+    api_key: str = ""                    # can also come from env var
+    api_key_env: str = ""                # env var name, e.g. "OPENAI_API_KEY"
+    base_url: str = ""                   # override default API base URL
+    enabled: bool = True
+    models: list[ProviderModelConfig] = Field(default_factory=list)
+    fallback: list[str] = Field(default_factory=list)  # fallback provider names
+
+
+class ProvidersConfig(BaseModel):
+    """Top-level providers configuration."""
+
+    enabled: bool = False
+    strategy: Literal["cost", "quality", "balanced", "latency"] = "cost"
+    providers: list[ProviderConfig] = Field(default_factory=list)
+
+
 class StackConfig(BaseModel):
     """Root config — 1:1 mapping with llmstack.yaml."""
 
@@ -74,3 +110,4 @@ class StackConfig(BaseModel):
     gateway: GatewayConfig = Field(default_factory=GatewayConfig)
     observe: ObserveConfig = Field(default_factory=ObserveConfig)
     docker: DockerConfig = Field(default_factory=DockerConfig)
+    providers: ProvidersConfig = Field(default_factory=ProvidersConfig)
