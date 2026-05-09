@@ -1,7 +1,7 @@
 <p align="center">
   <h1 align="center">llmstack</h1>
-  <p align="center"><strong>The open-source LLM platform that actually saves you money.</strong></p>
-  <p align="center">Smart routing across any provider. Fine-tune in one command. AI agents with tools. Full observability. Self-hosted.</p>
+  <p align="center"><strong>Chat with any codebase. Locally. Privately. Free.</strong></p>
+  <p align="center">The open-source alternative to Cursor and Copilot — runs entirely on your machine with Ollama.<br>Plus: smart routing, fine-tuning, AI agents, MCP server, and full observability.</p>
 </p>
 
 <p align="center">
@@ -13,66 +13,117 @@
 </p>
 
 <p align="center">
+  <a href="#ask-your-codebase-anything">Ask</a> &bull;
   <a href="#universal-gateway">Gateway</a> &bull;
   <a href="#smart-routing">Smart Routing</a> &bull;
   <a href="#ai-agents--mcp">Agents & MCP</a> &bull;
   <a href="#fine-tuning">Fine-tuning</a> &bull;
-  <a href="#ai-observability">Observability</a> &bull;
-  <a href="#ask-your-files-anything">Ask</a>
+  <a href="#ai-observability">Observability</a>
 </p>
 
 ---
 
 ```bash
 pip install llmstack-cli
+llmstack ask -i ./src/    # start chatting with your codebase
 ```
 
-## Why llmstack?
+## Ask Your Codebase Anything
 
-You're paying too much for LLM APIs. Simple queries hit expensive models. You can't compare providers. Fine-tuning requires a PhD. Monitoring is an afterthought.
+```bash
+llmstack ask "How does authentication work?" ./src/
+```
 
-**llmstack fixes all of this in one tool:**
+One command. No API keys. No cloud. No Docker. No $20/month subscription. Just Ollama + your files.
 
-| Problem | llmstack Solution |
-|---------|------------------|
-| "Hello" costs the same as "Design a distributed system" | **Smart routing** sends each query to the cheapest model that can handle it |
-| Locked into one provider | **Universal gateway** routes across OpenAI, Anthropic, Google, Groq, Mistral, Together + local |
-| Provider goes down | **Fallback chains** automatically fail over to the next provider |
-| No idea if your model is degrading | **Quality scoring** on every response with drift alerts |
-| Fine-tuning requires Jupyter + 200 lines of boilerplate | **One command**: `llmstack finetune data.jsonl` |
-| Can't compare models properly | **A/B testing** with statistical confidence |
-| AI tools can't use your local LLM | **MCP server** connects Claude Code, Cursor, VS Code to your models |
+```
+  llmstack ask  model=llama3.2  embeddings=nomic-embed-text
+
+  Git: main (15 recent commits)
+  Index cached: 847 chunks (0 files changed)
+  Embeddings loaded from cache
+
+  Answer:
+  Authentication works through API key validation in the FastAPI gateway
+  middleware. Each request must include an `Authorization: Bearer <key>`
+  header. The middleware validates keys against the stored list in
+  llmstack.yaml [src/gateway/middleware/auth.py:23-45]. Rate limiting
+  is tied to the API key — each key gets its own token bucket tracked
+  in Redis [src/gateway/middleware/rate_limit.py:12-38].
+
+  ┌─────────────── Sources ───────────────┐
+  │ File                  Lines   Score    │
+  │ gateway/middleware/auth.py  23-45  0.0142  │
+  │ gateway/middleware/rate_limit.py  12-38  0.0098  │
+  │ config/schema.py      89-102  0.0076  │
+  └───────────────────────────────────────┘
+```
+
+### Why this is better than Cursor/Copilot/Aider
+
+| | llmstack ask | Cursor | Copilot | Aider | Khoj |
+|---|:---:|:---:|:---:|:---:|:---:|
+| **AST-aware code chunking** | **Yes** | Yes | - | Partial | No |
+| **Hybrid search (BM25 + vector)** | **Yes** | ? | - | No | No |
+| **Persistent incremental index** | **Yes** | Yes | - | No | Yes |
+| **Git-aware context** | **Yes** | Yes | - | Yes | No |
+| **Interactive conversation** | **Yes** | Yes | - | Yes | Yes |
+| **20+ file types (PDF, DOCX, logs...)** | **Yes** | No | No | No | Yes |
+| **100% local, 100% private** | **Yes** | No | No | No | Yes |
+| **100% free, forever** | **Yes** | $20/mo | $10/mo | API costs | Free |
+| **Zero config CLI** | **Yes** | IDE only | IDE only | Config needed | Server needed |
+
+### Key features
+
+**Persistent index** — first query indexes your project (~30s). Every query after that: **~0.1s**. Only re-embeds files that changed (SHA-256 hash diff).
+
+**AST-aware chunking** — Python files split by functions and classes using the `ast` module. Large classes (>50 lines) split into individual methods. JS/TS/Go/Rust/Java use regex boundary detection. No more broken chunks mid-function.
+
+**Hybrid search** — combines BM25 keyword matching (catches exact function names, error messages) with vector cosine similarity (catches meaning and intent). Merged via Reciprocal Rank Fusion. Better recall than either alone.
+
+**Git-aware** — the LLM sees your current branch, recent commits, and changed files. Ask "what changed this week?" and get real answers.
+
+**Interactive mode** — multi-turn conversation with your codebase. Context preserved across questions.
+
+```bash
+# Interactive conversation with your project
+llmstack ask -i ./src/
+# You: How does the cache work?
+# Assistant: The cache uses Redis with SHA-256 keys...
+# You: What happens when Redis goes down?
+# Assistant: There's an in-memory fallback in rate_limit.py...
+
+# Single question
+llmstack ask "Find security vulnerabilities" ./src/ --model llama3.1:70b
+
+# Ask about any file type
+llmstack ask "Summarize the key findings" report.pdf
+llmstack ask "What went wrong at 3am?" error.log
+cat contract.pdf | llmstack ask "Are there any risks?"
+
+# Skip cache for fresh re-index
+llmstack ask "What's new?" ./src/ --no-cache
+
+# Without git context
+llmstack ask "Explain the architecture" ./src/ --no-git
+```
+
+**20+ file types:** Python, JavaScript, TypeScript, Go, Rust, Java, C/C++, Ruby, PHP, Swift, Kotlin, PDF, DOCX, Markdown, HTML, JSON, YAML, TOML, CSV, logs, and more.
 
 ---
 
 ## Quick Start
 
-### Ask your files anything (no setup)
-
 ```bash
+# Install
 pip install llmstack-cli
-llmstack ask "How does auth work?" ./src/
-```
 
-Works instantly with [Ollama](https://ollama.com). No Docker, no config, no server.
+# Chat with your codebase (just needs Ollama)
+llmstack ask -i ./src/
 
-### Full stack with smart routing
-
-```bash
+# Full LLM stack with smart routing
 llmstack init --preset router
 llmstack up
-# 7 services running: inference, embeddings, vector DB, cache, gateway, Prometheus, Grafana
-```
-
-### Route across cloud providers
-
-```bash
-export OPENAI_API_KEY=sk-...
-export ANTHROPIC_API_KEY=sk-ant-...
-# Configure providers in llmstack.yaml, then:
-curl http://localhost:8000/v1/chat/completions \
-  -d '{"model":"auto","messages":[{"role":"user","content":"Hello!"}]}'
-# → routed to cheapest model: gpt-4.1-nano ($0.10/M) instead of gpt-4o ($2.50/M)
 ```
 
 ---
@@ -317,24 +368,19 @@ Each trace captures: prompt, routing decision, provider, model, response, latenc
 
 ---
 
-## Ask Your Files Anything
+## More about `llmstack ask`
 
-```bash
-llmstack ask "How does authentication work?" ./src/
+See the [top of this README](#ask-your-codebase-anything) for the full feature breakdown. Under the hood:
+
 ```
-
-No API keys. No cloud. No Docker. Just Ollama + your files.
-
-**20+ file types:** PDF, DOCX, Markdown, Python, JavaScript, TypeScript, Go, Rust, Java, C/C++, JSON, YAML, CSV, HTML, logs, and more.
-
-```bash
-llmstack ask "Summarize the key findings" report.pdf
-llmstack ask "What went wrong at 3am?" error.log
-llmstack ask "Find security vulnerabilities" ./src/ --model llama3.1:70b
-cat contract.pdf | llmstack ask "Are there any risks?"
+Files → AST chunker (functions/classes) → Embed (Ollama) → Persistent SQLite index
+                                                                    ↓
+Question → BM25 keyword search ──┐
+                                 ├── Reciprocal Rank Fusion → Top-K context → LLM → Streamed answer
+Question → Vector cosine search ─┘
+                                                                    ↑
+                                                          Git context (branch, commits, diff)
 ```
-
-Streaming answers with source citations (`file:line-range`).
 
 ---
 
@@ -376,7 +422,8 @@ Auto hardware detection:
 
 | Command | Description |
 |---------|-------------|
-| `llmstack ask <question> [path]` | Ask questions about local files |
+| `llmstack ask <question> [path]` | Ask questions about local files (persistent index, hybrid search) |
+| `llmstack ask -i [path]` | Interactive conversation with your codebase |
 | `llmstack init [--preset]` | Create config (presets: chat, rag, router, agent) |
 | `llmstack up` | Start all services |
 | `llmstack down` | Stop all services |
@@ -410,6 +457,21 @@ Auto hardware detection:
 
 ## Comparison
 
+### Codebase Q&A
+
+| | llmstack ask | Cursor | Aider | Khoj | Simon's llm |
+|---|:---:|:---:|:---:|:---:|:---:|
+| AST code chunking | **Yes** | Yes | Partial | No | No |
+| Hybrid search (BM25 + vector) | **Yes** | ? | No | No | No |
+| Persistent incremental index | **Yes** | Yes | No | Yes | Manual |
+| Git-aware context | **Yes** | Yes | Yes | No | No |
+| Interactive conversation | **Yes** | Yes | Yes | Yes | No |
+| 20+ file types | **Yes** | No | No | Yes | No |
+| 100% local + free | **Yes** | No | No | Yes | Yes |
+| Zero config CLI | **Yes** | No | No | No | Yes |
+
+### LLM Platform
+
 | | llmstack | Ollama | LiteLLM | LocalAI | LangSmith |
 |---|:---:|:---:|:---:|:---:|:---:|
 | Multi-provider gateway | **Yes** | - | Yes | - | - |
@@ -421,11 +483,7 @@ Auto hardware detection:
 | One-command fine-tuning | **Yes** | - | - | - | - |
 | AI agents with tools | **Yes** | - | - | - | - |
 | MCP server | **Yes** | - | - | - | - |
-| Chat with local files | **Yes** | - | - | - | - |
 | Local inference | **Yes** | Yes | - | Yes | - |
-| RAG pipeline | **Yes** | - | - | - | - |
-| Response caching | **Yes** | - | - | - | - |
-| Circuit breaker | **Yes** | - | - | - | - |
 | Self-hosted / free | **Yes** | Yes | Partial | Yes | Paid |
 
 ## Configuration
