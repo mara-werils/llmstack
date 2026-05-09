@@ -1,7 +1,7 @@
 <p align="center">
   <h1 align="center">llmstack</h1>
-  <p align="center"><strong>Ask your files anything. Locally. Privately. One command.</strong></p>
-  <p align="center">Chat with your code, PDFs, and logs using a local LLM. Plus: smart model routing for your full LLM stack.</p>
+  <p align="center"><strong>The open-source LLM platform that actually saves you money.</strong></p>
+  <p align="center">Smart routing across any provider. Fine-tune in one command. AI agents with tools. Full observability. Self-hosted.</p>
 </p>
 
 <p align="center">
@@ -12,6 +12,309 @@
   <a href="https://github.com/mara-werils/llmstack/stargazers"><img src="https://img.shields.io/github/stars/mara-werils/llmstack?style=social" alt="Stars"></a>
 </p>
 
+<p align="center">
+  <a href="#universal-gateway">Gateway</a> &bull;
+  <a href="#smart-routing">Smart Routing</a> &bull;
+  <a href="#ai-agents--mcp">Agents & MCP</a> &bull;
+  <a href="#fine-tuning">Fine-tuning</a> &bull;
+  <a href="#ai-observability">Observability</a> &bull;
+  <a href="#ask-your-files-anything">Ask</a>
+</p>
+
+---
+
+```bash
+pip install llmstack-cli
+```
+
+## Why llmstack?
+
+You're paying too much for LLM APIs. Simple queries hit expensive models. You can't compare providers. Fine-tuning requires a PhD. Monitoring is an afterthought.
+
+**llmstack fixes all of this in one tool:**
+
+| Problem | llmstack Solution |
+|---------|------------------|
+| "Hello" costs the same as "Design a distributed system" | **Smart routing** sends each query to the cheapest model that can handle it |
+| Locked into one provider | **Universal gateway** routes across OpenAI, Anthropic, Google, Groq, Mistral, Together + local |
+| Provider goes down | **Fallback chains** automatically fail over to the next provider |
+| No idea if your model is degrading | **Quality scoring** on every response with drift alerts |
+| Fine-tuning requires Jupyter + 200 lines of boilerplate | **One command**: `llmstack finetune data.jsonl` |
+| Can't compare models properly | **A/B testing** with statistical confidence |
+| AI tools can't use your local LLM | **MCP server** connects Claude Code, Cursor, VS Code to your models |
+
+---
+
+## Quick Start
+
+### Ask your files anything (no setup)
+
+```bash
+pip install llmstack-cli
+llmstack ask "How does auth work?" ./src/
+```
+
+Works instantly with [Ollama](https://ollama.com). No Docker, no config, no server.
+
+### Full stack with smart routing
+
+```bash
+llmstack init --preset router
+llmstack up
+# 7 services running: inference, embeddings, vector DB, cache, gateway, Prometheus, Grafana
+```
+
+### Route across cloud providers
+
+```bash
+export OPENAI_API_KEY=sk-...
+export ANTHROPIC_API_KEY=sk-ant-...
+# Configure providers in llmstack.yaml, then:
+curl http://localhost:8000/v1/chat/completions \
+  -d '{"model":"auto","messages":[{"role":"user","content":"Hello!"}]}'
+# → routed to cheapest model: gpt-4.1-nano ($0.10/M) instead of gpt-4o ($2.50/M)
+```
+
+---
+
+## Universal Gateway
+
+Route every request through a single OpenAI-compatible endpoint. llmstack picks the best provider and model automatically.
+
+**6 cloud providers + local inference:**
+
+| Provider | Models | Pricing tracked |
+|----------|--------|----------------|
+| **OpenAI** | GPT-4o, GPT-4.1, o3, o4-mini, GPT-4.1-nano | Per-token |
+| **Anthropic** | Claude Opus 4, Sonnet 4, Haiku 4 | Per-token |
+| **Google** | Gemini 2.5 Pro/Flash, Gemini 2.0 Flash | Per-token |
+| **Groq** | Llama 3.3 70B, Llama 3.1 8B, Mixtral | Per-token |
+| **Together** | Llama 405B, DeepSeek R1/V3, Qwen 72B | Per-token |
+| **Mistral** | Mistral Large/Small, Codestral, Pixtral | Per-token |
+| **Local** | Ollama / vLLM (any GGUF model) | Free |
+
+**Fallback chains:** if OpenAI returns 429/503, the request automatically retries on Anthropic, then falls back to local.
+
+```yaml
+# llmstack.yaml
+providers:
+  enabled: true
+  strategy: cost          # cost | quality | balanced | latency
+  providers:
+    - name: openai
+      api_key_env: OPENAI_API_KEY
+      models:
+        - name: gpt-4.1-nano
+          tier: simple
+          cost_per_m_input: 0.10
+        - name: gpt-4o
+          tier: medium
+          cost_per_m_input: 2.50
+      fallback: [anthropic, local]
+    - name: anthropic
+      api_key_env: ANTHROPIC_API_KEY
+    - name: local
+```
+
+**Response headers tell you exactly what happened:**
+
+```
+X-Provider: openai
+X-Model-Router: gpt-4.1-nano
+X-Query-Tier: simple
+X-Cost-USD: 0.000003
+X-Cache: MISS
+```
+
+---
+
+## Smart Routing
+
+The classifier scores every request in **< 2ms** using 7 heuristic signals (no ML model needed), then picks the cheapest adequate model.
+
+```
+Request → Classify (7 signals, <2ms) → Route to optimal model + provider
+```
+
+| Signal | What it measures |
+|--------|-----------------|
+| Token count | Message length |
+| Task markers | "hello" vs "implement distributed consensus" |
+| Code detection | Code blocks, programming terms |
+| Conversation depth | Turn count |
+| System prompt | Complexity of instructions |
+| Language mix | Multilingual content |
+| Question patterns | Simple fact vs multi-constraint reasoning |
+
+**Real results (CPU-only, no GPU):**
+
+| Query | Tier | Model | Latency |
+|-------|------|-------|---------|
+| "Hello!" | Simple | llama3.2:1b | **1.6s** |
+| "What is 2+2?" | Simple | llama3.2:1b | **5.9s** |
+| "Write binary search in Python" | Medium | llama3.2:3b | **52.2s** |
+
+**71% of requests routed to the small model. 71% compute savings.**
+
+With cloud providers, cost savings are even bigger — simple queries go to `gpt-4.1-nano` ($0.10/M) instead of `gpt-4o` ($2.50/M).
+
+---
+
+## AI Agents & MCP
+
+### Agents with tool use
+
+```bash
+llmstack agent "Find all TODO comments in this repo and summarize them"
+```
+
+The agent uses a **ReAct loop** — it plans, calls tools, observes results, and iterates until the task is done.
+
+**6 built-in tools:** `read_file`, `write_file`, `list_directory`, `grep`, `shell`, `http_get`
+
+```bash
+# Use specific tools only
+llmstack agent "Check if tests pass" --tools shell,read_file
+
+# Use a larger model for complex tasks
+llmstack agent "Refactor auth.py to use JWT tokens" --model llama3.1:70b
+```
+
+### MCP Server
+
+Connect any MCP-compatible AI client (Claude Code, Cursor, VS Code) to your local LLM:
+
+```bash
+llmstack mcp --model llama3.2
+```
+
+```json
+// .claude/claude_desktop_config.json
+{
+  "mcpServers": {
+    "llmstack": {
+      "command": "llmstack",
+      "args": ["mcp", "--model", "llama3.2"]
+    }
+  }
+}
+```
+
+**8 tools exposed via MCP:** all agent tools + `llmstack_chat` (LLM inference) + `llmstack_ask` (file RAG with citations).
+
+---
+
+## Fine-tuning
+
+Fine-tune a model on your data in one command. No Jupyter. No boilerplate. No ML expertise.
+
+```bash
+llmstack finetune data.jsonl --base llama3.2:1b --export-ollama my-model
+```
+
+**What happens:**
+
+1. **Auto data prep** — detects format (CSV/JSON/JSONL/TXT/Parquet), auto-maps columns (`instruction`/`output`, `prompt`/`completion`, `question`/`answer`, chat `messages`), splits train/eval
+2. **Auto hyperparameters** — epochs, LoRA rank, batch size, learning rate all auto-selected based on dataset size and model
+3. **Training** — LoRA/QLoRA via [unsloth](https://github.com/unslothai/unsloth) (2x faster) or HuggingFace PEFT
+4. **Export** — GGUF conversion + `ollama create` → model ready to serve
+
+```bash
+# Override any hyperparameter
+llmstack finetune data.csv --base llama3.2:1b --epochs 5 --lr 1e-4 --lora-r 32
+
+# Export to GGUF with custom quantization
+llmstack finetune data.jsonl --base llama3.2:1b --export-gguf --quant q5_k_m
+
+# Full pipeline: train + export + register in Ollama
+llmstack finetune emails.jsonl --base llama3.2:1b --export-ollama email-assistant
+# → ollama run email-assistant
+```
+
+**Auto hyperparameter selection:**
+
+| Dataset size | Epochs | LoRA rank | Learning rate |
+|-------------|--------|-----------|--------------|
+| < 100 | 5 | 8 | 1e-4 |
+| 100–500 | 3 | 16 | 2e-4 |
+| 500–5K | 2 | 16 | 2e-4 |
+| 5K+ | 1 | 32+ | 2e-4 |
+
+---
+
+## AI Observability
+
+Every response is scored in real-time. Quality drift triggers alerts. Compare models with A/B testing.
+
+### Quality scoring (every response, < 1ms)
+
+5 metrics scored on every non-streaming response:
+
+| Metric | What it measures |
+|--------|-----------------|
+| **Coherence** | Structural quality (length, sentences, formatting) |
+| **Relevance** | Does the response address the query? |
+| **Refusal** | "I can't help with that" detection |
+| **Toxicity** | Harmful content flags |
+| **Repetition** | Looping / repetitive output |
+
+### Drift detection & alerts
+
+```
+Quality drops below 0.4 → CRITICAL alert
+Quality trending negative over 50 requests → WARNING alert
+```
+
+```bash
+# Check live quality from the gateway
+llmstack eval --gateway-url http://localhost:8000
+```
+
+```
+┌──────────── Quality Summary ────────────┐
+│ Metric     Mean    Recent  Trend  Count  │
+│ overall    0.7821  0.7534  -0.02   1042  │
+│ coherence  0.8912  0.8845  +0.01   1042  │
+│ relevance  0.6834  0.6223  -0.06   1042  │  ← trending down
+│ refusal    0.0124  0.0098  -0.00   1042  │
+│ repetition 0.0231  0.0187  -0.00   1042  │
+└─────────────────────────────────────────┘
+```
+
+### A/B testing
+
+```bash
+# Create a test via API
+curl -X POST http://localhost:8000/v1/observe/ab-test \
+  -d '{"name":"gpt4o-vs-sonnet","model_a":"gpt-4o","model_b":"claude-sonnet-4-20250514","traffic_split":0.5}'
+
+# Check results
+curl http://localhost:8000/v1/observe/ab-test/gpt4o-vs-sonnet
+```
+
+```json
+{
+  "winner": "claude-sonnet-4-20250514",
+  "confidence": "high",
+  "avg_quality_a": 0.7821,
+  "avg_quality_b": 0.8234,
+  "requests_a": 523,
+  "requests_b": 519,
+  "avg_cost_a_usd": 0.000034,
+  "avg_cost_b_usd": 0.000089
+}
+```
+
+### Request tracing
+
+Every request is traced end-to-end:
+
+```
+GET /v1/observe/traces?model=gpt-4o&limit=10
+```
+
+Each trace captures: prompt, routing decision, provider, model, response, latency, tokens, cost, quality scores.
+
 ---
 
 ## Ask Your Files Anything
@@ -20,480 +323,156 @@
 llmstack ask "How does authentication work?" ./src/
 ```
 
-```
-Searching ./src/ (47 files, 12,841 lines)
-Embedding chunks... done (0.8s)
+No API keys. No cloud. No Docker. Just Ollama + your files.
 
-Based on the source code, authentication works as follows:
-
-1. API key authentication is the primary method. Keys are validated
-   in the FastAPI gateway middleware (gateway/auth.py:23-45).
-
-2. Each request must include an Authorization: Bearer <key> header.
-   The middleware extracts the key, checks it against the stored
-   keys in llmstack.yaml, and rejects invalid keys with 401.
-
-3. Rate limiting is tied to the API key — each key gets its own
-   token bucket tracked in Redis.
-
-Sources:
-  - src/gateway/auth.py (lines 23-45)
-  - src/gateway/middleware.py (lines 12-38)
-  - src/config/schema.py (lines 89-102)
-```
-
-No API keys. No cloud. No Docker. Just you, your files, and a local LLM.
-
-**Supports:** PDF, DOCX, Markdown, Python, JavaScript, TypeScript, Go, Rust, Java, JSON, YAML, CSV, HTML, logs, and 20+ file types.
+**20+ file types:** PDF, DOCX, Markdown, Python, JavaScript, TypeScript, Go, Rust, Java, C/C++, JSON, YAML, CSV, HTML, logs, and more.
 
 ```bash
-# Ask about any file or directory
 llmstack ask "Summarize the key findings" report.pdf
-llmstack ask "What went wrong?" error.log
+llmstack ask "What went wrong at 3am?" error.log
 llmstack ask "Find security vulnerabilities" ./src/ --model llama3.1:70b
-
-# Pipe from stdin
 cat contract.pdf | llmstack ask "Are there any risks?"
 ```
 
-## Quick Start
-
-```bash
-pip install llmstack-cli
-llmstack ask "summarize this" report.pdf
-```
-
-That's it. If [Ollama](https://ollama.com) is running, it works. No Docker, no Redis, no config file, no server to start.
-
-> **[Full Documentation](https://mara-werils.github.io/llmstack)** | **[Ask Guide](https://mara-werils.github.io/llmstack/guide/ask/)** | **[Examples](examples/)** | **[Roadmap](ROADMAP.md)** | **[Contributing](CONTRIBUTING.md)**
+Streaming answers with source citations (`file:line-range`).
 
 ---
 
-## Full Stack Mode: Smart Model Routing
+## Full Stack Architecture
 
-Want more than file Q&A? llmstack also runs a full local LLM stack with **smart model routing** -- it automatically sends each query to the smallest model that can handle it.
-
-**Stop running 70B for "Hello".**
-
-```bash
-llmstack init --preset router
+```
 llmstack up
+    │
+    ├── Qdrant (vector DB)          :6333
+    ├── Redis (cache + rate limit)  :6379
+    ├── Ollama / vLLM (inference)   :11434
+    ├── TEI (embeddings)            :8002
+    ├── Gateway                     :8000
+    │   ├── Smart Router (<2ms classification)
+    │   ├── Provider Registry (6 cloud + local)
+    │   ├── Semantic Cache (Redis, <1ms hit)
+    │   ├── Circuit Breaker (3-state, exponential backoff)
+    │   ├── Rate Limiter (token bucket, Redis + Lua)
+    │   ├── Quality Scorer (5 metrics, every response)
+    │   ├── Trace Store (5K rolling window)
+    │   ├── RAG Pipeline (ingest + query)
+    │   └── Web UI (chat, RAG, dashboard)
+    ├── Prometheus (metrics)
+    └── Grafana (dashboard)         :8080
 ```
 
-You now have **7 services** running locally: multi-model inference, embeddings, vector DB, cache, API gateway with smart routing, Prometheus, and Grafana -- plus a **built-in Web UI** at `http://localhost:8000`.
+Auto hardware detection:
 
-Real results from a GCP `e2-standard-4` (CPU-only, 16GB RAM, no GPU):
-
-| Your query | Tier | Model routed to | Latency |
-|---|---|---|---|
-| "Hello!" | Simple | `llama3.2:1b` | **1.6s** |
-| "Thanks!" | Simple | `llama3.2:1b` | **2.9s** |
-| "What is 2+2?" | Simple | `llama3.2:1b` | **5.9s** |
-| "Write binary search in Python" | Medium | `llama3.2:3b` | **52.2s** |
-
-**71% of requests routed to the small model.** The 1b model generates at 8.5 tokens/sec -- 1.8x faster than the 3b model at 4.7 tokens/sec. On GPU hardware, the gap is much wider.
-
-The router inspects every incoming request -- message length, vocabulary complexity, domain signals, conversation depth -- and picks the right model in under 2ms. You see which model handled your query in the `X-Model-Router` and `X-Query-Tier` response headers.
-
-No other local LLM tool does this.
-
-## How Smart Routing Works
-
-```
-                    +-----------+
-    Request ------->|  Classify |-----> score 0-1
-                    +-----------+
-                          |
-              +-----------+-----------+
-              |           |           |
-         score < 0.3  0.3 - 0.7  score > 0.7
-              |           |           |
-         +----v---+  +----v---+  +----v----+
-         | 1B-3B  |  | 7B-13B |  | 30B-70B |
-         | model  |  | model  |  |  model  |
-         +--------+  +--------+  +---------+
-              |           |           |
-              +-----+-----+-----------+
-                    |
-              +-----v------+
-              |  Response   |
-              | X-Model-Routed: llama3.2:1b
-              | X-Route-Reason: simple-greeting
-              | X-Route-Time: 1.8ms
-              +------------+
-```
-
-The classifier evaluates each request against four signals:
-
-| Signal | What it measures | Example |
-|---|---|---|
-| **Token count** | Message length and context window needs | Short greeting vs. long RFC |
-| **Vocabulary complexity** | Technical density, domain jargon | "Hi" vs. "implement a B-tree with WAL" |
-| **Task type** | Classification, generation, reasoning, code | Chat vs. multi-step math proof |
-| **Conversation depth** | Turn count and accumulated context | Turn 1 vs. turn 15 of a debug session |
-
-Classification takes **< 2ms** -- it's a lightweight heuristic, not another LLM call. Zero overhead on your actual inference.
-
-You can override routing for any request:
-
-```bash
-# Force a specific model
-curl http://localhost:8000/v1/chat/completions \
-  -H "X-Model-Override: llama3.1:70b" \
-  -d '{"model":"auto","messages":[{"role":"user","content":"Hello!"}]}'
-```
-
-## API Usage
-
-```bash
-# Every request is automatically routed to the optimal model
-curl http://localhost:8000/v1/chat/completions \
-  -H "Authorization: Bearer YOUR_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"model":"auto","messages":[{"role":"user","content":"Hello!"}]}'
-```
-
-```json
-{
-  "model": "llama3.2:1b",
-  "choices": [{"message": {"content": "Hello! How can I help you today?"}}],
-  "usage": {"total_tokens": 20},
-  "headers": {"X-Model-Routed": "llama3.2:1b", "X-Route-Reason": "simple-greeting"}
-}
-```
-
-The gateway picked `llama3.2:1b` for a greeting. It answered in 47ms instead of 830ms. Your GPU barely noticed.
-
-```python
-# Or use the Python SDK
-from llmstack import Client
-
-with Client(api_key="YOUR_KEY") as llm:
-    # Auto-routed: the SDK doesn't need to know which model answers
-    response = llm.chat([{"role": "user", "content": "Hello!"}])
-    print(response.choices[0].message.content)
-    print(f"Routed to: {response.model}")  # llama3.2:1b
-```
-
-Works with **any OpenAI-compatible client**: LangChain, LlamaIndex, Vercel AI SDK, openai-python -- just set `model: "auto"` or let the gateway decide.
-
-## Benchmarks
-
-Measured on GCP `e2-standard-4` (4 vCPU, 16GB RAM, CPU-only -- no GPU). Two models: `llama3.2:1b` + `llama3.2:3b`.
-
-### Routing distribution (real traffic)
-
-| Metric | Value |
-|---|---|
-| Requests routed to 1b (simple) | **71.4%** |
-| Requests routed to 3b (medium) | **28.6%** |
-| Avg latency -- 1b (simple queries) | **2.9s** |
-| Avg latency -- 3b (complex queries) | **52.2s** |
-| Estimated compute savings | **71%** |
-
-### Token generation speed (CPU-only)
-
-| Model | Tokens/sec | Avg latency | Used for |
-|---|---|---|---|
-| `llama3.2:1b` | **8.5 t/s** | 2.9s | Greetings, simple Q&A, quick lookups |
-| `llama3.2:3b` | **4.7 t/s** | 52.2s | Explanations, code, complex reasoning |
-
-On GPU hardware (NVIDIA RTX 3090 / Apple M-series), expect 10-50x faster speeds -- the routing advantage grows proportionally.
-
-### What this means
-
-Without routing, every query hits the 3b model. With routing, 71% of queries use the 1b model at 1.8x the token speed. The 3b model is reserved for queries that actually need it.
-
-Run your own benchmarks:
-
-```bash
-llmstack bench --model llama3.2:1b --model llama3.2:3b
-```
-
-## Full Stack, One Command
-
-Smart routing is the headline, but llmstack gives you the entire local LLM infrastructure:
-
-```
-                         llmstack up
-                              |
-                    +---------v----------+
-                    |   Hardware Detect   |
-                    |  NVIDIA / Apple / CPU|
-                    +---------+----------+
-                              |
-              +-------+-------+-------+-------+
-              |       |       |       |       |
-         +----v--+ +--v---+ +v-----+ +v----+ +v-----------+
-         |Qdrant | |Redis | |Ollama| | TEI | |  Gateway    |
-         |Vector | |Cache | | or   | |Embed| |  + Router   |
-         |  DB   | |+ Rate| | vLLM | |     | |  + RAG      |
-         |       | | Limit| |      | |     | |  + Cache    |
-         +-------+ +------+ +------+ +-----+ |  + Breaker  |
-              :6333   :6379   :11434   :8002  |  + Metrics  |
-                                              +-----+------+
-                                                    |:8000
-                                              +-----v------+
-                                              | Prometheus  |
-                                              |  + Grafana  |
-                                              +------------+
-                                                    :8080
-```
-
-| Service | What it does | Port |
-|---------|-------------|------|
-| Ollama / vLLM (auto-detected) | Multi-model inference | 11434 |
-| TEI / Ollama | Text embeddings for RAG | 8002 |
-| Qdrant | Vector storage + semantic search | 6333 |
-| Redis | Response cache + rate limit state | 6379 |
-| FastAPI Gateway | Smart routing, auth, cache, RAG, circuit breaker | 8000 |
-| Grafana + Prometheus | Latency, tokens, errors, cache hits, routing stats | 8080 |
-
-Auto hardware detection picks the right backend:
-
-| Your hardware | Backend | Why |
-|---|---|---|
+| Hardware | Backend | Why |
+|----------|---------|-----|
 | NVIDIA GPU 16GB+ | vLLM | PagedAttention, max throughput |
 | NVIDIA GPU < 16GB | Ollama | Lower memory overhead |
-| Apple Silicon (M1-M4) | Ollama | Metal acceleration |
+| Apple Silicon | Ollama | Metal acceleration |
 | CPU only | Ollama | GGUF quantized models |
 
-## Features
+---
 
-**`llmstack ask` -- Chat With Your Files** -- ask questions about local files and directories using a local LLM. PDF, code, logs, docs -- one command, no setup. Streaming answers with source citations.
+## CLI Reference
 
-**Smart Model Router** -- routes queries to the right-sized model automatically. The only local LLM tool that does this.
+| Command | Description |
+|---------|-------------|
+| `llmstack ask <question> [path]` | Ask questions about local files |
+| `llmstack init [--preset]` | Create config (presets: chat, rag, router, agent) |
+| `llmstack up` | Start all services |
+| `llmstack down` | Stop all services |
+| `llmstack status` | Health check |
+| `llmstack chat` | Interactive terminal chat |
+| `llmstack agent <task>` | Run an AI agent with tools |
+| `llmstack mcp` | Start MCP server for AI clients |
+| `llmstack finetune <data>` | Fine-tune a model on your data |
+| `llmstack eval` | Evaluate model quality |
+| `llmstack bench` | Benchmark routing performance |
+| `llmstack export` | Generate docker-compose.yml |
+| `llmstack logs <service>` | Stream service logs |
+| `llmstack doctor` | Diagnose system issues |
 
-**RAG Pipeline** -- ingest documents, chunk, embed, store in Qdrant. Query with semantic search + augmented generation. Source citations included. Streaming supported.
+## API Endpoints
 
-**Semantic Response Cache** -- SHA-256 keyed, Redis-backed. Identical queries return in < 1ms. Only caches deterministic requests (temperature <= 0.1). `X-Cache: HIT/MISS` headers.
+| Endpoint | Description |
+|----------|-------------|
+| `POST /v1/chat/completions` | Chat (auto-routed across providers) |
+| `POST /v1/embeddings` | Text embeddings |
+| `GET /v1/models` | List models from all providers (with pricing) |
+| `POST /v1/rag/ingest` | Ingest documents for RAG |
+| `POST /v1/rag/query` | RAG query with citations |
+| `GET /v1/observe/traces` | Request traces with quality scores |
+| `GET /v1/observe/quality` | Quality summary with drift detection |
+| `GET /v1/observe/alerts` | Active quality alerts |
+| `POST /v1/observe/ab-test` | Create A/B test |
+| `GET /v1/observe/ab-test/{name}` | A/B test results |
+| `GET /healthz` | System health |
+| `GET /metrics` | Prometheus metrics |
 
-**Token Bucket Rate Limiter** -- Redis + atomic Lua scripts. Per-API-key with IP fallback. Configurable: `100/min`, `10/sec`, `3600/hour`. In-memory fallback if Redis goes down.
+## Comparison
 
-**Circuit Breaker** -- three-state machine (CLOSED / OPEN / HALF_OPEN) with exponential backoff. Prevents cascading failures. Fail-fast 503 when inference is down.
-
-**Observability** -- Prometheus + pre-built Grafana dashboard. Request rate, p50/p99 latency, token throughput, error rate, cache hit ratio, circuit breaker state, routing distribution.
-
-**Built-in Web UI** -- chat, RAG document management, health dashboard, settings. Zero extra install.
-
-**Python SDK** -- sync `Client`, async `AsyncClient`. Chat, streaming, embeddings, RAG ingest/query.
-
-**Plugin System** -- extend with new backends via pip. `pip install llmstack-cli-plugin-chromadb` and go.
-
-## Web UI
-
-Open `http://localhost:8000` after `llmstack up`:
-
-- **Chat** -- streaming responses, model selector (or "auto" for smart routing), conversation history
-- **RAG** -- paste or upload documents, query your knowledge base with citations
-- **Dashboard** -- health status, cache hit rate, circuit breaker state, routing distribution per model
-- **Settings** -- API key, default model, temperature, persisted in browser
-
-No extra install. No extra container. It ships with the gateway.
-
-## Python SDK
-
-```bash
-pip install llmstack-cli
-```
-
-```python
-from llmstack import Client
-
-with Client(api_key="YOUR_KEY") as llm:
-    # Chat (auto-routed)
-    response = llm.chat([{"role": "user", "content": "Hello!"}])
-    print(response.choices[0].message.content)
-
-    # Streaming
-    for chunk in llm.chat(
-        [{"role": "user", "content": "Explain TCP handshake"}],
-        stream=True,
-    ):
-        print(chunk.content, end="", flush=True)
-
-    # Embeddings
-    embeddings = llm.embed(["Hello world"])
-
-    # RAG ingest + query
-    llm.rag_ingest("Your document text here...", source="doc.txt")
-    answer = llm.rag_query("What does the document say?")
-    print(answer.answer, answer.sources)
-```
-
-Async version: `from llmstack import AsyncClient`
-
-Drop-in compatible with the OpenAI SDK too:
-
-```python
-from openai import OpenAI
-
-client = OpenAI(base_url="http://localhost:8000/v1", api_key="YOUR_KEY")
-response = client.chat.completions.create(
-    model="auto",  # smart routing picks the model
-    messages=[{"role": "user", "content": "What's 2+2?"}],
-)
-print(response.model)  # llama3.2:1b — didn't need 70B for this
-```
-
-See [examples/](examples/) for LangChain, LlamaIndex, Vercel AI SDK, and FastAPI integrations.
+| | llmstack | Ollama | LiteLLM | LocalAI | LangSmith |
+|---|:---:|:---:|:---:|:---:|:---:|
+| Multi-provider gateway | **Yes** | - | Yes | - | - |
+| Smart cost-aware routing | **Yes** | - | - | - | - |
+| Fallback chains | **Yes** | - | Yes | - | - |
+| AI quality scoring | **Yes** | - | - | - | Yes |
+| Drift detection + alerts | **Yes** | - | - | - | Yes |
+| A/B testing | **Yes** | - | - | - | Yes |
+| One-command fine-tuning | **Yes** | - | - | - | - |
+| AI agents with tools | **Yes** | - | - | - | - |
+| MCP server | **Yes** | - | - | - | - |
+| Chat with local files | **Yes** | - | - | - | - |
+| Local inference | **Yes** | Yes | - | Yes | - |
+| RAG pipeline | **Yes** | - | - | - | - |
+| Response caching | **Yes** | - | - | - | - |
+| Circuit breaker | **Yes** | - | - | - | - |
+| Self-hosted / free | **Yes** | Yes | Partial | Yes | Paid |
 
 ## Configuration
 
-One file: `llmstack.yaml`
-
 ```yaml
+# llmstack.yaml
 version: "1"
 
 models:
   chat:
     name: llama3.2
-    backend: auto              # auto | ollama | vllm
-    context_length: 8192
+    backend: auto
   embeddings:
     name: bge-m3
 
-router:
+providers:
   enabled: true
-  models:
-    simple: llama3.2:1b        # greetings, short Q&A
-    medium: llama3.2:8b        # explanations, summaries
-    complex: llama3.1:70b      # architecture, proofs, code
-  thresholds:
-    simple_max: 0.3            # complexity score boundary
-    complex_min: 0.7
+  strategy: cost
+  providers:
+    - name: openai
+      api_key_env: OPENAI_API_KEY
+      fallback: [anthropic, local]
+    - name: anthropic
+      api_key_env: ANTHROPIC_API_KEY
+    - name: local
 
-services:
-  vectors:
-    provider: qdrant
-    port: 6333
-  cache:
-    provider: redis
-    max_memory: 256mb
+observe:
+  quality_tracking: true
+  alert_threshold: 0.4
+  drift_threshold: -0.1
 
 gateway:
   port: 8000
   auth: api_key
   rate_limit: 100/min
-  cors: ["*"]
-
-observe:
-  metrics: true
-  dashboard_port: 8080
 ```
-
-!!! note
-    `llmstack ask` does not require a config file. It uses Ollama directly with sensible defaults. The config above is only needed for the full stack mode (`llmstack up`).
-
-## API Reference
-
-### OpenAI-compatible endpoints
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/v1/chat/completions` | POST | Chat completion (streaming + non-streaming, auto-routed) |
-| `/v1/embeddings` | POST | Text embeddings |
-| `/v1/models` | GET | List available models |
-
-### RAG endpoints
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/v1/rag/ingest` | POST | Ingest document (chunk + embed + store) |
-| `/v1/rag/query` | POST | Query with retrieval-augmented generation |
-| `/v1/rag/documents/{source}` | DELETE | Delete documents by source |
-| `/v1/rag/status` | GET | Collection statistics |
-
-### System endpoints
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/healthz` | GET | Health check with circuit breaker, cache, and routing stats |
-| `/metrics` | GET | Prometheus metrics |
-
-### Routing headers
-
-| Header | Direction | Description |
-|--------|-----------|-------------|
-| `X-Model-Routed` | Response | Which model actually handled the request |
-| `X-Route-Reason` | Response | Why that model was selected |
-| `X-Route-Time` | Response | Classification latency (typically < 2ms) |
-| `X-Model-Override` | Request | Force a specific model, bypass router |
-| `X-Cache` | Response | `HIT` or `MISS` |
-| `X-RateLimit-Remaining` | Response | Requests left in current window |
-
-## Comparison
-
-| | llmstack | Ollama | LocalAI | AnythingLLM | LiteLLM |
-|---|---|---|---|---|---|
-| **Chat with local files** | **Yes** | No | No | No | No |
-| **Smart model routing** | **Yes** | No | No | No | No |
-| One-command full stack | **Yes** | No | No | Partial | No |
-| Built-in Web UI | **Yes** | No | No | Bundled | No |
-| Python SDK | **Yes** | Yes | No | No | Yes |
-| Built-in RAG pipeline | **Yes** | No | No | Bundled | No |
-| Response caching | **Yes** | No | No | No | No |
-| Circuit breaker | **Yes** | No | No | No | No |
-| Rate limiting (Redis) | **Yes** | No | No | Yes | Yes |
-| Auto hardware detection | **Yes** | No | No | No | No |
-| OpenAI-compatible API | **Yes** | Yes | Yes | No | Yes |
-| Built-in vector DB | **Yes** | No | No | Bundled | No |
-| Observability dashboard | **Yes** | No | Partial | No | Partial |
-| Plugin ecosystem | **Yes** | No | No | No | No |
-
-The first two rows are the ones that matter. No other local LLM tool lets you chat with your files from the terminal, and no other tool automatically routes queries to the right model.
-
-## Presets
-
-```bash
-llmstack init --preset chat      # Minimal: inference + cache + gateway
-llmstack init --preset rag       # + Qdrant + embeddings for RAG apps
-llmstack init --preset router    # Multi-model with smart routing (recommended)
-llmstack init --preset agent     # 70B model + 16K context + longer timeouts
-```
-
-## CLI
-
-| Command | Description |
-|---------|-------------|
-| `llmstack ask <question> [path]` | Ask questions about local files using a local LLM |
-| `llmstack init [--preset]` | Create config with smart defaults |
-| `llmstack up [--attach]` | Start all services |
-| `llmstack down [--volumes]` | Stop and clean up |
-| `llmstack status` | Health check all services |
-| `llmstack chat [--model]` | Interactive terminal chat |
-| `llmstack export [--output]` | Generate docker-compose.yml |
-| `llmstack logs <service>` | Stream service logs |
-| `llmstack bench` | Benchmark routing performance |
-| `llmstack doctor` | Diagnose system issues |
-
-## Export to Docker Compose
-
-```bash
-llmstack export
-# Exported 7 services to docker-compose.yml
-# Run with: docker compose up -d
-```
-
-Share the generated file with your team. No llmstack dependency required.
-
-## Roadmap
-
-See [ROADMAP.md](ROADMAP.md) for the full plan through v1.0. Next up:
-
-- **v0.6** -- Multi-node deployment, auto-scaling, TLS, OAuth2
-- **v0.7** -- Prompt versioning, evaluation framework, TypeScript SDK
-- **v1.0** -- Kubernetes Helm chart, plugin marketplace, 90%+ test coverage
 
 ## Requirements
 
 - Python 3.11+
-- **`llmstack ask`**: Just [Ollama](https://ollama.com) running locally. No Docker needed.
-- **Full stack mode** (`llmstack up`): Docker
+- **`llmstack ask`**: [Ollama](https://ollama.com) running locally. No Docker needed.
+- **Full stack** (`llmstack up`): Docker
+- **Fine-tuning**: `pip install llmstack-cli[finetune]` (adds PyTorch, PEFT, TRL)
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and guidelines.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup. PRs welcome.
 
 ## License
 
