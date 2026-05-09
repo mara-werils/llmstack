@@ -243,22 +243,39 @@ async def _ask_async(
             console.print(f"  [dim]Index saved to {project_root / '.llmstack-index'}[/]")
 
     # ── Interactive or single-shot mode ──────────────────────────────────
-    if interactive:
-        await _interactive_loop(
-            searcher=searcher, embeddings=embeddings, all_chunks=all_chunks,
-            model=model, ollama_url=ollama_url, top_k=top_k,
-            show_sources=show_sources, git_context=git_context_text,
+    try:
+        if interactive:
+            await _interactive_loop(
+                searcher=searcher, embeddings=embeddings, all_chunks=all_chunks,
+                model=model, ollama_url=ollama_url, top_k=top_k,
+                show_sources=show_sources, git_context=git_context_text,
+            )
+        else:
+            await _single_query(
+                question=question, searcher=searcher, embeddings=embeddings,
+                model=model, ollama_url=ollama_url, top_k=top_k,
+                show_sources=show_sources, git_context=git_context_text,
+            )
+    except httpx.ReadTimeout:
+        console.print(
+            "\n[error]LLM response timed out.[/] The model is too slow on this hardware.\n"
+            "  Try a smaller model: [bold]--model llama3.2:1b[/]\n"
+            "  Or increase timeout with a faster machine."
         )
-    else:
-        await _single_query(
-            question=question, searcher=searcher, embeddings=embeddings,
-            model=model, ollama_url=ollama_url, top_k=top_k,
-            show_sources=show_sources, git_context=git_context_text,
-        )
-
-    await embeddings.close()
-    if index:
-        index.close()
+    except httpx.HTTPStatusError as exc:
+        if exc.response.status_code == 404:
+            console.print(
+                f"\n[error]Model not found.[/] Run:\n"
+                f"  [bold cyan]ollama pull {model}[/]"
+            )
+        else:
+            console.print(f"\n[error]HTTP error: {exc.response.status_code}[/]")
+    except Exception as exc:
+        console.print(f"\n[error]Error: {exc}[/]")
+    finally:
+        await embeddings.close()
+        if index:
+            index.close()
 
 
 async def _single_query(
