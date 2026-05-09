@@ -17,6 +17,8 @@ class _RequestRecord:
     score: float
     latency_ms: float
     timestamp: float
+    provider: str = "local"
+    cost_usd: float = 0.0
 
 
 class RouterStats:
@@ -30,26 +32,36 @@ class RouterStats:
         self._lock = Lock()
         self._model_counts: dict[str, int] = defaultdict(int)
         self._tier_counts: dict[str, int] = defaultdict(int)
+        self._provider_counts: dict[str, int] = defaultdict(int)
         self._model_latencies: dict[str, list[float]] = defaultdict(list)
         self._tier_latencies: dict[str, list[float]] = defaultdict(list)
         self._total_requests: int = 0
         self._largest_model_avoided: int = 0
         self._history: deque[_RequestRecord] = deque(maxlen=history_size)
         self._largest_model: str | None = None
+        self._total_cost_usd: float = 0.0
+        self._provider_costs: dict[str, float] = defaultdict(float)
 
     def set_largest_model(self, model_name: str) -> None:
         """Configure which model counts as the 'large' model for savings calc."""
         with self._lock:
             self._largest_model = model_name
 
-    def record(self, decision: RoutingDecision, latency_ms: float) -> None:
+    def record(
+        self, decision: RoutingDecision, latency_ms: float, cost_usd: float = 0.0,
+    ) -> None:
         """Record a completed routing decision."""
+        provider = getattr(decision, "provider", "local")
         with self._lock:
             self._total_requests += 1
             self._model_counts[decision.model] += 1
             self._tier_counts[decision.profile.tier] += 1
+            self._provider_counts[provider] += 1
             self._model_latencies[decision.model].append(latency_ms)
             self._tier_latencies[decision.profile.tier].append(latency_ms)
+
+            self._total_cost_usd += cost_usd
+            self._provider_costs[provider] += cost_usd
 
             if self._largest_model and decision.model != self._largest_model:
                 self._largest_model_avoided += 1
@@ -60,6 +72,8 @@ class RouterStats:
                 score=decision.profile.score,
                 latency_ms=latency_ms,
                 timestamp=time.time(),
+                provider=provider,
+                cost_usd=cost_usd,
             ))
 
     def summary(self) -> dict:
@@ -84,6 +98,9 @@ class RouterStats:
 
             savings_pct = round(self._largest_model_avoided / total * 100, 1) if total else 0.0
 
+            provider_dist = {p: {"count": c, "pct": round(c / total * 100, 1)}
+                             for p, c in self._provider_counts.items()}
+
             recent = [
                 {
                     "model": r.model,
@@ -91,6 +108,8 @@ class RouterStats:
                     "score": r.score,
                     "latency_ms": round(r.latency_ms, 1),
                     "timestamp": r.timestamp,
+                    "provider": r.provider,
+                    "cost_usd": round(r.cost_usd, 6),
                 }
                 for r in list(self._history)[-20:]
             ]
@@ -99,9 +118,12 @@ class RouterStats:
                 "total_requests": self._total_requests,
                 "model_distribution": model_dist,
                 "tier_distribution": tier_dist,
+                "provider_distribution": provider_dist,
                 "avg_latency_by_model_ms": avg_latency_by_model,
                 "avg_latency_by_tier_ms": avg_latency_by_tier,
                 "estimated_savings_pct": savings_pct,
                 "largest_model": self._largest_model,
+                "total_cost_usd": round(self._total_cost_usd, 4),
+                "cost_by_provider_usd": {p: round(c, 4) for p, c in self._provider_costs.items()},
                 "recent_decisions": recent,
             }

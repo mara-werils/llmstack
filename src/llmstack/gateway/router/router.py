@@ -18,11 +18,14 @@ logger = logging.getLogger(__name__)
 class ModelTier:
     """Describes a model and its capabilities."""
 
-    name: str              # e.g. "llama3.2:1b"
+    name: str              # e.g. "llama3.2:1b", "gpt-4o", "claude-sonnet-4-20250514"
     tier: str              # "simple" | "medium" | "complex"
     max_context: int = 8192
     speed_score: float = 1.0    # relative speed (higher = faster)
     quality_score: float = 1.0  # relative quality (higher = better)
+    provider: str = "local"     # provider name: "local", "openai", "anthropic", etc.
+    cost_per_m_input: float = 0.0   # $ per 1M input tokens
+    cost_per_m_output: float = 0.0  # $ per 1M output tokens
 
 
 @dataclass
@@ -33,6 +36,8 @@ class RoutingDecision:
     profile: QueryProfile         # Classification that led to this decision
     alternatives: list[str] = field(default_factory=list)
     estimated_speedup: float = 1.0  # vs always using the largest model
+    provider: str = "local"       # which provider serves this model
+    estimated_cost_per_1k: float = 0.0  # estimated cost per 1K tokens (input)
 
 
 # Tier ordering for comparisons
@@ -95,11 +100,13 @@ class ModelRouter:
             profile=profile,
             alternatives=alternatives,
             estimated_speedup=round(speedup, 2),
+            provider=selected.provider,
+            estimated_cost_per_1k=round(selected.cost_per_m_input / 1000, 6),
         )
 
         logger.info(
-            "Routed query: tier=%s score=%.3f model=%s strategy=%s",
-            profile.tier, profile.score, selected.name, self.strategy,
+            "Routed query: tier=%s score=%.3f model=%s provider=%s strategy=%s",
+            profile.tier, profile.score, selected.name, selected.provider, self.strategy,
         )
         return decision
 
@@ -126,13 +133,21 @@ class ModelRouter:
         return method(profile)
 
     def _select_cost(self, profile: QueryProfile) -> ModelTier:
-        """Pick the smallest model whose tier >= the query tier."""
+        """Pick the cheapest adequate model.
+
+        When providers have real dollar costs, sort by cost first.
+        Falls back to tier ordering for local (free) models.
+        """
         tier_val = _TIER_ORDER.get(profile.tier, 1)
         candidates = [m for m in self.models if _TIER_ORDER.get(m.tier, 1) >= tier_val]
         if not candidates:
             return self._largest_model()
-        # Among adequate models, pick the one with the lowest tier (cheapest)
-        return min(candidates, key=lambda m: (_TIER_ORDER.get(m.tier, 1), -m.speed_score))
+        # Sort by: real cost first (cheaper is better), then tier, then speed
+        return min(candidates, key=lambda m: (
+            m.cost_per_m_input + m.cost_per_m_output,
+            _TIER_ORDER.get(m.tier, 1),
+            -m.speed_score,
+        ))
 
     def _select_quality(self, profile: QueryProfile) -> ModelTier:
         """Pick the highest-quality model for the tier or above."""

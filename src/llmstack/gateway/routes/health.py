@@ -74,8 +74,24 @@ async def healthz():
             extras["router"] = {
                 "total_requests": summary["total_requests"],
                 "tier_distribution": summary["tier_distribution"],
+                "provider_distribution": summary.get("provider_distribution", {}),
                 "estimated_savings_pct": summary["estimated_savings_pct"],
+                "total_cost_usd": summary.get("total_cost_usd", 0.0),
+                "cost_by_provider_usd": summary.get("cost_by_provider_usd", {}),
             }
+    except Exception:
+        pass
+
+    try:
+        from llmstack.gateway.providers.registry import get_registry
+        registry = get_registry()
+        if registry is not None:
+            providers_status = {}
+            for name, p in registry.all_providers().items():
+                providers_status[name] = {
+                    "models": len([m for m in registry.all_models() if m.provider == name]),
+                }
+            extras["providers"] = providers_status
     except Exception:
         pass
 

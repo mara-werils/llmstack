@@ -1,6 +1,7 @@
-"""Proxy layer — forwards requests to inference and embedding backends.
+"""Proxy layer — forwards requests to inference backends via providers.
 
-Integrates semantic caching (Redis) and circuit breaker (resilience).
+Integrates semantic caching (Redis), circuit breaker (resilience),
+and the provider registry for multi-provider routing.
 """
 
 from __future__ import annotations
@@ -22,8 +23,22 @@ EMBEDDINGS_URL = os.getenv("LLMSTACK_EMBEDDINGS_URL", "")
 REQUEST_TIMEOUT = int(os.getenv("LLMSTACK_REQUEST_TIMEOUT", "120"))
 
 
-async def proxy_chat_completion(payload: dict, stream: bool = False) -> dict | AsyncIterator[bytes]:
-    """Forward a chat completion request with caching and circuit breaker."""
+async def proxy_chat_completion(
+    payload: dict,
+    stream: bool = False,
+    provider_name: str | None = None,
+) -> dict | AsyncIterator[bytes]:
+    """Forward a chat completion request with caching, circuit breaker, and provider routing.
+
+    If ``provider_name`` is set and a provider registry is available,
+    the request is dispatched through the provider. Otherwise, falls back
+    to direct HTTP forwarding to the local inference backend.
+    """
+    # Try provider registry first
+    if provider_name and provider_name != "local":
+        return await _proxy_via_provider(payload, stream, provider_name)
+
+    # Legacy path: direct proxy to local Ollama/vLLM
     breaker = get_inference_breaker()
     model = payload.get("model", "")
     messages = payload.get("messages", [])
@@ -73,6 +88,46 @@ async def proxy_chat_completion(payload: dict, stream: bool = False) -> dict | A
     except (httpx.ConnectError, httpx.ReadTimeout, httpx.ConnectTimeout):
         breaker.record_failure()
         raise
+
+
+async def _proxy_via_provider(
+    payload: dict,
+    stream: bool,
+    provider_name: str,
+) -> dict | AsyncIterator[bytes]:
+    """Route request through the provider registry."""
+    from llmstack.gateway.providers.registry import get_registry
+
+    registry = get_registry()
+    if registry is None:
+        raise RuntimeError("Provider registry not initialized")
+
+    if stream:
+        return registry.stream_with_fallback(payload)
+
+    # Non-streaming: use caching
+    model = payload.get("model", "")
+    messages = payload.get("messages", [])
+    temperature = payload.get("temperature", 1.0)
+
+    cache = await get_cache()
+    cached = await cache.get(model, messages, temperature)
+    if cached is not None:
+        return cached
+
+    result = await registry.chat_with_fallback(payload)
+
+    # Record token usage
+    usage = result.get("usage", {})
+    record_tokens(
+        input_tokens=usage.get("prompt_tokens", 0),
+        output_tokens=usage.get("completion_tokens", 0),
+    )
+
+    # Cache
+    await cache.put(model, messages, result, temperature)
+
+    return result
 
 
 async def _stream_response(url: str, payload: dict, timeout: httpx.Timeout) -> AsyncIterator[bytes]:
