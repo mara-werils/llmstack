@@ -295,8 +295,9 @@ async def _single_query(
     if git_context:
         prompt = f"Git context:\n{git_context}\n\n{prompt}"
 
-    # Stream response
-    async with httpx.AsyncClient(timeout=300) as client:
+    # Stream response (long read timeout for CPU inference)
+    timeout = httpx.Timeout(300, connect=10, read=300, write=30)
+    async with httpx.AsyncClient(timeout=timeout) as client:
         async with client.stream(
             "POST", f"{ollama_url}/api/chat",
             json={"model": model, "messages": [{"role": "user", "content": prompt}], "stream": True},
