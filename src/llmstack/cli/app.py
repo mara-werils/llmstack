@@ -141,6 +141,23 @@ def ask(
     )
 
 
+@app.command(name="eval")
+def eval_cmd(
+    data: str = typer.Option(None, "--data", "-d", help="Path to evaluation dataset"),
+    model: str = typer.Option("llama3.2", "--model", "-m", help="Model to evaluate"),
+    ollama_url: str = typer.Option("http://localhost:11434", "--ollama-url", help="Ollama API URL"),
+    gateway_url: str = typer.Option(None, "--gateway-url", "-g", help="Running gateway URL (shows live quality)"),
+    max_examples: int = typer.Option(20, "--max-examples", help="Max eval examples"),
+    output: str = typer.Option(None, "--output", "-o", help="Save results to JSON file"),
+) -> None:
+    """Evaluate model quality against a test dataset or live gateway."""
+    from llmstack.cli.commands.eval import eval_cmd as _eval
+    _eval(
+        data=data, model=model, ollama_url=ollama_url,
+        gateway_url=gateway_url, max_examples=max_examples, output=output,
+    )
+
+
 @app.command()
 def finetune(
     data: str = typer.Argument(..., help="Path to training data (CSV, JSON, JSONL, TXT, Parquet)"),

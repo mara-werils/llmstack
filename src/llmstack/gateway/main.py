@@ -19,6 +19,7 @@ from llmstack.gateway.routes.models import router as models_router
 from llmstack.gateway.routes.health import router as health_router
 from llmstack.gateway.routes.rag import router as rag_router
 from llmstack.gateway.routes.router import router as router_router
+from llmstack.gateway.routes.observe import router as observe_router
 from llmstack.gateway.middleware.auth import AuthMiddleware
 from llmstack.gateway.middleware.metrics import MetricsMiddleware
 from llmstack.gateway.middleware.rate_limit import RateLimitMiddleware
@@ -186,13 +187,31 @@ def _init_providers() -> None:
     logger.info("Provider registry initialised: %d providers, %d models", len(provider_defs), total)
 
 
+def _init_observe() -> None:
+    """Initialise the AI observability system (traces, scoring, quality tracking)."""
+    from llmstack.observe._state import init_observe
+    from llmstack.observe.traces import TraceStore
+    from llmstack.observe.scoring import QualityScorer
+    from llmstack.observe.tracker import QualityTracker
+    from llmstack.observe.ab_testing import ABTestManager
+
+    init_observe(
+        trace_store=TraceStore(max_size=5000),
+        scorer=QualityScorer(),
+        tracker=QualityTracker(),
+        ab_manager=ABTestManager(),
+    )
+    logger.info("AI observability initialised: traces, scoring, quality tracking, A/B testing")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Startup: connect cache, init router and providers. Shutdown: close connections."""
+    """Startup: connect cache, init router, providers, observe. Shutdown: close connections."""
     from llmstack.gateway.cache import get_cache
     cache = await get_cache()
     _init_router()
     _init_providers()
+    _init_observe()
     yield
     await cache.close()
 
@@ -237,6 +256,7 @@ def create_app() -> FastAPI:
     app.include_router(models_router, prefix="/v1")
     app.include_router(rag_router, prefix="/v1")
     app.include_router(router_router, prefix="/v1")
+    app.include_router(observe_router, prefix="/v1")
     app.include_router(health_router)
 
     # Serve Web UI
