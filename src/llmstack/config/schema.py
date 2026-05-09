@@ -101,6 +101,49 @@ class ProvidersConfig(BaseModel):
     providers: list[ProviderConfig] = Field(default_factory=list)
 
 
+# ---------------------------------------------------------------------------
+# Agent configuration
+# ---------------------------------------------------------------------------
+
+class AgentToolConfig(BaseModel):
+    """Configuration for an individual agent tool."""
+
+    name: str                            # tool name, e.g. "shell", "read_file"
+    enabled: bool = True
+    timeout: int = 60                    # per-tool timeout in seconds
+
+
+class AgentProfileConfig(BaseModel):
+    """Configuration for a named agent profile."""
+
+    name: str = "default"                # profile name
+    model: str = "llama3.2"              # LLM model for the agent
+    max_steps: int = 25                  # max tool-use iterations
+    max_tokens: int = 4096
+    temperature: float = 0.1
+    system_prompt: str = ""              # custom system prompt
+    tools: list[str] = Field(default_factory=lambda: [
+        "read_file", "write_file", "list_directory", "grep", "shell", "http_get",
+    ])
+
+
+class AgentsConfig(BaseModel):
+    """Top-level agents configuration."""
+
+    profiles: list[AgentProfileConfig] = Field(default_factory=list)
+
+
+class MCPConfig(BaseModel):
+    """MCP server configuration."""
+
+    enabled: bool = False
+    model: str = "llama3.2"
+    tools: list[str] = Field(default_factory=lambda: [
+        "read_file", "write_file", "list_directory", "grep", "shell",
+        "http_get", "llmstack_chat", "llmstack_ask",
+    ])
+
+
 class StackConfig(BaseModel):
     """Root config — 1:1 mapping with llmstack.yaml."""
 
@@ -111,3 +154,5 @@ class StackConfig(BaseModel):
     observe: ObserveConfig = Field(default_factory=ObserveConfig)
     docker: DockerConfig = Field(default_factory=DockerConfig)
     providers: ProvidersConfig = Field(default_factory=ProvidersConfig)
+    agents: AgentsConfig = Field(default_factory=AgentsConfig)
+    mcp: MCPConfig = Field(default_factory=MCPConfig)

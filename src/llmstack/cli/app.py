@@ -139,3 +139,33 @@ def ask(
         ollama_url=ollama_url,
         show_sources=show_sources,
     )
+
+
+@app.command(name="agent")
+def agent_cmd(
+    task: str = typer.Argument(..., help="Task for the agent to complete"),
+    model: str = typer.Option(None, "--model", "-m", help="Model name (default: llama3.2)"),
+    ollama_url: str = typer.Option("http://localhost:11434", "--ollama-url", help="Ollama API URL"),
+    max_steps: int = typer.Option(25, "--max-steps", help="Maximum agent steps"),
+    tools: str = typer.Option(None, "--tools", "-t", help="Comma-separated tool names to enable"),
+    working_dir: str = typer.Option(".", "--dir", "-d", help="Working directory for file operations"),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Show detailed output"),
+) -> None:
+    """Run an AI agent that uses tools to complete a task."""
+    from llmstack.cli.commands.agent import agent as _agent
+    _agent(
+        task=task, model=model, ollama_url=ollama_url,
+        max_steps=max_steps, tools=tools,
+        working_dir=working_dir, verbose=verbose,
+    )
+
+
+@app.command(name="mcp")
+def mcp_cmd(
+    model: str = typer.Option(None, "--model", "-m", help="Model name (default: llama3.2)"),
+    ollama_url: str = typer.Option("http://localhost:11434", "--ollama-url", help="Ollama API URL"),
+    working_dir: str = typer.Option(".", "--dir", "-d", help="Working directory"),
+) -> None:
+    """Start the MCP server for AI client integration (Claude Code, Cursor, etc.)."""
+    from llmstack.cli.commands.mcp import mcp_serve as _mcp
+    _mcp(model=model, ollama_url=ollama_url, working_dir=working_dir)
