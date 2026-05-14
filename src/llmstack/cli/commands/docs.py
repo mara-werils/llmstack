@@ -277,4 +277,4 @@ Output the COMPLETE file with docstrings added. Output ONLY the Python code, no 
     if write:
         console.print(f"\n[green]Docstrings generated for {min(len(py_files), 5)} files.[/]")
     else:
-        console.print(f"\n[dim]Tip: Use --write to save changes to files[/]")
+        console.print("\n[dim]Tip: Use --write to save changes to files[/]")

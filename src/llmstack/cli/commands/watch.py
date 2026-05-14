@@ -43,7 +43,6 @@ async def _watch_async(
     patterns: str,
     debounce: float,
 ) -> None:
-    import typer
     from rich.panel import Panel
     from rich.markdown import Markdown
 
