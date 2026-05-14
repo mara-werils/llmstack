@@ -23,6 +23,12 @@
 
 ---
 
+<p align="center">
+  <img src="assets/demo.gif" alt="llmstack ask demo" width="700">
+</p>
+
+---
+
 ```bash
 pip install llmstack-cli
 llmstack ask -i ./src/    # start chatting with your codebase

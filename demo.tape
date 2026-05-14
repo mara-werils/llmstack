@@ -1,51 +1,27 @@
-# VHS tape for recording llmstack demo GIF
-# Pre-requisite: cp scripts/fake-llmstack /tmp/llmstack
-# Run: vhs demo.tape
+Output assets/demo.gif
 
-Output demo.gif
-
-Set FontSize 16
-Set Width 1200
-Set Height 800
-Set Theme "Catppuccin Mocha"
-Set Padding 20
-Set TypingSpeed 40ms
 Set Shell "bash"
+Set FontSize 14
+Set Width 900
+Set Height 500
+Set Theme "Catppuccin Mocha"
+Set TypingSpeed 60ms
+Set Padding 20
 
-# Set PATH so /tmp/llmstack is found, then clear screen
-Hide
-Type "export PATH=/tmp:$PATH"
-Enter
-Sleep 300ms
-Type "export PS1='$ '"
-Enter
-Sleep 300ms
-Type "clear"
-Enter
-Sleep 500ms
-Show
+# Show install
+Type "pip install llmstack-cli" Sleep 500ms Enter
+Sleep 2s
 
-# --- Scene 1: Show version ---
-Type "llmstack --version"
-Enter
-Sleep 1.5s
+# Single question
+Type "llmstack ask 'How does authentication work?' ./src/" Sleep 500ms Enter
+Sleep 6s
 
-# --- Scene 2: Initialize with RAG preset ---
-Type "llmstack init --preset rag"
-Enter
+# Interactive mode
+Type "llmstack ask -i ./src/" Sleep 500ms Enter
 Sleep 3s
-
-# --- Scene 3: Start the stack ---
-Type "llmstack up"
-Enter
-Sleep 4s
-
-# --- Scene 4: Check status ---
-Type "llmstack status"
-Enter
-Sleep 3s
-
-# --- Scene 5: Tear down ---
-Type "llmstack down"
-Enter
-Sleep 3s
+Type "How does the cache work?" Sleep 500ms Enter
+Sleep 5s
+Type "What happens when Redis goes down?" Sleep 500ms Enter
+Sleep 5s
+Type "exit" Enter
+Sleep 1s
