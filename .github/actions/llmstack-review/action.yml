@@ -1,0 +1,90 @@
+name: 'LLMStack Review'
+description: 'AI-powered code review for pull requests using LLMStack'
+author: 'llmstack'
+
+branding:
+  icon: 'eye'
+  color: 'blue'
+
+inputs:
+  model:
+    description: 'Ollama model to use for review'
+    required: false
+    default: 'llama3.2'
+  ollama-url:
+    description: 'Ollama API URL'
+    required: false
+    default: 'http://localhost:11434'
+  severity:
+    description: 'Minimum severity to report (INFO, WARNING, CRITICAL)'
+    required: false
+    default: 'WARNING'
+  github-token:
+    description: 'GitHub token for posting review comments'
+    required: false
+    default: ${{ github.token }}
+
+outputs:
+  review-result:
+    description: 'Review result: APPROVED or NEEDS_CHANGES'
+    value: ${{ steps.review.outputs.result }}
+  issues-found:
+    description: 'Number of issues found'
+    value: ${{ steps.review.outputs.issues }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Install LLMStack
+      shell: bash
+      run: pip install llmstack-cli
+
+    - name: Run review
+      id: review
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+      run: |
+        llmstack review \
+          --model ${{ inputs.model }} \
+          --ollama-url ${{ inputs.ollama-url }} \
+          --severity ${{ inputs.severity }} \
+          --output json \
+          --output-file review.json \
+          --commits 1
+
+        echo "result=$(cat review.json | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d.get("summary",{}).get("verdict","NEEDS_CHANGES"))')" >> $GITHUB_OUTPUT
+        echo "issues=$(cat review.json | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d.get("summary",{}).get("total_issues",0))')" >> $GITHUB_OUTPUT
+
+    - name: Post review comment
+      if: github.event_name == 'pull_request'
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+      run: |
+        REVIEW_BODY=$(python3 -c "
+        import json
+        with open('review.json') as f:
+            data = json.load(f)
+        summary = data.get('summary', {})
+        issues = data.get('issues', [])
+        verdict = summary.get('verdict', 'NEEDS_CHANGES')
+        emoji = 'approved' if verdict == 'APPROVED' else 'changes requested'
+
+        body = f'## LLMStack AI Review\n\n'
+        body += f'**Verdict:** {verdict}\n'
+        body += f'**Issues:** {summary.get(\"total_issues\", 0)} total ({summary.get(\"critical\", 0)} critical, {summary.get(\"warnings\", 0)} warnings)\n\n'
+
+        if issues:
+            body += '### Issues\n\n'
+            for issue in issues[:10]:
+                sev = issue.get('severity', 'INFO')
+                body += f'- **[{sev}]** \`{issue.get(\"file\", \"\")}:{issue.get(\"line\", \"\")}\` — {issue.get(\"message\", \"\")}\n'
+
+        if summary.get('summary'):
+            body += f'\n### Summary\n\n{summary[\"summary\"]}\n'
+
+        print(body)
+        ")
+
+        gh pr comment ${{ github.event.pull_request.number }} --body "$REVIEW_BODY"

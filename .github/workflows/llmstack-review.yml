@@ -1,0 +1,31 @@
+name: LLMStack AI Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Start Ollama
+        run: |
+          curl -fsSL https://ollama.com/install.sh | sh
+          ollama serve &
+          sleep 5
+          ollama pull llama3.2:1b
+
+      - name: Run LLMStack Review
+        uses: ./.github/actions/llmstack-review
+        with:
+          model: llama3.2:1b
+          severity: WARNING
+          github-token: ${{ secrets.GITHUB_TOKEN }}
