@@ -1,0 +1,26 @@
+{
+  "name": "@llmstack/client",
+  "version": "1.0.0",
+  "description": "Official TypeScript/JavaScript SDK for LLMStack",
+  "main": "dist/index.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "files": ["dist", "src"],
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts",
+    "test": "jest",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": ["llm", "ollama", "ai", "local-ai", "llmstack"],
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "tsup": "^8.0.0",
+    "typescript": "^5.0.0",
+    "@types/node": "^20.0.0",
+    "jest": "^29.0.0",
+    "ts-jest": "^29.0.0"
+  },
+  "peerDependencies": {
+    "node-fetch": ">=3.0.0"
+  }
+}
