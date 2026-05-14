@@ -211,18 +211,26 @@ Start directly with JSON output, no preamble."""
 
         progress.update(task, completed=True)
 
-    # Parse response
+    # Parse response — handle both clean JSON lines and JSON embedded in prose
     for line in full_response.splitlines():
         line = line.strip()
-        if not line or not line.startswith("{"):
+        if not line:
             continue
+        # Strip markdown code fences if present
+        if line.startswith("```"):
+            continue
+        # Find first { in line for embedded JSON
+        brace_idx = line.find("{")
+        if brace_idx == -1:
+            continue
+        candidate = line[brace_idx:]
         try:
-            obj = json.loads(line)
+            obj = json.loads(candidate)
             if obj.get("type") == "summary":
                 summary_data = obj
             elif "severity" in obj:
                 issues.append(obj)
-            raw_lines.append(line)
+            raw_lines.append(candidate)
         except json.JSONDecodeError:
             raw_lines.append(line)
 
