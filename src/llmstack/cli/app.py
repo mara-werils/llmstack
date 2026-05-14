@@ -130,12 +130,17 @@ def ask(
     interactive: bool = typer.Option(False, "--interactive", "-i", help="Interactive conversation mode"),
     no_cache: bool = typer.Option(False, "--no-cache", help="Disable persistent index, re-index from scratch"),
     git: bool = typer.Option(True, "--git/--no-git", help="Include git context (branch, recent commits)"),
+    repo: list[str] = typer.Option(None, "--repo", "-r", help="Additional repo paths for multi-repo support"),
 ) -> None:
     """Ask questions about local files using a local LLM."""
     from llmstack.cli.commands.ask import ask as _ask
+    # Merge extra repo paths into files list
+    all_files = list(files or [])
+    for r in (repo or []):
+        all_files.append(Path(r))
     _ask(
         question=question,
-        files=files,
+        files=all_files if all_files else files,
         model=model,
         embed_model=embed_model,
         top_k=top_k,
@@ -223,3 +228,139 @@ def mcp_cmd(
     """Start the MCP server for AI client integration (Claude Code, Cursor, etc.)."""
     from llmstack.cli.commands.mcp import mcp_serve as _mcp
     _mcp(model=model, ollama_url=ollama_url, working_dir=working_dir)
+
+
+@app.command()
+def review(
+    target: str = typer.Argument("", help="Git ref or range (e.g. HEAD~2..HEAD, branch..main)"),
+    pr: str = typer.Option(None, "--pr", help="GitHub PR URL to fetch and review"),
+    model: str = typer.Option("llama3.2", "--model", "-m", help="Model name"),
+    ollama_url: str = typer.Option("http://localhost:11434", "--ollama-url", help="Ollama API URL"),
+    output: str = typer.Option("terminal", "--output", "-o", help="Output format: terminal, markdown, json"),
+    output_file: str = typer.Option(None, "--output-file", "-f", help="Save report to file"),
+    severity: str = typer.Option(None, "--severity", "-s", help="Filter by severity: CRITICAL, WARNING, INFO"),
+    staged: bool = typer.Option(False, "--staged", help="Review staged changes only"),
+    commits: int = typer.Option(1, "--commits", "-c", help="Number of recent commits to review"),
+) -> None:
+    """AI-powered code review for git diffs and GitHub PRs."""
+    from llmstack.cli.commands.review import review as _review
+    _review(
+        target=target, pr_url=pr, model=model, ollama_url=ollama_url,
+        output_format=output, severity=severity, output_file=output_file,
+        staged=staged, commits=commits,
+    )
+
+
+@app.command()
+def fix(
+    description: str = typer.Argument("", help="Description of the issue to fix"),
+    file: str = typer.Option(None, "--file", "-f", help="File to fix"),
+    model: str = typer.Option("llama3.2", "--model", "-m", help="Model name"),
+    ollama_url: str = typer.Option("http://localhost:11434", "--ollama-url", help="Ollama API URL"),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Show patch without applying"),
+    no_interactive: bool = typer.Option(False, "--no-interactive", help="Apply patch without confirmation"),
+) -> None:
+    """AI-powered auto-fix: generate and apply a patch for a code issue."""
+    from llmstack.cli.commands.fix import fix as _fix
+    _fix(
+        description=description, file=file, model=model, ollama_url=ollama_url,
+        dry_run=dry_run, interactive=not no_interactive,
+    )
+
+
+@app.command()
+def docs(
+    target: str = typer.Argument(None, help="File or directory to document"),
+    output: str = typer.Option(None, "--output", "-o", help="Output file path"),
+    model: str = typer.Option("llama3.2", "--model", "-m", help="Model name"),
+    ollama_url: str = typer.Option("http://localhost:11434", "--ollama-url", help="Ollama API URL"),
+    doc_type: str = typer.Option("docstrings", "--type", "-t", help="Type: docstrings, readme"),
+    write: bool = typer.Option(False, "--write", "-w", help="Write changes to files"),
+) -> None:
+    """Generate documentation, docstrings, or README using AI."""
+    from llmstack.cli.commands.docs import docs as _docs
+    _docs(target=target, output=output, model=model, ollama_url=ollama_url,
+          doc_type=doc_type, write=write)
+
+
+@app.command(name="test")
+def test_cmd(
+    target: str = typer.Argument(None, help="File or directory to generate tests for"),
+    output: str = typer.Option(None, "--output", "-o", help="Output file path"),
+    model: str = typer.Option("llama3.2", "--model", "-m", help="Model name"),
+    ollama_url: str = typer.Option("http://localhost:11434", "--ollama-url", help="Ollama API URL"),
+    framework: str = typer.Option("pytest", "--framework", "-F", help="Test framework: pytest, jest"),
+    write: bool = typer.Option(False, "--write", "-w", help="Write test files"),
+    coverage: bool = typer.Option(False, "--coverage", help="Include coverage hints"),
+) -> None:
+    """Generate AI-powered test cases for your code."""
+    from llmstack.cli.commands.test_gen import test_gen as _test_gen
+    _test_gen(target=target, output=output, model=model, ollama_url=ollama_url,
+              framework=framework, write=write, coverage=coverage)
+
+
+@app.command(name="diff")
+def diff_cmd(
+    target: str = typer.Argument("HEAD~1..HEAD", help="Git range or ref to explain"),
+    model: str = typer.Option("llama3.2", "--model", "-m", help="Model name"),
+    ollama_url: str = typer.Option("http://localhost:11434", "--ollama-url", help="Ollama API URL"),
+    staged: bool = typer.Option(False, "--staged", help="Explain staged changes"),
+    commits: int = typer.Option(1, "--commits", "-c", help="Number of recent commits"),
+    file: str = typer.Option(None, "--file", "-f", help="Limit diff to specific file"),
+) -> None:
+    """Explain a git diff in plain English."""
+    from llmstack.cli.commands.diff_explain import diff_explain as _diff
+    _diff(target=target, model=model, ollama_url=ollama_url,
+          staged=staged, commits=commits, file=file)
+
+
+@app.command()
+def watch(
+    directory: str = typer.Argument(".", help="Directory to watch"),
+    model: str = typer.Option("llama3.2", "--model", "-m", help="Model name"),
+    ollama_url: str = typer.Option("http://localhost:11434", "--ollama-url", help="Ollama API URL"),
+    patterns: str = typer.Option("*.py,*.js,*.ts", "--patterns", "-p", help="File patterns to watch (comma-separated)"),
+    debounce: float = typer.Option(2.0, "--debounce", "-d", help="Debounce seconds between analyses"),
+) -> None:
+    """Watch files for changes and get real-time AI suggestions."""
+    from llmstack.cli.commands.watch import watch as _watch
+    _watch(directory=directory, model=model, ollama_url=ollama_url,
+           patterns=patterns, debounce=debounce)
+
+
+@app.command()
+def commit(
+    model: str = typer.Option("llama3.2", "--model", "-m", help="Model name"),
+    ollama_url: str = typer.Option("http://localhost:11434", "--ollama-url", help="Ollama API URL"),
+    push: bool = typer.Option(False, "--push", help="Push after committing"),
+    all_changes: bool = typer.Option(False, "--all", "-a", help="Stage all changes before generating message"),
+) -> None:
+    """Generate a conventional commit message with AI and optionally apply it."""
+    from llmstack.cli.commands.commit_gen import commit_gen as _commit_gen
+    _commit_gen(model=model, ollama_url=ollama_url, push=push, all_changes=all_changes)
+
+
+@app.command()
+def security(
+    target: str = typer.Argument(None, help="File or directory to audit"),
+    model: str = typer.Option("llama3.2", "--model", "-m", help="Model name"),
+    ollama_url: str = typer.Option("http://localhost:11434", "--ollama-url", help="Ollama API URL"),
+    output: str = typer.Option("terminal", "--output", "-o", help="Output format: terminal, markdown, json"),
+    output_file: str = typer.Option(None, "--output-file", "-f", help="Save report to file"),
+    severity: str = typer.Option(None, "--severity", "-s", help="Filter by severity: CRITICAL, HIGH, MEDIUM, LOW"),
+) -> None:
+    """AI-powered security audit with OWASP Top 10 and CWE references."""
+    from llmstack.cli.commands.security import security as _security
+    _security(target=target, model=model, ollama_url=ollama_url,
+              output_format=output, output_file=output_file, severity=severity)
+
+
+@app.command(name="export-conv")
+def export_conv_cmd(
+    output: str = typer.Option(None, "--output", "-o", help="Output file path"),
+    format: str = typer.Option("markdown", "--format", "-f", help="Format: markdown, json"),
+    index_dir: str = typer.Option(None, "--index-dir", help="Custom index directory"),
+) -> None:
+    """Export conversation history from the persistent index."""
+    from llmstack.cli.commands.export_conv import export_conv as _export_conv
+    _export_conv(output=output, format=format, index_dir=index_dir)
