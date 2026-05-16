@@ -20,6 +20,7 @@ from llmstack.gateway.routes.health import router as health_router
 from llmstack.gateway.routes.rag import router as rag_router
 from llmstack.gateway.routes.router import router as router_router
 from llmstack.gateway.routes.observe import router as observe_router
+from llmstack.gateway.routes.learn import router as learn_router
 from llmstack.gateway.middleware.auth import AuthMiddleware
 from llmstack.gateway.middleware.metrics import MetricsMiddleware
 from llmstack.gateway.middleware.rate_limit import RateLimitMiddleware
@@ -257,6 +258,7 @@ def create_app() -> FastAPI:
     app.include_router(rag_router, prefix="/v1")
     app.include_router(router_router, prefix="/v1")
     app.include_router(observe_router, prefix="/v1")
+    app.include_router(learn_router, prefix="/v1")
     app.include_router(health_router)
 
     # Serve Web UI
