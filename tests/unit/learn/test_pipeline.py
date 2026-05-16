@@ -35,7 +35,7 @@ class TestLearningPipeline:
     def test_collector_creation(self, pipeline):
         """Creates a working feedback collector."""
         collector = pipeline.collector(command="test")
-        collector.record_interaction("hello", "hi there", model="test")
+        collector.record_interaction("hello", "hi there", model="test", command="test")
         fb = collector.thumbs_up()
         assert fb.feedback_type == FeedbackType.THUMBS_UP
         assert fb.command == "test"

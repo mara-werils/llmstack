@@ -57,8 +57,10 @@ class TestActiveLearner:
 
     def test_cooldown(self, learner):
         """Respects cooldown between requests."""
-        learner._interaction_count = 5
-        learner._last_request_at = 4  # just asked
+        # should_request_feedback increments _interaction_count first, so:
+        # after increment: count=4, last_request_at=3, diff=1 < cooldown=2
+        learner._interaction_count = 3
+        learner._last_request_at = 3
 
         result = learner.should_request_feedback("query", "I think maybe perhaps...")
         assert result is False
