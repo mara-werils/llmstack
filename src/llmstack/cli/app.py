@@ -364,3 +364,61 @@ def export_conv_cmd(
     """Export conversation history from the persistent index."""
     from llmstack.cli.commands.export_conv import export_conv as _export_conv
     _export_conv(output=output, format=format, index_dir=index_dir)
+
+
+# --- Adaptive Learning Pipeline commands ---
+
+@app.command(name="learn")
+def learn_cmd(
+    action: str = typer.Argument("status", help="Action: status, train, rollback, feedback, export, reset, preferences, patterns, versions"),
+    limit: int = typer.Option(20, "--limit", "-n", help="Limit results"),
+    output: str = typer.Option(None, "--output", "-o", help="Output path for export"),
+    format: str = typer.Option("jsonl", "--format", "-f", help="Export format: jsonl, json, hf, backup"),
+    feedback_type: str = typer.Option(None, "--type", "-t", help="Filter feedback by type"),
+    confirm: bool = typer.Option(False, "--confirm", help="Confirm destructive actions"),
+    force: bool = typer.Option(False, "--force", help="Force action without checks"),
+) -> None:
+    """Adaptive learning pipeline — your AI gets smarter over time.
+
+    Actions:
+      status      Show pipeline status and metrics
+      train       Trigger a training run
+      rollback    Rollback to previous model version
+      feedback    Show collected feedback
+      export      Export learning data
+      reset       Reset all learning data
+      preferences Show learned user preferences
+      patterns    Show learned code patterns
+      versions    Show model version history
+    """
+    from llmstack.cli.commands.learn import (
+        learn_status,
+        learn_train,
+        learn_rollback,
+        learn_feedback,
+        learn_export,
+        learn_reset,
+        learn_preferences,
+        learn_patterns,
+        learn_versions,
+    )
+
+    actions = {
+        "status": lambda: learn_status(),
+        "train": lambda: learn_train(force=force),
+        "rollback": lambda: learn_rollback(),
+        "feedback": lambda: learn_feedback(limit=limit, feedback_type=feedback_type),
+        "export": lambda: learn_export(output=output, format=format),
+        "reset": lambda: learn_reset(confirm=confirm),
+        "preferences": lambda: learn_preferences(),
+        "patterns": lambda: learn_patterns(),
+        "versions": lambda: learn_versions(),
+    }
+
+    handler = actions.get(action)
+    if handler:
+        handler()
+    else:
+        from llmstack.cli.console import console
+        console.print(f"[red]Unknown action: {action}[/]")
+        console.print(f"Available: {', '.join(actions.keys())}")
