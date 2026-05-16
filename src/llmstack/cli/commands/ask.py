@@ -354,15 +354,17 @@ async def _interactive_loop(
     """Interactive multi-turn conversation mode."""
     from rich.panel import Panel
     from llmstack.ask.conversation import ConversationEngine
+    from llmstack.learn.collector import FeedbackCollector
 
     conv = ConversationEngine(
         ollama_url=ollama_url, model=model, git_context=git_context,
     )
+    collector = FeedbackCollector()
 
     console.print()
     console.print(Panel(
         "[bold]Interactive mode[/] — chat with your codebase\n"
-        "[dim]Commands: /clear (reset), /sources (show last sources), /quit (exit)[/]",
+        "[dim]Commands: /clear (reset), /sources (show last), /fb (feedback), /quit (exit)[/]",
         border_style="cyan",
     ))
 
@@ -396,6 +398,19 @@ async def _interactive_loop(
                         console.print("[dim]No sources from last answer.[/]")
                 continue
 
+            if question.startswith("/fb"):
+                fb_input = question[3:].strip()
+                if not fb_input:
+                    console.print("[dim]Feedback: y=good, n=bad, c:text=correction, s=skip[/]")
+                    try:
+                        fb_input = console.input("[dim]→ [/]").strip()
+                    except (KeyboardInterrupt, EOFError):
+                        continue
+                result = collector.parse_feedback_input(fb_input)
+                if result:
+                    console.print(f"[dim]✓ {result.feedback_type.value}[/]")
+                continue
+
             # Search for context
             query_emb = await embeddings.embed([question])
             query_vec = query_emb[0] if len(query_emb) > 0 else None
@@ -405,15 +420,36 @@ async def _interactive_loop(
             console.print("[bold green]Assistant:[/]")
             console.print()
 
+            response_text = ""
             async for token in conv.ask(question, results):
                 print(token, end="", flush=True)
+                response_text += token
             print()
+
+            # Track interaction for learning
+            if response_text:
+                collector.record_interaction(
+                    query=question, response=response_text,
+                    model=model, command="ask",
+                )
 
             if show_sources and results:
                 _print_sources(results)
 
+            # Periodic feedback prompt
+            if collector.should_prompt():
+                console.print("[dim]Was this helpful? (y/n/c:correction/s=skip):[/] ", end="")
+                try:
+                    fb_input = console.input("").strip()
+                    result = collector.parse_feedback_input(fb_input)
+                    if result:
+                        console.print(f"[dim]✓ {result.feedback_type.value}[/]")
+                except (KeyboardInterrupt, EOFError):
+                    pass
+
     finally:
         await conv.close()
+        collector.close()
 
     console.print("\n[dim]Goodbye![/]")
 

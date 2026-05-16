@@ -33,8 +33,13 @@ def chat(model: str | None = None) -> None:
         console.print("[error]Cannot connect to gateway. Run 'llmstack up' first.[/]")
         sys.exit(1)
 
+    # Initialize learning feedback collector
+    from llmstack.learn.collector import FeedbackCollector
+
+    collector = FeedbackCollector()
+
     console.print(f"\n[bold]LLMStack Chat[/] — model: [cyan]{model_name}[/]")
-    console.print("[dim]Type 'exit' or Ctrl+C to quit. '/clear' to reset conversation.[/]\n")
+    console.print("[dim]Type 'exit' or Ctrl+C to quit. '/clear' to reset. '/fb' for feedback.[/]\n")
 
     messages: list[dict[str, str]] = []
 
@@ -42,6 +47,7 @@ def chat(model: str | None = None) -> None:
         try:
             user_input = console.input("[bold green]You:[/] ")
         except (KeyboardInterrupt, EOFError):
+            collector.close()
             console.print("\n[dim]Goodbye![/]")
             break
 
@@ -49,11 +55,33 @@ def chat(model: str | None = None) -> None:
         if not text:
             continue
         if text.lower() in ("exit", "quit"):
+            collector.close()
             console.print("[dim]Goodbye![/]")
             break
         if text == "/clear":
             messages.clear()
             console.print("[dim]Conversation cleared.[/]\n")
+            continue
+
+        # Feedback commands
+        if text.startswith("/fb"):
+            fb_input = text[3:].strip() if len(text) > 3 else ""
+            if not fb_input:
+                console.print("[dim]Feedback: y=good, n=bad, c:text=correction, s=skip[/]")
+                try:
+                    fb_input = console.input("[dim]→ [/]").strip()
+                except (KeyboardInterrupt, EOFError):
+                    continue
+            result = collector.parse_feedback_input(fb_input)
+            if result:
+                console.print(f"[dim]✓ Recorded {result.feedback_type.value}[/]")
+            else:
+                console.print("[dim]Skipped.[/]")
+            continue
+
+        if text == "/learn":
+            stats = collector.get_stats()
+            console.print(f"[dim]Learning: {stats['total_stored']} total, {stats['pending']} pending[/]")
             continue
 
         messages.append({"role": "user", "content": text})
@@ -101,4 +129,20 @@ def chat(model: str | None = None) -> None:
         print()  # newline after streamed response
         if assistant_text:
             messages.append({"role": "assistant", "content": assistant_text})
+            collector.record_interaction(
+                query=text, response=assistant_text,
+                model=model_name, command="chat",
+            )
+
+        # Periodic feedback prompt
+        if collector.should_prompt():
+            console.print("[dim]Was this helpful? (y/n/c:correction/s=skip):[/] ", end="")
+            try:
+                fb_input = console.input("").strip()
+                result = collector.parse_feedback_input(fb_input)
+                if result:
+                    console.print(f"[dim]✓ {result.feedback_type.value}[/]")
+            except (KeyboardInterrupt, EOFError):
+                pass
+
         print()
