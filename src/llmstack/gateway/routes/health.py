@@ -112,6 +112,12 @@ async def healthz():
     )
 
 
+@router.get("/ping")
+async def ping():
+    """Ultra-lightweight ping — no backend checks, just returns pong."""
+    return PlainTextResponse("pong", status_code=200)
+
+
 @router.get("/healthz/live")
 async def liveness():
     """Kubernetes liveness probe — always returns 200 if the process is alive."""
