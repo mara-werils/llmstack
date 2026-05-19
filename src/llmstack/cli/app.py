@@ -46,6 +46,28 @@ def init(
     _init(preset=preset, directory=Path(directory) if directory else None)
 
 
+@app.command(name="config")
+def config_cmd(
+    action: str = typer.Argument("show", help="Action: show, validate, path"),
+    format: str = typer.Option("yaml", "--format", "-f", help="Output format: yaml, json"),
+) -> None:
+    """Inspect and validate llmstack.yaml configuration."""
+    from llmstack.cli.commands.config import config_validate, config_show, config_path
+
+    actions = {
+        "validate": config_validate,
+        "show": lambda: config_show(output_format=format),
+        "path": config_path,
+    }
+    handler = actions.get(action)
+    if handler:
+        handler()
+    else:
+        from llmstack.cli.console import console
+        console.print(f"[error]Unknown action: {action}[/]")
+        console.print(f"Available: {', '.join(actions.keys())}")
+
+
 @app.command()
 def up(
     attach: bool = typer.Option(False, "--attach", "-a", help="Stream logs after starting"),
