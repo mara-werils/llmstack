@@ -220,9 +220,25 @@ async def lifespan(app: FastAPI):
 def create_app() -> FastAPI:
     app = FastAPI(
         title="LLMStack Gateway",
-        description="OpenAI-compatible API gateway with caching, RAG, and resilience",
-        version="0.3.0",
+        description=(
+            "OpenAI-compatible API gateway with smart routing, semantic caching, "
+            "RAG, observability, and multi-provider resilience. "
+            "Drop-in replacement for the OpenAI API — works with any OpenAI SDK."
+        ),
+        version="1.0.0",
         lifespan=lifespan,
+        openapi_tags=[
+            {"name": "Chat", "description": "OpenAI-compatible chat completions"},
+            {"name": "Embeddings", "description": "Text embedding generation"},
+            {"name": "Models", "description": "List available models across providers"},
+            {"name": "RAG", "description": "Document ingestion and semantic search"},
+            {"name": "Observe", "description": "Traces, quality tracking, alerts, A/B tests"},
+            {"name": "Learn", "description": "Adaptive learning feedback and training"},
+            {"name": "Router", "description": "Smart model routing stats and decisions"},
+            {"name": "Health", "description": "Health checks, readiness probes, metrics"},
+        ],
+        docs_url="/docs",
+        redoc_url="/redoc",
     )
 
     # CORS
