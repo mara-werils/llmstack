@@ -125,6 +125,17 @@ def chat(
 
 
 @app.command()
+def profile(
+    model: str = typer.Option("llama3.2", "--model", "-m", help="Model to profile"),
+    ollama_url: str = typer.Option("http://localhost:11434", "--ollama-url", help="Ollama API URL"),
+    runs: int = typer.Option(4, "--runs", "-n", help="Number of test prompts"),
+) -> None:
+    """Quick performance profile: tokens/sec, latency per prompt."""
+    from llmstack.cli.commands.profile import profile as _profile
+    _profile(model=model, ollama_url=ollama_url, runs=runs)
+
+
+@app.command()
 def compare(
     prompt: str = typer.Argument(..., help="Prompt to send to all models"),
     models: str = typer.Option(..., "--models", "-m", help="Comma-separated model names"),
