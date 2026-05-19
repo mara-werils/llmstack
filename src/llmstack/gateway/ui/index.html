@@ -1106,6 +1106,7 @@ a { color: var(--accent); text-decoration: none; }
             <option value="__auto__">Auto (Smart Router)</option>
             <option value="llama3.2">Loading models...</option>
           </select>
+          <button class="btn-secondary" style="padding:6px 12px;font-size:12px;" onclick="exportChat()" title="Download conversation">Export</button>
           <button class="btn-secondary" style="padding:6px 12px;font-size:12px;" onclick="clearChat()">Clear</button>
         </div>
       </div>
@@ -1410,6 +1411,28 @@ function autoResize(el) {
   el.style.height = 'auto';
   el.style.height = Math.min(el.scrollHeight, 160) + 'px';
   document.getElementById('sendBtn').disabled = !el.value.trim();
+}
+
+function exportChat() {
+  if (chatHistory.length === 0) {
+    toast('No conversation to export', 'info');
+    return;
+  }
+
+  const lines = chatHistory.map(m => {
+    const role = m.role === 'user' ? 'You' : 'Assistant';
+    return `## ${role}\n\n${m.content}\n`;
+  });
+
+  const markdown = `# LLMStack Chat Export\n\n${lines.join('\n---\n\n')}`;
+  const blob = new Blob([markdown], { type: 'text/markdown' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `llmstack-chat-${new Date().toISOString().slice(0,10)}.md`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('Chat exported', 'success');
 }
 
 function clearChat() {
