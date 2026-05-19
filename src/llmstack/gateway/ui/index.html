@@ -1071,6 +1071,11 @@ a { color: var(--accent); text-decoration: none; }
         RAG
       </div>
 
+      <div class="nav-item" data-panel="traces" onclick="switchPanel('traces')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Traces
+      </div>
+
       <div class="nav-section-label">System</div>
 
       <div class="nav-item" data-panel="dashboard" onclick="switchPanel('dashboard')">
@@ -1198,6 +1203,22 @@ a { color: var(--accent); text-decoration: none; }
       </div>
     </div>
 
+    <!-- ============ TRACES PANEL ============ -->
+    <div class="panel" id="panel-traces">
+      <div class="panel-header">
+        <div class="panel-title">Request Traces</div>
+        <button class="dash-refresh-btn" onclick="refreshTraces()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          Refresh
+        </button>
+      </div>
+      <div class="panel-body">
+        <div id="tracesTable" style="overflow-x:auto;">
+          <div class="empty-state"><div class="loading-spinner"></div><div>Loading traces...</div></div>
+        </div>
+      </div>
+    </div>
+
     <!-- ============ SETTINGS PANEL ============ -->
     <div class="panel" id="panel-settings">
       <div class="panel-header">
@@ -1312,6 +1333,7 @@ function switchPanel(name) {
   document.getElementById('sidebar').classList.remove('open');
 
   if (name === 'dashboard') refreshDashboard();
+  if (name === 'traces') refreshTraces();
   if (name === 'chat') document.getElementById('chatInput').focus();
 }
 
@@ -2021,6 +2043,62 @@ appendMessage = function(...args) {
   setTimeout(addCopyButtons, 50);
   return result;
 };
+
+async function refreshTraces() {
+  const container = document.getElementById('tracesTable');
+  try {
+    const resp = await fetch(apiBase() + '/v1/observe/traces?limit=50', { headers: apiHeaders() });
+    if (!resp.ok) {
+      container.innerHTML = '<div class="empty-state"><div>Traces not available</div></div>';
+      return;
+    }
+    const data = await resp.json();
+    const traces = data.traces || [];
+    if (traces.length === 0) {
+      container.innerHTML = '<div class="empty-state"><div>No traces recorded yet</div></div>';
+      return;
+    }
+
+    let html = '<table style="width:100%;border-collapse:collapse;font-size:13px;">';
+    html += '<thead><tr style="border-bottom:1px solid var(--border-primary);">';
+    html += '<th style="padding:8px;text-align:left;color:var(--text-secondary);">Time</th>';
+    html += '<th style="padding:8px;text-align:left;color:var(--text-secondary);">Model</th>';
+    html += '<th style="padding:8px;text-align:left;color:var(--text-secondary);">Provider</th>';
+    html += '<th style="padding:8px;text-align:left;color:var(--text-secondary);">Tier</th>';
+    html += '<th style="padding:8px;text-align:right;color:var(--text-secondary);">Tokens</th>';
+    html += '<th style="padding:8px;text-align:right;color:var(--text-secondary);">Latency</th>';
+    html += '<th style="padding:8px;text-align:right;color:var(--text-secondary);">Cost</th>';
+    html += '<th style="padding:8px;text-align:center;color:var(--text-secondary);">Cache</th>';
+    html += '</tr></thead><tbody>';
+
+    for (const t of traces) {
+      let ts = t.timestamp || '';
+      if (typeof ts === 'string' && ts.includes('T')) ts = ts.split('T')[1].slice(0,8);
+      const tier = t.routed_tier || '-';
+      const tierClass = {simple:'simple',medium:'medium',complex:'complex'}[tier] || '';
+      const tokens = (t.input_tokens||0) + '+' + (t.output_tokens||0);
+      const latMs = t.latency_ms||0;
+      const latStr = latMs < 1000 ? Math.round(latMs)+'ms' : (latMs/1000).toFixed(1)+'s';
+      const cost = t.cost_usd > 0 ? '$'+t.cost_usd.toFixed(4) : '-';
+      const cached = t.cached ? '<span style="color:var(--green);">HIT</span>' : '-';
+
+      html += `<tr style="border-bottom:1px solid var(--border-subtle);">`;
+      html += `<td style="padding:6px 8px;color:var(--text-tertiary);">${escapeHtml(ts)}</td>`;
+      html += `<td style="padding:6px 8px;color:var(--green);">${escapeHtml(t.model||'-')}</td>`;
+      html += `<td style="padding:6px 8px;">${escapeHtml(t.provider||'local')}</td>`;
+      html += `<td style="padding:6px 8px;">${tierClass ? '<span class="tier-badge '+tierClass+'">'+tier+'</span>' : tier}</td>`;
+      html += `<td style="padding:6px 8px;text-align:right;font-variant-numeric:tabular-nums;">${tokens}</td>`;
+      html += `<td style="padding:6px 8px;text-align:right;font-variant-numeric:tabular-nums;">${latStr}</td>`;
+      html += `<td style="padding:6px 8px;text-align:right;color:var(--yellow);">${cost}</td>`;
+      html += `<td style="padding:6px 8px;text-align:center;">${cached}</td>`;
+      html += `</tr>`;
+    }
+    html += '</tbody></table>';
+    container.innerHTML = html;
+  } catch(e) {
+    container.innerHTML = `<div class="empty-state"><div style="color:var(--red);">${escapeHtml(e.message)}</div></div>`;
+  }
+}
 
 function renderMarkdown(text) {
   if (!text) return '';
