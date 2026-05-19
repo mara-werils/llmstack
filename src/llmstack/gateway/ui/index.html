@@ -1283,6 +1283,8 @@ let chatHistory = []; // {role, content}
 let isStreaming = false;
 let abortController = null;
 
+let dashAutoRefreshId = null;
+
 document.addEventListener('DOMContentLoaded', () => {
   loadSettings();
   applySettings();
@@ -1290,6 +1292,14 @@ document.addEventListener('DOMContentLoaded', () => {
   refreshDashboard();
   fetchRouterStats();
   document.getElementById('chatInput').focus();
+
+  // Auto-refresh dashboard every 30s when visible
+  dashAutoRefreshId = setInterval(() => {
+    const dashPanel = document.getElementById('panel-dashboard');
+    if (dashPanel && dashPanel.classList.contains('active')) {
+      refreshDashboard();
+    }
+  }, 30000);
 });
 
 function switchPanel(name) {
@@ -1720,6 +1730,8 @@ function renderDashboard(data) {
 
   // Gateway Status Card
   const statusClass = data.status === 'ok' ? 'ok' : 'degraded';
+  const version = data.version || '?';
+  const uptimeStr = data.uptime_s ? formatDuration(data.uptime_s) : '-';
   html += `
     <div class="dash-card">
       <div class="dash-card-header">
@@ -1730,6 +1742,8 @@ function renderDashboard(data) {
       </div>
       <div><span class="status-badge ${statusClass}"><span class="status-dot pulse"></span>${data.status === 'ok' ? 'Healthy' : 'Degraded'}</span></div>
       <div class="dash-divider"></div>
+      <div class="dash-stat-row"><span class="dash-stat-label">Version</span><span class="dash-stat-value">v${escapeHtml(version)}</span></div>
+      <div class="dash-stat-row"><span class="dash-stat-label">Uptime</span><span class="dash-stat-value">${uptimeStr}</span></div>
       ${Object.entries(data.services || {}).map(([name, ok]) => `
         <div class="dash-stat-row">
           <span class="dash-stat-label" style="text-transform:capitalize;">${name}</span>
