@@ -10,6 +10,7 @@ from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.gzip import GZipMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -251,6 +252,9 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    # GZip compression for responses > 500 bytes
+    app.add_middleware(GZipMiddleware, minimum_size=500)
 
     # Middleware stack (order matters: outermost first)
     # 0. Request size limit (reject oversized payloads before processing)
