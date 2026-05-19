@@ -134,6 +134,21 @@ def doctor() -> None:
             failure(f"{dep} is missing")
             issues += 1
 
+    # Model recommendations based on hardware
+    console.print(f"\n[accent]Recommended Models[/]")
+    ram_gb = hw.ram_mb // 1024
+    vram_mb = hw.gpu_vram_mb
+
+    if vram_mb >= 48000 or ram_gb >= 64:
+        info("70B models: llama3.1:70b, qwen2.5:72b (you have plenty of memory)")
+    if vram_mb >= 16000 or ram_gb >= 32:
+        info("13B-34B models: codellama:34b, deepseek-coder:33b")
+    if vram_mb >= 8000 or ram_gb >= 16:
+        info("7B-8B models: llama3.2, mistral, codellama:7b (best balance)")
+    if ram_gb >= 8:
+        info("3B models: llama3.2:3b, phi3:3.8b (fast, good for simple tasks)")
+    info("1B models: llama3.2:1b, qwen2.5:1.5b (fastest, great for smart routing)")
+
     # Summary
     console.print()
     if issues == 0 and warnings == 0:
