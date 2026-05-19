@@ -17,3 +17,7 @@ data/
 .ruff_cache/
 .pytest_cache/
 llmstack.yaml
+llmstack.local.yaml
+.llmstack-index/
+finetune-output/
+*.gguf
