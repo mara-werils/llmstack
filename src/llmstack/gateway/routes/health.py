@@ -101,6 +101,41 @@ async def healthz():
     )
 
 
+@router.get("/healthz/live")
+async def liveness():
+    """Kubernetes liveness probe — always returns 200 if the process is alive."""
+    return JSONResponse(content={"status": "alive"}, status_code=200)
+
+
+@router.get("/healthz/ready")
+async def readiness():
+    """Kubernetes readiness probe — returns 200 only if all backends are reachable."""
+    checks = {}
+
+    if INFERENCE_URL:
+        health_url = INFERENCE_URL.replace("/v1", "")
+        checks["inference"] = await _check_url(health_url) or await _check_url(health_url + "/health")
+
+    if QDRANT_URL:
+        checks["qdrant"] = await _check_url(f"{QDRANT_URL}/healthz")
+
+    if REDIS_URL:
+        try:
+            import redis.asyncio as aioredis
+            r = aioredis.from_url(REDIS_URL, socket_connect_timeout=3)
+            await r.ping()
+            checks["redis"] = True
+            await r.aclose()
+        except Exception:
+            checks["redis"] = False
+
+    all_ok = all(checks.values()) if checks else True
+    return JSONResponse(
+        content={"status": "ready" if all_ok else "not_ready", "checks": checks},
+        status_code=200 if all_ok else 503,
+    )
+
+
 @router.get("/metrics")
 async def metrics():
     from llmstack.gateway.middleware.metrics import get_prometheus_metrics
