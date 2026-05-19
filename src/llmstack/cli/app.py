@@ -134,6 +134,15 @@ def export(
 
 
 @app.command()
+def cost(
+    gateway_url: str = typer.Option(None, "--gateway-url", "-g", help="Gateway URL"),
+) -> None:
+    """Show cost, usage, and savings summary from the gateway."""
+    from llmstack.cli.commands.cost import cost as _cost
+    _cost(gateway_url=gateway_url)
+
+
+@app.command()
 def playground(
     gateway_url: str = typer.Option(None, "--url", "-u", help="Gateway URL"),
 ) -> None:
