@@ -134,6 +134,17 @@ def export(
 
 
 @app.command()
+def traces(
+    gateway_url: str = typer.Option(None, "--gateway-url", "-g", help="Gateway URL"),
+    limit: int = typer.Option(20, "--limit", "-n", help="Number of traces to show"),
+    model: str = typer.Option(None, "--model", "-m", help="Filter by model name"),
+) -> None:
+    """View recent request traces with latency, cost, and quality scores."""
+    from llmstack.cli.commands.traces import traces as _traces
+    _traces(gateway_url=gateway_url, limit=limit, model_filter=model)
+
+
+@app.command()
 def cost(
     gateway_url: str = typer.Option(None, "--gateway-url", "-g", help="Gateway URL"),
 ) -> None:
