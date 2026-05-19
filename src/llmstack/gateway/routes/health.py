@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import time
 
 import httpx
 from fastapi import APIRouter
@@ -13,6 +14,8 @@ router = APIRouter()
 INFERENCE_URL = os.getenv("LLMSTACK_INFERENCE_URL", "")
 QDRANT_URL = os.getenv("LLMSTACK_QDRANT_URL", "")
 REDIS_URL = os.getenv("LLMSTACK_REDIS_URL", "")
+
+_START_TIME = time.monotonic()
 
 
 async def _check_url(url: str) -> bool:
@@ -95,8 +98,16 @@ async def healthz():
     except Exception:
         pass
 
+    uptime_s = time.monotonic() - _START_TIME
+
     return JSONResponse(
-        content={"status": "ok" if all_ok else "degraded", "services": checks, **extras},
+        content={
+            "status": "ok" if all_ok else "degraded",
+            "version": "1.0.0",
+            "uptime_s": round(uptime_s, 1),
+            "services": checks,
+            **extras,
+        },
         status_code=status_code,
     )
 
