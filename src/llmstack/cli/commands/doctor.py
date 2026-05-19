@@ -5,7 +5,9 @@ from __future__ import annotations
 import shutil
 import socket
 
-from llmstack.cli.console import console
+import httpx
+
+from llmstack.cli.console import console, banner, success, failure, warn, info
 from llmstack.core.hardware import detect_hardware
 
 
@@ -15,58 +17,144 @@ def _check_port(port: int) -> bool:
         return s.connect_ex(("127.0.0.1", port)) != 0
 
 
+def _check_url(url: str, timeout: int = 3) -> bool:
+    """Check if a URL is reachable."""
+    try:
+        resp = httpx.get(url, timeout=timeout)
+        return resp.status_code == 200
+    except Exception:
+        return False
+
+
 def doctor() -> None:
     """Check system requirements and diagnose common issues."""
-    console.print("\n[bold]LLMStack Doctor[/]\n")
+    banner("LLMStack Doctor", "System health check")
+    console.print()
     issues = 0
+    warnings = 0
 
     # Docker
+    console.print("[accent]Docker[/]")
     if shutil.which("docker"):
-        console.print("  [green]PASS[/] Docker is installed")
+        success("Docker CLI is installed")
     else:
-        console.print("  [red]FAIL[/] Docker is not installed")
+        failure("Docker is not installed")
+        console.print("    [muted]Install: https://docs.docker.com/get-docker/[/]")
         issues += 1
 
-    # Docker daemon
     try:
         import docker
         client = docker.from_env()
         client.ping()
-        console.print("  [green]PASS[/] Docker daemon is running")
+        success("Docker daemon is running")
+        docker_info = client.info()
+        runtime = "nvidia" if "nvidia" in str(docker_info.get("Runtimes", {})) else "default"
+        info(f"Docker version: {docker_info.get('ServerVersion', 'unknown')}")
     except Exception:
-        console.print("  [red]FAIL[/] Docker daemon is not reachable")
+        failure("Docker daemon is not reachable")
+        console.print("    [muted]Try: sudo systemctl start docker (or open Docker Desktop)[/]")
         issues += 1
 
     # Hardware
+    console.print(f"\n[accent]Hardware[/]")
     hw = detect_hardware()
+    info(f"OS: {hw.os} | CPU: {hw.cpu_cores} cores | RAM: {hw.ram_mb // 1024} GB")
+
     if hw.gpu_vendor != "none":
-        console.print(f"  [green]PASS[/] GPU detected: {hw.gpu_name}")
+        success(f"GPU: {hw.gpu_name} ({hw.gpu_vram_mb} MB VRAM)")
         if hw.gpu_vendor == "nvidia" and hw.docker_runtime != "nvidia":
-            console.print("  [yellow]WARN[/] nvidia-container-toolkit not found (GPU passthrough may not work)")
+            warn("nvidia-container-toolkit not found (GPU passthrough may not work)")
+            console.print("    [muted]Install: https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html[/]")
+            warnings += 1
     else:
-        console.print("  [yellow]WARN[/] No GPU detected (CPU inference only)")
+        warn("No GPU detected (CPU inference only, will be slower)")
+        warnings += 1
 
-    console.print(f"  [green]INFO[/] RAM: {hw.ram_mb // 1024} GB, CPU: {hw.cpu_cores} cores")
+    recommended_ram = 8
+    if hw.ram_mb < recommended_ram * 1024:
+        warn(f"Low RAM ({hw.ram_mb // 1024} GB). Recommended: {recommended_ram}+ GB for 7B models")
+        warnings += 1
 
-    # Ports
-    for port, service in [(11434, "Ollama"), (6333, "Qdrant"), (6379, "Redis"), (8000, "Gateway")]:
+    # Ollama
+    console.print(f"\n[accent]Ollama[/]")
+    ollama_url = "http://localhost:11434"
+    if _check_url(ollama_url):
+        success(f"Ollama is running at {ollama_url}")
+        try:
+            resp = httpx.get(f"{ollama_url}/api/tags", timeout=5)
+            models = resp.json().get("models", [])
+            if models:
+                model_names = [m["name"] for m in models[:5]]
+                info(f"Models: {', '.join(model_names)}" + (" ..." if len(models) > 5 else ""))
+            else:
+                warn("No models pulled. Run: ollama pull llama3.2")
+                warnings += 1
+        except Exception:
+            pass
+    else:
+        warn("Ollama is not running")
+        console.print("    [muted]Install: https://ollama.com/download[/]")
+        console.print("    [muted]Start: ollama serve[/]")
+        warnings += 1
+
+    # Network Ports
+    console.print(f"\n[accent]Network Ports[/]")
+    for port, service in [(11434, "Ollama"), (6333, "Qdrant"), (6379, "Redis"), (8000, "Gateway"), (8080, "Dashboard")]:
         if _check_port(port):
-            console.print(f"  [green]PASS[/] Port {port} ({service}) is available")
+            success(f"Port {port} ({service}) is available")
         else:
-            console.print(f"  [yellow]WARN[/] Port {port} ({service}) is in use")
+            if service == "Ollama" and _check_url(f"http://localhost:{port}"):
+                success(f"Port {port} ({service}) is in use by {service}")
+            else:
+                warn(f"Port {port} ({service}) is in use by another process")
+                warnings += 1
 
     # Config
+    console.print(f"\n[accent]Configuration[/]")
     try:
         from llmstack.config.loader import load_config
-        load_config()
-        console.print("  [green]PASS[/] llmstack.yaml is valid")
+        config = load_config()
+        success(f"llmstack.yaml is valid (model: {config.models.chat.name})")
     except FileNotFoundError:
-        console.print("  [yellow]WARN[/] No llmstack.yaml found (run 'llmstack init')")
-    except SystemExit:
-        console.print("  [red]FAIL[/] llmstack.yaml has validation errors")
+        warn("No llmstack.yaml found")
+        console.print("    [muted]Run: llmstack init (or llmstack quickstart)[/]")
+        warnings += 1
+    except SystemExit as exc:
+        failure(f"llmstack.yaml validation error: {exc}")
         issues += 1
 
-    if issues:
-        console.print(f"\n[error]{issues} issue(s) found.[/]")
+    # Python dependencies
+    console.print(f"\n[accent]Dependencies[/]")
+    for dep in ["typer", "rich", "httpx", "pydantic", "docker", "numpy"]:
+        try:
+            from importlib.metadata import version
+            version(dep)
+            success(f"{dep} is installed")
+        except Exception:
+            failure(f"{dep} is missing")
+            issues += 1
+
+    # Model recommendations based on hardware
+    console.print(f"\n[accent]Recommended Models[/]")
+    ram_gb = hw.ram_mb // 1024
+    vram_mb = hw.gpu_vram_mb
+
+    if vram_mb >= 48000 or ram_gb >= 64:
+        info("70B models: llama3.1:70b, qwen2.5:72b (you have plenty of memory)")
+    if vram_mb >= 16000 or ram_gb >= 32:
+        info("13B-34B models: codellama:34b, deepseek-coder:33b")
+    if vram_mb >= 8000 or ram_gb >= 16:
+        info("7B-8B models: llama3.2, mistral, codellama:7b (best balance)")
+    if ram_gb >= 8:
+        info("3B models: llama3.2:3b, phi3:3.8b (fast, good for simple tasks)")
+    info("1B models: llama3.2:1b, qwen2.5:1.5b (fastest, great for smart routing)")
+
+    # Summary
+    console.print()
+    if issues == 0 and warnings == 0:
+        console.print("[bold green]All checks passed! LLMStack is ready to use.[/]")
+    elif issues == 0:
+        console.print(f"[bold yellow]{warnings} warning(s), but no blocking issues.[/]")
     else:
-        console.print("\n[success]All checks passed![/]")
+        console.print(f"[bold red]{issues} issue(s) and {warnings} warning(s) found.[/]")
+    console.print()

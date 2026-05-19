@@ -19,7 +19,10 @@ app = typer.Typer(
 
 def version_callback(value: bool) -> None:
     if value:
+        import platform
+        import sys
         typer.echo(f"llmstack {__version__}")
+        typer.echo(f"Python {sys.version.split()[0]} on {platform.platform()}")
         raise typer.Exit()
 
 
@@ -36,14 +39,59 @@ def main(
 
 
 @app.command()
+def quickstart(
+    model: str = typer.Option("llama3.2", "--model", "-m", help="Model to use"),
+    ollama_url: str = typer.Option("http://localhost:11434", "--ollama-url", help="Ollama API URL"),
+    skip_pull: bool = typer.Option(False, "--skip-pull", help="Skip model pull check"),
+) -> None:
+    """Zero-to-running in one command: check deps, pull model, create config."""
+    from llmstack.cli.commands.quickstart import quickstart as _quickstart
+    _quickstart(model=model, ollama_url=ollama_url, skip_pull=skip_pull)
+
+
+@app.command()
 def init(
-    preset: str = typer.Option(None, "--preset", "-p", help="Preset: chat, rag, agent"),
+    preset: str = typer.Option(None, "--preset", "-p", help="Preset: chat, rag, agent, secure"),
     directory: str = typer.Option(None, "--dir", "-d", help="Target directory"),
 ) -> None:
     """Create a new llmstack.yaml configuration file."""
     from pathlib import Path
     from llmstack.cli.commands.init import init as _init
     _init(preset=preset, directory=Path(directory) if directory else None)
+
+
+@app.command(name="config")
+def config_cmd(
+    action: str = typer.Argument("show", help="Action: show, validate, path"),
+    format: str = typer.Option("yaml", "--format", "-f", help="Output format: yaml, json"),
+) -> None:
+    """Inspect and validate llmstack.yaml configuration."""
+    from llmstack.cli.commands.config import config_validate, config_show, config_path
+
+    actions = {
+        "validate": config_validate,
+        "show": lambda: config_show(output_format=format),
+        "path": config_path,
+    }
+    handler = actions.get(action)
+    if handler:
+        handler()
+    else:
+        from llmstack.cli.console import console
+        console.print(f"[error]Unknown action: {action}[/]")
+        console.print(f"Available: {', '.join(actions.keys())}")
+
+
+@app.command()
+def serve(
+    host: str = typer.Option("0.0.0.0", "--host", "-h", help="Bind host"),
+    port: int = typer.Option(8000, "--port", "-p", help="Bind port"),
+    reload: bool = typer.Option(False, "--reload", help="Auto-reload on code changes"),
+    workers: int = typer.Option(1, "--workers", "-w", help="Number of worker processes"),
+) -> None:
+    """Start the gateway API server directly (no Docker required)."""
+    from llmstack.cli.commands.serve import serve as _serve
+    _serve(host=host, port=port, reload=reload, workers=workers)
 
 
 @app.command()
@@ -92,12 +140,91 @@ def chat(
 
 
 @app.command()
+def profile(
+    model: str = typer.Option("llama3.2", "--model", "-m", help="Model to profile"),
+    ollama_url: str = typer.Option("http://localhost:11434", "--ollama-url", help="Ollama API URL"),
+    runs: int = typer.Option(4, "--runs", "-n", help="Number of test prompts"),
+) -> None:
+    """Quick performance profile: tokens/sec, latency per prompt."""
+    from llmstack.cli.commands.profile import profile as _profile
+    _profile(model=model, ollama_url=ollama_url, runs=runs)
+
+
+@app.command()
+def compare(
+    prompt: str = typer.Argument(..., help="Prompt to send to all models"),
+    models: str = typer.Option(..., "--models", "-m", help="Comma-separated model names"),
+    ollama_url: str = typer.Option("http://localhost:11434", "--ollama-url", help="Ollama API URL"),
+) -> None:
+    """Compare outputs from multiple models side-by-side."""
+    from llmstack.cli.commands.compare import compare as _compare
+    model_list = [m.strip() for m in models.split(",") if m.strip()]
+    _compare(prompt=prompt, models=model_list, ollama_url=ollama_url)
+
+
+@app.command()
 def export(
     output: str = typer.Option("docker-compose.yml", "--output", "-o", help="Output file path"),
 ) -> None:
     """Export llmstack.yaml as a standalone docker-compose.yml."""
     from llmstack.cli.commands.export import export as _export
     _export(output=output)
+
+
+@app.command()
+def traces(
+    gateway_url: str = typer.Option(None, "--gateway-url", "-g", help="Gateway URL"),
+    limit: int = typer.Option(20, "--limit", "-n", help="Number of traces to show"),
+    model: str = typer.Option(None, "--model", "-m", help="Filter by model name"),
+) -> None:
+    """View recent request traces with latency, cost, and quality scores."""
+    from llmstack.cli.commands.traces import traces as _traces
+    _traces(gateway_url=gateway_url, limit=limit, model_filter=model)
+
+
+@app.command()
+def cost(
+    gateway_url: str = typer.Option(None, "--gateway-url", "-g", help="Gateway URL"),
+) -> None:
+    """Show cost, usage, and savings summary from the gateway."""
+    from llmstack.cli.commands.cost import cost as _cost
+    _cost(gateway_url=gateway_url)
+
+
+@app.command()
+def playground(
+    gateway_url: str = typer.Option(None, "--url", "-u", help="Gateway URL"),
+) -> None:
+    """Open the LLMStack Web UI playground in your browser."""
+    from llmstack.cli.commands.playground import playground as _playground
+    _playground(gateway_url=gateway_url)
+
+
+@app.command()
+def pull(
+    model: str = typer.Argument(..., help="Model name to pull (e.g. llama3.2, mistral, codellama)"),
+    ollama_url: str = typer.Option("http://localhost:11434", "--ollama-url", help="Ollama API URL"),
+) -> None:
+    """Pull a model from the Ollama registry with progress display."""
+    from llmstack.cli.commands.pull import pull as _pull
+    _pull(model=model, ollama_url=ollama_url)
+
+
+@app.command(name="models")
+def models_cmd(
+    ollama_url: str = typer.Option("http://localhost:11434", "--ollama-url", help="Ollama API URL"),
+    gateway_url: str = typer.Option(None, "--gateway-url", "-g", help="Running gateway URL"),
+) -> None:
+    """List all available models from Ollama and the gateway."""
+    from llmstack.cli.commands.models import models as _models
+    _models(ollama_url=ollama_url, gateway_url=gateway_url)
+
+
+@app.command()
+def info() -> None:
+    """Show detailed system, hardware, and project information."""
+    from llmstack.cli.commands.info import info as _info
+    _info()
 
 
 @app.command()
@@ -353,6 +480,17 @@ def security(
     from llmstack.cli.commands.security import security as _security
     _security(target=target, model=model, ollama_url=ollama_url,
               output_format=output, output_file=output_file, severity=severity)
+
+
+@app.command(name="history")
+def history_cmd(
+    limit: int = typer.Option(20, "--limit", "-n", help="Number of conversations to show"),
+    search: str = typer.Option(None, "--search", "-s", help="Search query"),
+    index_dir: str = typer.Option(None, "--index-dir", help="Custom index directory"),
+) -> None:
+    """View and search your ask conversation history."""
+    from llmstack.cli.commands.history import history as _history
+    _history(index_dir=index_dir, limit=limit, search=search)
 
 
 @app.command(name="export-conv")

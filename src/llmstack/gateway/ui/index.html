@@ -982,6 +982,45 @@ a { color: var(--accent); text-decoration: none; }
 .tier-legend-dot.medium { background: var(--yellow); }
 .tier-legend-dot.complex { background: #a855f7; }
 
+/* Code block copy button */
+.code-block-wrapper {
+  position: relative;
+}
+
+.code-copy-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 500;
+  background: var(--bg-hover);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-sm);
+  color: var(--text-tertiary);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--transition-fast), background var(--transition-fast);
+  z-index: 1;
+}
+
+.code-block-wrapper:hover .code-copy-btn { opacity: 1; }
+.code-copy-btn:hover { background: var(--bg-active); color: var(--text-primary); }
+.code-copy-btn.copied { color: var(--green); }
+
+/* Keyboard shortcut hints */
+.kbd {
+  display: inline-block;
+  padding: 1px 5px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
+  border-radius: 3px;
+  color: var(--text-tertiary);
+  line-height: 1.5;
+}
+
 .msg-content table {
   border-collapse: collapse;
   margin: 10px 0;
@@ -1015,7 +1054,7 @@ a { color: var(--accent); text-decoration: none; }
       <div class="sidebar-logo">L</div>
       <div>
         <div class="sidebar-title">LLMStack</div>
-        <div class="sidebar-subtitle">Gateway v0.4</div>
+        <div class="sidebar-subtitle">Gateway v1.0</div>
       </div>
     </div>
 
@@ -1030,6 +1069,11 @@ a { color: var(--accent); text-decoration: none; }
       <div class="nav-item" data-panel="rag" onclick="switchPanel('rag')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
         RAG
+      </div>
+
+      <div class="nav-item" data-panel="traces" onclick="switchPanel('traces')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Traces
       </div>
 
       <div class="nav-section-label">System</div>
@@ -1051,7 +1095,7 @@ a { color: var(--accent); text-decoration: none; }
     </nav>
 
     <div class="sidebar-footer" id="sidebarFooter">
-      LLMStack Gateway v0.4.0
+      LLMStack Gateway v1.0.0
     </div>
   </aside>
 
@@ -1067,6 +1111,7 @@ a { color: var(--accent); text-decoration: none; }
             <option value="__auto__">Auto (Smart Router)</option>
             <option value="llama3.2">Loading models...</option>
           </select>
+          <button class="btn-secondary" style="padding:6px 12px;font-size:12px;" onclick="exportChat()" title="Download conversation">Export</button>
           <button class="btn-secondary" style="padding:6px 12px;font-size:12px;" onclick="clearChat()">Clear</button>
         </div>
       </div>
@@ -1087,7 +1132,7 @@ a { color: var(--accent); text-decoration: none; }
               <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
             </button>
           </div>
-          <div class="chat-hint">Press Enter to send, Shift+Enter for new line</div>
+          <div class="chat-hint">Press Enter to send, Shift+Enter for new line &middot; <span class="kbd">&#8984;K</span> Focus &middot; <span class="kbd">&#8984;1-4</span> Panels &middot; <span class="kbd">Esc</span> Cancel</div>
         </div>
       </div>
     </div>
@@ -1154,6 +1199,22 @@ a { color: var(--accent); text-decoration: none; }
             <div class="loading-spinner"></div>
             <div>Loading dashboard...</div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ TRACES PANEL ============ -->
+    <div class="panel" id="panel-traces">
+      <div class="panel-header">
+        <div class="panel-title">Request Traces</div>
+        <button class="dash-refresh-btn" onclick="refreshTraces()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          Refresh
+        </button>
+      </div>
+      <div class="panel-body">
+        <div id="tracesTable" style="overflow-x:auto;">
+          <div class="empty-state"><div class="loading-spinner"></div><div>Loading traces...</div></div>
         </div>
       </div>
     </div>
@@ -1243,6 +1304,8 @@ let chatHistory = []; // {role, content}
 let isStreaming = false;
 let abortController = null;
 
+let dashAutoRefreshId = null;
+
 document.addEventListener('DOMContentLoaded', () => {
   loadSettings();
   applySettings();
@@ -1250,6 +1313,14 @@ document.addEventListener('DOMContentLoaded', () => {
   refreshDashboard();
   fetchRouterStats();
   document.getElementById('chatInput').focus();
+
+  // Auto-refresh dashboard every 30s when visible
+  dashAutoRefreshId = setInterval(() => {
+    const dashPanel = document.getElementById('panel-dashboard');
+    if (dashPanel && dashPanel.classList.contains('active')) {
+      refreshDashboard();
+    }
+  }, 30000);
 });
 
 function switchPanel(name) {
@@ -1262,6 +1333,7 @@ function switchPanel(name) {
   document.getElementById('sidebar').classList.remove('open');
 
   if (name === 'dashboard') refreshDashboard();
+  if (name === 'traces') refreshTraces();
   if (name === 'chat') document.getElementById('chatInput').focus();
 }
 
@@ -1371,6 +1443,28 @@ function autoResize(el) {
   el.style.height = 'auto';
   el.style.height = Math.min(el.scrollHeight, 160) + 'px';
   document.getElementById('sendBtn').disabled = !el.value.trim();
+}
+
+function exportChat() {
+  if (chatHistory.length === 0) {
+    toast('No conversation to export', 'info');
+    return;
+  }
+
+  const lines = chatHistory.map(m => {
+    const role = m.role === 'user' ? 'You' : 'Assistant';
+    return `## ${role}\n\n${m.content}\n`;
+  });
+
+  const markdown = `# LLMStack Chat Export\n\n${lines.join('\n---\n\n')}`;
+  const blob = new Blob([markdown], { type: 'text/markdown' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `llmstack-chat-${new Date().toISOString().slice(0,10)}.md`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('Chat exported', 'success');
 }
 
 function clearChat() {
@@ -1658,6 +1752,8 @@ function renderDashboard(data) {
 
   // Gateway Status Card
   const statusClass = data.status === 'ok' ? 'ok' : 'degraded';
+  const version = data.version || '?';
+  const uptimeStr = data.uptime_s ? formatDuration(data.uptime_s) : '-';
   html += `
     <div class="dash-card">
       <div class="dash-card-header">
@@ -1668,6 +1764,8 @@ function renderDashboard(data) {
       </div>
       <div><span class="status-badge ${statusClass}"><span class="status-dot pulse"></span>${data.status === 'ok' ? 'Healthy' : 'Degraded'}</span></div>
       <div class="dash-divider"></div>
+      <div class="dash-stat-row"><span class="dash-stat-label">Version</span><span class="dash-stat-value">v${escapeHtml(version)}</span></div>
+      <div class="dash-stat-row"><span class="dash-stat-label">Uptime</span><span class="dash-stat-value">${uptimeStr}</span></div>
       ${Object.entries(data.services || {}).map(([name, ok]) => `
         <div class="dash-stat-row">
           <span class="dash-stat-label" style="text-transform:capitalize;">${name}</span>
@@ -1819,7 +1917,7 @@ async function fetchRouterStats() {
       }
       indicator.className = 'router-indicator inactive';
       indicatorText.textContent = 'Router: inactive';
-      footer.innerHTML = 'LLMStack Gateway v0.4.0';
+      footer.innerHTML = 'LLMStack Gateway v1.0.0';
       return;
     }
 
@@ -1877,7 +1975,128 @@ async function fetchRouterStats() {
     }
     indicator.className = 'router-indicator inactive';
     indicatorText.textContent = 'Router: inactive';
-    footer.innerHTML = 'LLMStack Gateway v0.4.0';
+    footer.innerHTML = 'LLMStack Gateway v1.0.0';
+  }
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+  const isMeta = e.metaKey || e.ctrlKey;
+
+  // Cmd/Ctrl+K: focus chat input
+  if (isMeta && e.key === 'k') {
+    e.preventDefault();
+    switchPanel('chat');
+    document.getElementById('chatInput').focus();
+  }
+
+  // Cmd/Ctrl+Shift+N: clear chat
+  if (isMeta && e.shiftKey && e.key === 'N') {
+    e.preventDefault();
+    clearChat();
+  }
+
+  // Escape: cancel streaming or close sidebar
+  if (e.key === 'Escape') {
+    if (isStreaming && abortController) {
+      abortController.abort();
+    }
+    document.getElementById('sidebar').classList.remove('open');
+  }
+
+  // Cmd/Ctrl+1-4: switch panels
+  if (isMeta && e.key >= '1' && e.key <= '4') {
+    e.preventDefault();
+    const panels = ['chat', 'rag', 'dashboard', 'settings'];
+    const idx = parseInt(e.key) - 1;
+    if (idx < panels.length) switchPanel(panels[idx]);
+  }
+});
+
+function addCopyButtons() {
+  document.querySelectorAll('.msg-content pre:not(.has-copy-btn)').forEach(pre => {
+    pre.classList.add('has-copy-btn');
+    const wrapper = document.createElement('div');
+    wrapper.className = 'code-block-wrapper';
+    pre.parentNode.insertBefore(wrapper, pre);
+    wrapper.appendChild(pre);
+
+    const btn = document.createElement('button');
+    btn.className = 'code-copy-btn';
+    btn.textContent = 'Copy';
+    btn.onclick = () => {
+      const code = pre.querySelector('code') || pre;
+      navigator.clipboard.writeText(code.textContent).then(() => {
+        btn.textContent = 'Copied!';
+        btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+      });
+    };
+    wrapper.appendChild(btn);
+  });
+}
+
+// Run after each message render
+const _origAppendMessage = appendMessage;
+appendMessage = function(...args) {
+  const result = _origAppendMessage.apply(this, args);
+  setTimeout(addCopyButtons, 50);
+  return result;
+};
+
+async function refreshTraces() {
+  const container = document.getElementById('tracesTable');
+  try {
+    const resp = await fetch(apiBase() + '/v1/observe/traces?limit=50', { headers: apiHeaders() });
+    if (!resp.ok) {
+      container.innerHTML = '<div class="empty-state"><div>Traces not available</div></div>';
+      return;
+    }
+    const data = await resp.json();
+    const traces = data.traces || [];
+    if (traces.length === 0) {
+      container.innerHTML = '<div class="empty-state"><div>No traces recorded yet</div></div>';
+      return;
+    }
+
+    let html = '<table style="width:100%;border-collapse:collapse;font-size:13px;">';
+    html += '<thead><tr style="border-bottom:1px solid var(--border-primary);">';
+    html += '<th style="padding:8px;text-align:left;color:var(--text-secondary);">Time</th>';
+    html += '<th style="padding:8px;text-align:left;color:var(--text-secondary);">Model</th>';
+    html += '<th style="padding:8px;text-align:left;color:var(--text-secondary);">Provider</th>';
+    html += '<th style="padding:8px;text-align:left;color:var(--text-secondary);">Tier</th>';
+    html += '<th style="padding:8px;text-align:right;color:var(--text-secondary);">Tokens</th>';
+    html += '<th style="padding:8px;text-align:right;color:var(--text-secondary);">Latency</th>';
+    html += '<th style="padding:8px;text-align:right;color:var(--text-secondary);">Cost</th>';
+    html += '<th style="padding:8px;text-align:center;color:var(--text-secondary);">Cache</th>';
+    html += '</tr></thead><tbody>';
+
+    for (const t of traces) {
+      let ts = t.timestamp || '';
+      if (typeof ts === 'string' && ts.includes('T')) ts = ts.split('T')[1].slice(0,8);
+      const tier = t.routed_tier || '-';
+      const tierClass = {simple:'simple',medium:'medium',complex:'complex'}[tier] || '';
+      const tokens = (t.input_tokens||0) + '+' + (t.output_tokens||0);
+      const latMs = t.latency_ms||0;
+      const latStr = latMs < 1000 ? Math.round(latMs)+'ms' : (latMs/1000).toFixed(1)+'s';
+      const cost = t.cost_usd > 0 ? '$'+t.cost_usd.toFixed(4) : '-';
+      const cached = t.cached ? '<span style="color:var(--green);">HIT</span>' : '-';
+
+      html += `<tr style="border-bottom:1px solid var(--border-subtle);">`;
+      html += `<td style="padding:6px 8px;color:var(--text-tertiary);">${escapeHtml(ts)}</td>`;
+      html += `<td style="padding:6px 8px;color:var(--green);">${escapeHtml(t.model||'-')}</td>`;
+      html += `<td style="padding:6px 8px;">${escapeHtml(t.provider||'local')}</td>`;
+      html += `<td style="padding:6px 8px;">${tierClass ? '<span class="tier-badge '+tierClass+'">'+tier+'</span>' : tier}</td>`;
+      html += `<td style="padding:6px 8px;text-align:right;font-variant-numeric:tabular-nums;">${tokens}</td>`;
+      html += `<td style="padding:6px 8px;text-align:right;font-variant-numeric:tabular-nums;">${latStr}</td>`;
+      html += `<td style="padding:6px 8px;text-align:right;color:var(--yellow);">${cost}</td>`;
+      html += `<td style="padding:6px 8px;text-align:center;">${cached}</td>`;
+      html += `</tr>`;
+    }
+    html += '</tbody></table>';
+    container.innerHTML = html;
+  } catch(e) {
+    container.innerHTML = `<div class="empty-state"><div style="color:var(--red);">${escapeHtml(e.message)}</div></div>`;
   }
 }
 

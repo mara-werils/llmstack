@@ -39,7 +39,9 @@ def chat(model: str | None = None) -> None:
     collector = FeedbackCollector()
 
     console.print(f"\n[bold]LLMStack Chat[/] — model: [cyan]{model_name}[/]")
-    console.print("[dim]Type 'exit' or Ctrl+C to quit. '/clear' to reset. '/fb' for feedback.[/]\n")
+    console.print("[dim]Commands: /help, /clear, /model <name>, /system <prompt>, /fb, exit[/]\n")
+
+    system_prompt = ""
 
     messages: list[dict[str, str]] = []
 
@@ -61,6 +63,27 @@ def chat(model: str | None = None) -> None:
         if text == "/clear":
             messages.clear()
             console.print("[dim]Conversation cleared.[/]\n")
+            continue
+
+        if text == "/help":
+            console.print("[dim]Available commands:[/]")
+            console.print("  [cyan]/clear[/]          Reset conversation")
+            console.print("  [cyan]/model <name>[/]   Switch model")
+            console.print("  [cyan]/system <text>[/]  Set system prompt")
+            console.print("  [cyan]/fb[/]             Give feedback")
+            console.print("  [cyan]/learn[/]          Show learning stats")
+            console.print("  [cyan]exit[/]            Quit")
+            console.print()
+            continue
+
+        if text.startswith("/model "):
+            model_name = text[7:].strip()
+            console.print(f"[dim]Switched to model: {model_name}[/]\n")
+            continue
+
+        if text.startswith("/system "):
+            system_prompt = text[8:].strip()
+            console.print(f"[dim]System prompt set: {system_prompt[:60]}{'...' if len(system_prompt) > 60 else ''}[/]\n")
             continue
 
         # Feedback commands
@@ -95,7 +118,11 @@ def chat(model: str | None = None) -> None:
                 "POST",
                 f"{base_url}/v1/chat/completions",
                 headers=headers,
-                json={"model": model_name, "messages": messages, "stream": True},
+                json={
+                    "model": model_name,
+                    "messages": ([{"role": "system", "content": system_prompt}] if system_prompt else []) + messages,
+                    "stream": True,
+                },
                 timeout=httpx.Timeout(300, connect=10),
             ) as resp:
                 if resp.status_code != 200:

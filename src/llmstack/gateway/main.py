@@ -10,6 +10,7 @@ from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.gzip import GZipMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -25,6 +26,7 @@ from llmstack.gateway.middleware.auth import AuthMiddleware
 from llmstack.gateway.middleware.metrics import MetricsMiddleware
 from llmstack.gateway.middleware.rate_limit import RateLimitMiddleware
 from llmstack.gateway.middleware.logging import LoggingMiddleware
+from llmstack.gateway.middleware.request_size import RequestSizeMiddleware
 
 logger = logging.getLogger(__name__)
 
@@ -220,9 +222,25 @@ async def lifespan(app: FastAPI):
 def create_app() -> FastAPI:
     app = FastAPI(
         title="LLMStack Gateway",
-        description="OpenAI-compatible API gateway with caching, RAG, and resilience",
-        version="0.3.0",
+        description=(
+            "OpenAI-compatible API gateway with smart routing, semantic caching, "
+            "RAG, observability, and multi-provider resilience. "
+            "Drop-in replacement for the OpenAI API — works with any OpenAI SDK."
+        ),
+        version="1.0.0",
         lifespan=lifespan,
+        openapi_tags=[
+            {"name": "Chat", "description": "OpenAI-compatible chat completions"},
+            {"name": "Embeddings", "description": "Text embedding generation"},
+            {"name": "Models", "description": "List available models across providers"},
+            {"name": "RAG", "description": "Document ingestion and semantic search"},
+            {"name": "Observe", "description": "Traces, quality tracking, alerts, A/B tests"},
+            {"name": "Learn", "description": "Adaptive learning feedback and training"},
+            {"name": "Router", "description": "Smart model routing stats and decisions"},
+            {"name": "Health", "description": "Health checks, readiness probes, metrics"},
+        ],
+        docs_url="/docs",
+        redoc_url="/redoc",
     )
 
     # CORS
@@ -235,7 +253,13 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
+    # GZip compression for responses > 500 bytes
+    app.add_middleware(GZipMiddleware, minimum_size=500)
+
     # Middleware stack (order matters: outermost first)
+    # 0. Request size limit (reject oversized payloads before processing)
+    app.add_middleware(RequestSizeMiddleware, max_bytes=10 * 1024 * 1024)
+
     # 1. Logging (outermost — captures everything)
     app.add_middleware(LoggingMiddleware)
 
