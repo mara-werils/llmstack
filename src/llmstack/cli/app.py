@@ -101,6 +101,13 @@ def export(
 
 
 @app.command()
+def info() -> None:
+    """Show detailed system, hardware, and project information."""
+    from llmstack.cli.commands.info import info as _info
+    _info()
+
+
+@app.command()
 def doctor() -> None:
     """Check system requirements and diagnose issues."""
     from llmstack.cli.commands.doctor import doctor as _doctor
