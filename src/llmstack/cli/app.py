@@ -48,7 +48,7 @@ def quickstart(
 
 @app.command()
 def init(
-    preset: str = typer.Option(None, "--preset", "-p", help="Preset: chat, rag, agent"),
+    preset: str = typer.Option(None, "--preset", "-p", help="Preset: chat, rag, agent, secure"),
     directory: str = typer.Option(None, "--dir", "-d", help="Target directory"),
 ) -> None:
     """Create a new llmstack.yaml configuration file."""
