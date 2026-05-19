@@ -100,6 +100,16 @@ def export(
     _export(output=output)
 
 
+@app.command(name="models")
+def models_cmd(
+    ollama_url: str = typer.Option("http://localhost:11434", "--ollama-url", help="Ollama API URL"),
+    gateway_url: str = typer.Option(None, "--gateway-url", "-g", help="Running gateway URL"),
+) -> None:
+    """List all available models from Ollama and the gateway."""
+    from llmstack.cli.commands.models import models as _models
+    _models(ollama_url=ollama_url, gateway_url=gateway_url)
+
+
 @app.command()
 def info() -> None:
     """Show detailed system, hardware, and project information."""
