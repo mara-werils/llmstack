@@ -982,6 +982,45 @@ a { color: var(--accent); text-decoration: none; }
 .tier-legend-dot.medium { background: var(--yellow); }
 .tier-legend-dot.complex { background: #a855f7; }
 
+/* Code block copy button */
+.code-block-wrapper {
+  position: relative;
+}
+
+.code-copy-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 500;
+  background: var(--bg-hover);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-sm);
+  color: var(--text-tertiary);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--transition-fast), background var(--transition-fast);
+  z-index: 1;
+}
+
+.code-block-wrapper:hover .code-copy-btn { opacity: 1; }
+.code-copy-btn:hover { background: var(--bg-active); color: var(--text-primary); }
+.code-copy-btn.copied { color: var(--green); }
+
+/* Keyboard shortcut hints */
+.kbd {
+  display: inline-block;
+  padding: 1px 5px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
+  border-radius: 3px;
+  color: var(--text-tertiary);
+  line-height: 1.5;
+}
+
 .msg-content table {
   border-collapse: collapse;
   margin: 10px 0;
@@ -1087,7 +1126,7 @@ a { color: var(--accent); text-decoration: none; }
               <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
             </button>
           </div>
-          <div class="chat-hint">Press Enter to send, Shift+Enter for new line</div>
+          <div class="chat-hint">Press Enter to send, Shift+Enter for new line &middot; <span class="kbd">&#8984;K</span> Focus &middot; <span class="kbd">&#8984;1-4</span> Panels &middot; <span class="kbd">Esc</span> Cancel</div>
         </div>
       </div>
     </div>
@@ -1880,6 +1919,71 @@ async function fetchRouterStats() {
     footer.innerHTML = 'LLMStack Gateway v0.4.0';
   }
 }
+
+// Keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+  const isMeta = e.metaKey || e.ctrlKey;
+
+  // Cmd/Ctrl+K: focus chat input
+  if (isMeta && e.key === 'k') {
+    e.preventDefault();
+    switchPanel('chat');
+    document.getElementById('chatInput').focus();
+  }
+
+  // Cmd/Ctrl+Shift+N: clear chat
+  if (isMeta && e.shiftKey && e.key === 'N') {
+    e.preventDefault();
+    clearChat();
+  }
+
+  // Escape: cancel streaming or close sidebar
+  if (e.key === 'Escape') {
+    if (isStreaming && abortController) {
+      abortController.abort();
+    }
+    document.getElementById('sidebar').classList.remove('open');
+  }
+
+  // Cmd/Ctrl+1-4: switch panels
+  if (isMeta && e.key >= '1' && e.key <= '4') {
+    e.preventDefault();
+    const panels = ['chat', 'rag', 'dashboard', 'settings'];
+    const idx = parseInt(e.key) - 1;
+    if (idx < panels.length) switchPanel(panels[idx]);
+  }
+});
+
+function addCopyButtons() {
+  document.querySelectorAll('.msg-content pre:not(.has-copy-btn)').forEach(pre => {
+    pre.classList.add('has-copy-btn');
+    const wrapper = document.createElement('div');
+    wrapper.className = 'code-block-wrapper';
+    pre.parentNode.insertBefore(wrapper, pre);
+    wrapper.appendChild(pre);
+
+    const btn = document.createElement('button');
+    btn.className = 'code-copy-btn';
+    btn.textContent = 'Copy';
+    btn.onclick = () => {
+      const code = pre.querySelector('code') || pre;
+      navigator.clipboard.writeText(code.textContent).then(() => {
+        btn.textContent = 'Copied!';
+        btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+      });
+    };
+    wrapper.appendChild(btn);
+  });
+}
+
+// Run after each message render
+const _origAppendMessage = appendMessage;
+appendMessage = function(...args) {
+  const result = _origAppendMessage.apply(this, args);
+  setTimeout(addCopyButtons, 50);
+  return result;
+};
 
 function renderMarkdown(text) {
   if (!text) return '';
