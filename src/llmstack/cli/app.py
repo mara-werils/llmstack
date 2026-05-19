@@ -19,7 +19,10 @@ app = typer.Typer(
 
 def version_callback(value: bool) -> None:
     if value:
+        import platform
+        import sys
         typer.echo(f"llmstack {__version__}")
+        typer.echo(f"Python {sys.version.split()[0]} on {platform.platform()}")
         raise typer.Exit()
 
 
