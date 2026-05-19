@@ -25,6 +25,7 @@ from llmstack.gateway.middleware.auth import AuthMiddleware
 from llmstack.gateway.middleware.metrics import MetricsMiddleware
 from llmstack.gateway.middleware.rate_limit import RateLimitMiddleware
 from llmstack.gateway.middleware.logging import LoggingMiddleware
+from llmstack.gateway.middleware.request_size import RequestSizeMiddleware
 
 logger = logging.getLogger(__name__)
 
@@ -252,6 +253,9 @@ def create_app() -> FastAPI:
     )
 
     # Middleware stack (order matters: outermost first)
+    # 0. Request size limit (reject oversized payloads before processing)
+    app.add_middleware(RequestSizeMiddleware, max_bytes=10 * 1024 * 1024)
+
     # 1. Logging (outermost — captures everything)
     app.add_middleware(LoggingMiddleware)
 
