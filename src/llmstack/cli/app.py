@@ -125,6 +125,18 @@ def chat(
 
 
 @app.command()
+def compare(
+    prompt: str = typer.Argument(..., help="Prompt to send to all models"),
+    models: str = typer.Option(..., "--models", "-m", help="Comma-separated model names"),
+    ollama_url: str = typer.Option("http://localhost:11434", "--ollama-url", help="Ollama API URL"),
+) -> None:
+    """Compare outputs from multiple models side-by-side."""
+    from llmstack.cli.commands.compare import compare as _compare
+    model_list = [m.strip() for m in models.split(",") if m.strip()]
+    _compare(prompt=prompt, models=model_list, ollama_url=ollama_url)
+
+
+@app.command()
 def export(
     output: str = typer.Option("docker-compose.yml", "--output", "-o", help="Output file path"),
 ) -> None:
