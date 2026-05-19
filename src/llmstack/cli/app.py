@@ -467,6 +467,17 @@ def security(
               output_format=output, output_file=output_file, severity=severity)
 
 
+@app.command(name="history")
+def history_cmd(
+    limit: int = typer.Option(20, "--limit", "-n", help="Number of conversations to show"),
+    search: str = typer.Option(None, "--search", "-s", help="Search query"),
+    index_dir: str = typer.Option(None, "--index-dir", help="Custom index directory"),
+) -> None:
+    """View and search your ask conversation history."""
+    from llmstack.cli.commands.history import history as _history
+    _history(index_dir=index_dir, limit=limit, search=search)
+
+
 @app.command(name="export-conv")
 def export_conv_cmd(
     output: str = typer.Option(None, "--output", "-o", help="Output file path"),
