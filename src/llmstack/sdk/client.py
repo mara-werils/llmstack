@@ -273,6 +273,52 @@ class Client:
         _raise_for_error(resp)
         return HealthResponse.from_dict(resp.json())
 
+    # -- convenience methods -----------------------------------------------
+
+    def ask(self, question: str, model: str = "llama3.2", **kwargs: Any) -> str:
+        """One-liner: send a question and get the response text.
+
+        Args:
+            question: The user's question.
+            model: Model identifier.
+            **kwargs: Additional chat completion parameters.
+
+        Returns:
+            The assistant's reply as a plain string.
+        """
+        resp = self.chat(
+            messages=[{"role": "user", "content": question}],
+            model=model,
+            stream=False,
+            **kwargs,
+        )
+        return resp.choices[0].message.content if resp.choices else ""
+
+    def complete(
+        self,
+        prompt: str,
+        model: str = "llama3.2",
+        system: str = "",
+        **kwargs: Any,
+    ) -> str:
+        """Send a prompt with optional system message and get text back.
+
+        Args:
+            prompt: The user prompt.
+            model: Model identifier.
+            system: Optional system prompt.
+            **kwargs: Additional chat completion parameters.
+
+        Returns:
+            The assistant's reply as a plain string.
+        """
+        messages: list[dict[str, str]] = []
+        if system:
+            messages.append({"role": "system", "content": system})
+        messages.append({"role": "user", "content": prompt})
+        resp = self.chat(messages=messages, model=model, stream=False, **kwargs)
+        return resp.choices[0].message.content if resp.choices else ""
+
 
 # ===================================================================
 # Asynchronous Client
@@ -483,3 +529,49 @@ class AsyncClient:
         resp = await self._client.get("/healthz")
         _raise_for_error(resp)
         return HealthResponse.from_dict(resp.json())
+
+    # -- convenience methods -----------------------------------------------
+
+    async def ask(self, question: str, model: str = "llama3.2", **kwargs: Any) -> str:
+        """One-liner: send a question and get the response text.
+
+        Args:
+            question: The user's question.
+            model: Model identifier.
+            **kwargs: Additional chat completion parameters.
+
+        Returns:
+            The assistant's reply as a plain string.
+        """
+        resp = await self.chat(
+            messages=[{"role": "user", "content": question}],
+            model=model,
+            stream=False,
+            **kwargs,
+        )
+        return resp.choices[0].message.content if resp.choices else ""
+
+    async def complete(
+        self,
+        prompt: str,
+        model: str = "llama3.2",
+        system: str = "",
+        **kwargs: Any,
+    ) -> str:
+        """Send a prompt with optional system message and get text back.
+
+        Args:
+            prompt: The user prompt.
+            model: Model identifier.
+            system: Optional system prompt.
+            **kwargs: Additional chat completion parameters.
+
+        Returns:
+            The assistant's reply as a plain string.
+        """
+        messages: list[dict[str, str]] = []
+        if system:
+            messages.append({"role": "system", "content": system})
+        messages.append({"role": "user", "content": prompt})
+        resp = await self.chat(messages=messages, model=model, stream=False, **kwargs)
+        return resp.choices[0].message.content if resp.choices else ""
