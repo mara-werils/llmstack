@@ -100,6 +100,16 @@ def export(
     _export(output=output)
 
 
+@app.command()
+def pull(
+    model: str = typer.Argument(..., help="Model name to pull (e.g. llama3.2, mistral, codellama)"),
+    ollama_url: str = typer.Option("http://localhost:11434", "--ollama-url", help="Ollama API URL"),
+) -> None:
+    """Pull a model from the Ollama registry with progress display."""
+    from llmstack.cli.commands.pull import pull as _pull
+    _pull(model=model, ollama_url=ollama_url)
+
+
 @app.command(name="models")
 def models_cmd(
     ollama_url: str = typer.Option("http://localhost:11434", "--ollama-url", help="Ollama API URL"),
