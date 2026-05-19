@@ -36,6 +36,17 @@ def main(
 
 
 @app.command()
+def quickstart(
+    model: str = typer.Option("llama3.2", "--model", "-m", help="Model to use"),
+    ollama_url: str = typer.Option("http://localhost:11434", "--ollama-url", help="Ollama API URL"),
+    skip_pull: bool = typer.Option(False, "--skip-pull", help="Skip model pull check"),
+) -> None:
+    """Zero-to-running in one command: check deps, pull model, create config."""
+    from llmstack.cli.commands.quickstart import quickstart as _quickstart
+    _quickstart(model=model, ollama_url=ollama_url, skip_pull=skip_pull)
+
+
+@app.command()
 def init(
     preset: str = typer.Option(None, "--preset", "-p", help="Preset: chat, rag, agent"),
     directory: str = typer.Option(None, "--dir", "-d", help="Target directory"),
