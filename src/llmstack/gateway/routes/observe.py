@@ -103,6 +103,39 @@ async def get_ab_test(test_name: str):
     return JSONResponse(content=result.to_dict())
 
 
+@router.get("/observe/stats")
+async def observe_stats():
+    """Aggregated observability stats for dashboard and CLI."""
+    from llmstack.observe._state import get_trace_store, get_tracker, get_ab_manager
+
+    result: dict = {}
+
+    store = get_trace_store()
+    if store is not None:
+        result["traces"] = {
+            "total": store.total_count,
+            "summary": store.summary(),
+        }
+
+    tracker = get_tracker()
+    if tracker is not None:
+        alerts = tracker.get_alerts(limit=5)
+        result["quality"] = {
+            **tracker.summary(),
+            "recent_alerts": [a.to_dict() for a in alerts],
+        }
+
+    manager = get_ab_manager()
+    if manager is not None:
+        tests = manager.list_tests()
+        result["ab_tests"] = {"active": len(tests)}
+
+    if not result:
+        return JSONResponse(content={"error": "observe not enabled"}, status_code=503)
+
+    return JSONResponse(content=result)
+
+
 @router.delete("/observe/ab-test/{test_name}")
 async def stop_ab_test(test_name: str):
     from llmstack.observe._state import get_ab_manager
