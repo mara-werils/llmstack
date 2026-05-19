@@ -80,6 +80,18 @@ def config_cmd(
 
 
 @app.command()
+def serve(
+    host: str = typer.Option("0.0.0.0", "--host", "-h", help="Bind host"),
+    port: int = typer.Option(8000, "--port", "-p", help="Bind port"),
+    reload: bool = typer.Option(False, "--reload", help="Auto-reload on code changes"),
+    workers: int = typer.Option(1, "--workers", "-w", help="Number of worker processes"),
+) -> None:
+    """Start the gateway API server directly (no Docker required)."""
+    from llmstack.cli.commands.serve import serve as _serve
+    _serve(host=host, port=port, reload=reload, workers=workers)
+
+
+@app.command()
 def up(
     attach: bool = typer.Option(False, "--attach", "-a", help="Stream logs after starting"),
 ) -> None:
