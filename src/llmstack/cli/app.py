@@ -101,6 +101,15 @@ def export(
 
 
 @app.command()
+def playground(
+    gateway_url: str = typer.Option(None, "--url", "-u", help="Gateway URL"),
+) -> None:
+    """Open the LLMStack Web UI playground in your browser."""
+    from llmstack.cli.commands.playground import playground as _playground
+    _playground(gateway_url=gateway_url)
+
+
+@app.command()
 def pull(
     model: str = typer.Argument(..., help="Model name to pull (e.g. llama3.2, mistral, codellama)"),
     ollama_url: str = typer.Option("http://localhost:11434", "--ollama-url", help="Ollama API URL"),
