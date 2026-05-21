@@ -44,6 +44,37 @@ class ServicesConfig(BaseModel):
     cache: CacheConfig = Field(default_factory=CacheConfig)
 
 
+class GuardrailsConfig(BaseModel):
+    """Content safety guardrails configuration."""
+
+    enabled: bool = False
+    pii_detection: bool = True
+    prompt_injection_detection: bool = True
+    custom_rules: list[dict] = Field(default_factory=list)
+
+
+class WebhooksConfig(BaseModel):
+    """Webhook notification configuration."""
+
+    enabled: bool = False
+    endpoints: list[dict] = Field(default_factory=list)
+
+
+class CostConfig(BaseModel):
+    """Cost tracking and budget configuration."""
+
+    enabled: bool = True
+    budgets: list[dict] = Field(default_factory=list)
+
+
+class BatchConfig(BaseModel):
+    """Batch processing configuration."""
+
+    enabled: bool = True
+    max_batch_size: int = 100
+    default_concurrency: int = 5
+
+
 class GatewayConfig(BaseModel):
     port: int = 8000
     auth: Literal["none", "api_key"] = "api_key"
@@ -51,6 +82,11 @@ class GatewayConfig(BaseModel):
     rate_limit: str = "100/min"
     cors: list[str] = Field(default_factory=lambda: ["*"])
     request_timeout: int = 120
+    guardrails: GuardrailsConfig = Field(default_factory=GuardrailsConfig)
+    webhooks: WebhooksConfig = Field(default_factory=WebhooksConfig)
+    cost: CostConfig = Field(default_factory=CostConfig)
+    batch: BatchConfig = Field(default_factory=BatchConfig)
+    warmup_models: list[str] = Field(default_factory=list)
 
 
 class ObserveConfig(BaseModel):
