@@ -24,6 +24,7 @@ from llmstack.gateway.routes.observe import router as observe_router
 from llmstack.gateway.routes.learn import router as learn_router
 from llmstack.gateway.routes.templates import router as templates_router
 from llmstack.gateway.routes.conversations import router as conversations_router
+from llmstack.gateway.routes.cost import router as cost_router
 from llmstack.gateway.middleware.auth import AuthMiddleware
 from llmstack.gateway.middleware.metrics import MetricsMiddleware
 from llmstack.gateway.middleware.rate_limit import RateLimitMiddleware
@@ -240,6 +241,7 @@ def create_app() -> FastAPI:
             {"name": "Learn", "description": "Adaptive learning feedback and training"},
             {"name": "Templates", "description": "Prompt template management and versioning"},
             {"name": "Conversations", "description": "Persistent conversation history"},
+            {"name": "Cost", "description": "Cost tracking, budgets, and alerts"},
             {"name": "Router", "description": "Smart model routing stats and decisions"},
             {"name": "Health", "description": "Health checks, readiness probes, metrics"},
         ],
@@ -289,6 +291,7 @@ def create_app() -> FastAPI:
     app.include_router(learn_router, prefix="/v1")
     app.include_router(templates_router, prefix="/v1")
     app.include_router(conversations_router, prefix="/v1")
+    app.include_router(cost_router, prefix="/v1")
     app.include_router(health_router)
 
     # Serve Web UI
