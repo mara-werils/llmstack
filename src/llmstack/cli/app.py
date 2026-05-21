@@ -560,3 +560,34 @@ def learn_cmd(
         from llmstack.cli.console import console
         console.print(f"[red]Unknown action: {action}[/]")
         console.print(f"Available: {', '.join(actions.keys())}")
+
+
+@app.command(name="backup")
+def backup_cmd(
+    output: str = typer.Option(None, "--output", "-o", help="Output archive path"),
+    data_dir: str = typer.Option(None, "--data-dir", "-d", help="Data directory to backup"),
+    include_models: bool = typer.Option(False, "--include-models", help="Include model files"),
+) -> None:
+    """Create a backup of all LLMStack configuration and data."""
+    from llmstack.cli.commands.backup import backup as _backup
+    _backup(output=output, data_dir=data_dir, include_models=include_models)
+
+
+@app.command(name="restore")
+def restore_cmd(
+    archive: str = typer.Argument(..., help="Path to backup archive (.tar.gz)"),
+    data_dir: str = typer.Option(None, "--data-dir", "-d", help="Target data directory"),
+    force: bool = typer.Option(False, "--force", help="Overwrite existing files"),
+) -> None:
+    """Restore LLMStack configuration and data from a backup."""
+    from llmstack.cli.commands.backup import restore as _restore
+    _restore(archive=archive, data_dir=data_dir, force=force)
+
+
+@app.command(name="backups")
+def list_backups_cmd(
+    directory: str = typer.Option(".", "--dir", "-d", help="Directory to search"),
+) -> None:
+    """List available backup files."""
+    from llmstack.cli.commands.backup import list_backups as _list
+    _list(directory=directory)
