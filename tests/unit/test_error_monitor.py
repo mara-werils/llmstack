@@ -21,7 +21,7 @@ class TestErrorRateMonitor:
         assert summary["total_errors"] == 0
 
     def test_record_error(self, monitor):
-        alerts = monitor.record_error("timeout", provider="openai")
+        monitor.record_error("timeout", provider="openai")
         summary = monitor.get_summary()
         assert summary["total_errors"] == 1
 
