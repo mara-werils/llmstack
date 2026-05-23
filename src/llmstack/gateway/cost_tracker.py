@@ -10,7 +10,7 @@ import time
 from collections import defaultdict
 from dataclasses import dataclass
 from enum import Enum
-from threading import Lock
+from threading import RLock
 from typing import Any
 
 
@@ -100,7 +100,7 @@ class CostTracker:
     """Tracks LLM API costs with budget enforcement and alerting."""
 
     def __init__(self):
-        self._lock = Lock()
+        self._lock = RLock()
         self._entries: list[CostEntry] = []
         self._budgets: dict[str, Budget] = {}
         self._alerts: list[BudgetAlert] = []
