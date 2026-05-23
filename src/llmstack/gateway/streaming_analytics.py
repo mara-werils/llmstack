@@ -134,7 +134,7 @@ class StreamingTracker:
             ]
 
         if not records:
-            return {"total_streams": 0}
+            return {"total_streams": 0, "active_streams": len(self._active_streams)}
 
         ttfts = [r.ttft_ms for r in records if r.ttft_ms > 0]
         tps_values = [r.tokens_per_second for r in records if r.tokens_per_second > 0]

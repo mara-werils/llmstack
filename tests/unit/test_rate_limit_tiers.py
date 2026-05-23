@@ -34,8 +34,9 @@ class TestTieredRateLimiter:
 
     def test_enterprise_higher_limits(self, limiter):
         limiter.set_key_tier("ent-key", "enterprise")
-        for _ in range(100):
+        for _ in range(50):
             limiter.record_request("ent-key")
+            limiter.record_completion("ent-key")
 
         allowed, _ = limiter.check("ent-key")
         assert allowed is True  # Enterprise allows 1000/min

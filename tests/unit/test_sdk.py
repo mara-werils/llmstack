@@ -55,7 +55,7 @@ class TestChatResponse:
             "model": "llama3.2",
             "choices": [],
         }
-        headers = {"X-Cache": "HIT", "X-Cache-Age": "42"}
+        headers = {"x-cache": "HIT", "x-cache-age": "42"}
         resp = ChatResponse.from_dict(data, headers=headers)
         assert resp.cached is True
         assert resp.cache_age == 42
