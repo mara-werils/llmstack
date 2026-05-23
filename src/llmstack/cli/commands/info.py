@@ -22,7 +22,7 @@ def info() -> None:
         from llmstack.core.hardware import detect_hardware
 
         hw = detect_hardware()
-        console.print(f"\n[accent]Hardware[/]")
+        console.print("\n[accent]Hardware[/]")
         console.print(f"  CPU cores   {hw.cpu_cores}")
         console.print(f"  RAM         {hw.ram_mb // 1024} GB")
         if hw.gpu_vendor != "none":
@@ -30,13 +30,13 @@ def info() -> None:
             console.print(f"  VRAM        {hw.gpu_vram_mb} MB")
             console.print(f"  Runtime     {hw.docker_runtime}")
         else:
-            console.print(f"  GPU         [muted]not detected[/]")
+            console.print("  GPU         [muted]not detected[/]")
     except Exception:
-        console.print(f"\n[accent]Hardware[/]")
-        console.print(f"  [muted]detection unavailable[/]")
+        console.print("\n[accent]Hardware[/]")
+        console.print("  [muted]detection unavailable[/]")
 
     # Config info
-    console.print(f"\n[accent]Configuration[/]")
+    console.print("\n[accent]Configuration[/]")
     try:
         from llmstack.config.loader import load_config
 
@@ -52,12 +52,12 @@ def info() -> None:
             console.print(f"  Providers       {', '.join(names)}")
             console.print(f"  Strategy        {config.providers.strategy}")
     except FileNotFoundError:
-        console.print(f"  [muted]No llmstack.yaml found (run 'llmstack init')[/]")
+        console.print("  [muted]No llmstack.yaml found (run 'llmstack init')[/]")
     except SystemExit:
-        console.print(f"  [error]llmstack.yaml has validation errors[/]")
+        console.print("  [error]llmstack.yaml has validation errors[/]")
 
     # Dependency versions
-    console.print(f"\n[accent]Dependencies[/]")
+    console.print("\n[accent]Dependencies[/]")
     _show_dep("typer")
     _show_dep("rich")
     _show_dep("httpx")

@@ -2,13 +2,10 @@
 
 from __future__ import annotations
 
-import json
-from unittest.mock import MagicMock, patch
 
-import pytest
 
-from llmstack.sdk.client import Client, LLMStackError, _parse_sse_line
-from llmstack.sdk.types import ChatResponse, ChatChoice, ChatMessage, Usage
+from llmstack.sdk.client import LLMStackError, _parse_sse_line
+from llmstack.sdk.types import ChatResponse
 
 
 class TestParseSSE:
@@ -58,7 +55,7 @@ class TestChatResponse:
             "model": "llama3.2",
             "choices": [],
         }
-        headers = {"X-Cache": "HIT", "X-Cache-Age": "42"}
+        headers = {"x-cache": "HIT", "x-cache-age": "42"}
         resp = ChatResponse.from_dict(data, headers=headers)
         assert resp.cached is True
         assert resp.cache_age == 42

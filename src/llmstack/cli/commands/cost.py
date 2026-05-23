@@ -38,13 +38,13 @@ def cost(gateway_url: str | None = None) -> None:
         tiers = router_data.get("tier_distribution", {})
         cost_by_provider = router_data.get("cost_by_provider_usd", {})
 
-        console.print(f"\n[accent]Overview[/]")
+        console.print("\n[accent]Overview[/]")
         console.print(f"  Total requests    [bold]{total_requests:,}[/]")
         console.print(f"  Total cost        [cost]${total_cost:.4f}[/]")
         console.print(f"  Savings           [speed]{savings_pct:.1f}%[/] vs always using largest model")
 
         if tiers:
-            console.print(f"\n[accent]Tier Distribution[/]")
+            console.print("\n[accent]Tier Distribution[/]")
             table = Table(show_header=True, show_edge=False, pad_edge=False)
             table.add_column("Tier", style="bold")
             table.add_column("Requests", justify="right")
@@ -60,7 +60,7 @@ def cost(gateway_url: str | None = None) -> None:
             console.print(table)
 
         if cost_by_provider:
-            console.print(f"\n[accent]Cost by Provider[/]")
+            console.print("\n[accent]Cost by Provider[/]")
             table = Table(show_header=True, show_edge=False, pad_edge=False)
             table.add_column("Provider", style="bold")
             table.add_column("Cost", justify="right", style="cost")
@@ -80,7 +80,7 @@ def cost(gateway_url: str | None = None) -> None:
         total = hits + misses
         hit_rate = hits / total * 100 if total > 0 else 0
 
-        console.print(f"\n[accent]Cache Performance[/]")
+        console.print("\n[accent]Cache Performance[/]")
         console.print(f"  Hit rate      [bold]{hit_rate:.1f}%[/]")
         console.print(f"  Hits          [success]{hits}[/]")
         console.print(f"  Misses        {misses}")

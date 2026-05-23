@@ -11,7 +11,7 @@ Provides metrics on the learning pipeline's effectiveness:
 from __future__ import annotations
 
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any
 
 from llmstack.learn.store import FeedbackStore
@@ -115,7 +115,6 @@ class LearningAnalytics:
             metrics.correction_rate = corrections / metrics.total_feedback
 
         # Feedback rate
-        all_feedback = self.store.get_feedback(limit=1)
         oldest = self.store.get_feedback(limit=1)
         if oldest:
             days = max(1, (time.time() - oldest[0].timestamp) / 86400)
@@ -196,7 +195,6 @@ class LearningAnalytics:
     def get_summary(self) -> dict[str, Any]:
         """Get a human-readable summary of learning pipeline status."""
         metrics = self.compute_metrics()
-        stats = self.store.get_stats()
 
         summary: dict[str, Any] = {
             "status": self._compute_status(metrics),

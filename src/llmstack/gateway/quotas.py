@@ -88,7 +88,7 @@ class QuotaManager:
         """Remove all limits for an API key."""
         with self._lock:
             before = len(self._limits)
-            self._limits = [l for l in self._limits if l.api_key != api_key]
+            self._limits = [lim for lim in self._limits if lim.api_key != api_key]
             return before - len(self._limits)
 
     def check(self, api_key: str, model: str = "") -> None:
@@ -157,14 +157,14 @@ class QuotaManager:
         with self._lock:
             return [
                 {
-                    "api_key": l.api_key,
-                    "max_requests": l.max_requests,
-                    "max_tokens": l.max_tokens,
-                    "max_cost_usd": l.max_cost_usd,
-                    "period": l.period.value,
-                    "model": l.model,
+                    "api_key": lim.api_key,
+                    "max_requests": lim.max_requests,
+                    "max_tokens": lim.max_tokens,
+                    "max_cost_usd": lim.max_cost_usd,
+                    "period": lim.period.value,
+                    "model": lim.model,
                 }
-                for l in self._limits
+                for lim in self._limits
             ]
 
 

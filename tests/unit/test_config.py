@@ -1,11 +1,13 @@
 """Tests for config schema and loader."""
 
+import os
+from unittest.mock import patch
 
 import yaml
 import pytest
 
 from llmstack.config.schema import StackConfig, ModelSpec, ModelsConfig
-from llmstack.config.loader import save_config, load_config
+from llmstack.config.loader import save_config, load_config, _deep_merge, _apply_env_overrides
 from llmstack.config.presets import PRESETS
 
 
@@ -76,10 +78,6 @@ def test_config_to_yaml():
 # ---------------------------------------------------------------------------
 # Config loader: local overrides and env var support
 # ---------------------------------------------------------------------------
-
-from llmstack.config.loader import _deep_merge, _apply_env_overrides
-import os
-from unittest.mock import patch
 
 
 class TestDeepMerge:

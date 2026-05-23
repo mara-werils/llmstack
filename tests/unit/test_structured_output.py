@@ -1,6 +1,5 @@
 """Tests for structured output validation."""
 
-import pytest
 
 from llmstack.gateway.structured_output import (
     extract_json, validate_output, validate_type, build_schema_prompt,

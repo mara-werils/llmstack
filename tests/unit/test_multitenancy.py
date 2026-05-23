@@ -39,7 +39,7 @@ class TestTenantManager:
         assert resolved.id == t.id
 
     def test_add_duplicate_key_fails(self, manager):
-        t1 = manager.create_tenant(name="T1", api_keys=["sk-dup"])
+        manager.create_tenant(name="T1", api_keys=["sk-dup"])
         t2 = manager.create_tenant(name="T2")
         assert manager.add_api_key(t2.id, "sk-dup") is False
 

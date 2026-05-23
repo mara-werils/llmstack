@@ -14,7 +14,6 @@ import uuid
 from dataclasses import dataclass, field
 from enum import IntEnum
 from threading import Lock
-from typing import Any
 
 
 class Priority(IntEnum):
@@ -89,11 +88,15 @@ class RequestPriorityQueue:
                     f"Queue full ({self._max_size} requests pending)"
                 )
 
-            loop = asyncio.get_event_loop()
+            try:
+                loop = asyncio.get_running_loop()
+            except RuntimeError:
+                loop = asyncio.new_event_loop()
             future = loop.create_future()
 
             request = PrioritizedRequest(
                 priority=priority,
+                timestamp=time.time(),
                 payload=payload,
                 api_key=api_key,
                 tier=tier,

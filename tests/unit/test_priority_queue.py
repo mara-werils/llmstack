@@ -4,7 +4,7 @@ import pytest
 
 from llmstack.gateway.priority_queue import (
     RequestPriorityQueue, Priority, QueueFullError,
-    resolve_priority, TIER_PRIORITY,
+    resolve_priority,
 )
 
 

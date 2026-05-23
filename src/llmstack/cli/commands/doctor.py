@@ -48,15 +48,15 @@ def doctor() -> None:
         client.ping()
         success("Docker daemon is running")
         docker_info = client.info()
-        runtime = "nvidia" if "nvidia" in str(docker_info.get("Runtimes", {})) else "default"
-        info(f"Docker version: {docker_info.get('ServerVersion', 'unknown')}")
+        gpu_runtime = "nvidia" if "nvidia" in str(docker_info.get("Runtimes", {})) else "default"
+        info(f"Docker version: {docker_info.get('ServerVersion', 'unknown')} (runtime: {gpu_runtime})")
     except Exception:
         failure("Docker daemon is not reachable")
         console.print("    [muted]Try: sudo systemctl start docker (or open Docker Desktop)[/]")
         issues += 1
 
     # Hardware
-    console.print(f"\n[accent]Hardware[/]")
+    console.print("\n[accent]Hardware[/]")
     hw = detect_hardware()
     info(f"OS: {hw.os} | CPU: {hw.cpu_cores} cores | RAM: {hw.ram_mb // 1024} GB")
 
@@ -76,7 +76,7 @@ def doctor() -> None:
         warnings += 1
 
     # Ollama
-    console.print(f"\n[accent]Ollama[/]")
+    console.print("\n[accent]Ollama[/]")
     ollama_url = "http://localhost:11434"
     if _check_url(ollama_url):
         success(f"Ollama is running at {ollama_url}")
@@ -98,7 +98,7 @@ def doctor() -> None:
         warnings += 1
 
     # Network Ports
-    console.print(f"\n[accent]Network Ports[/]")
+    console.print("\n[accent]Network Ports[/]")
     for port, service in [(11434, "Ollama"), (6333, "Qdrant"), (6379, "Redis"), (8000, "Gateway"), (8080, "Dashboard")]:
         if _check_port(port):
             success(f"Port {port} ({service}) is available")
@@ -110,7 +110,7 @@ def doctor() -> None:
                 warnings += 1
 
     # Config
-    console.print(f"\n[accent]Configuration[/]")
+    console.print("\n[accent]Configuration[/]")
     try:
         from llmstack.config.loader import load_config
         config = load_config()
@@ -124,7 +124,7 @@ def doctor() -> None:
         issues += 1
 
     # Python dependencies
-    console.print(f"\n[accent]Dependencies[/]")
+    console.print("\n[accent]Dependencies[/]")
     for dep in ["typer", "rich", "httpx", "pydantic", "docker", "numpy"]:
         try:
             from importlib.metadata import version
@@ -135,7 +135,7 @@ def doctor() -> None:
             issues += 1
 
     # Model recommendations based on hardware
-    console.print(f"\n[accent]Recommended Models[/]")
+    console.print("\n[accent]Recommended Models[/]")
     ram_gb = hw.ram_mb // 1024
     vram_mb = hw.gpu_vram_mb
 

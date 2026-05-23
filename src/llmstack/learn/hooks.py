@@ -7,8 +7,7 @@ inject learned preferences, collect feedback, and update quality metrics.
 from __future__ import annotations
 
 import logging
-import time
-from typing import Any, Callable
+from typing import Any
 
 from llmstack.learn.config import LearnConfig
 from llmstack.learn.feedback import Feedback, FeedbackType
@@ -101,7 +100,6 @@ class LearningHooks:
 
         # Record quality for regression detection
         if self.regression_detector and quality_score > 0:
-            from llmstack.learn.versions import ModelVersionManager
 
             active = self.regression_detector.version_mgr.get_active()
             if active:

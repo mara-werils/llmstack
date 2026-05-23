@@ -4,7 +4,6 @@ import pytest
 
 from llmstack.gateway.prompt_templates import (
     TemplateStore,
-    PromptTemplate,
     _extract_variables,
     BUILTIN_TEMPLATES,
 )

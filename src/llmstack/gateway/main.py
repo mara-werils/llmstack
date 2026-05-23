@@ -33,6 +33,7 @@ from llmstack.gateway.middleware.metrics import MetricsMiddleware
 from llmstack.gateway.middleware.rate_limit import RateLimitMiddleware
 from llmstack.gateway.middleware.logging import LoggingMiddleware
 from llmstack.gateway.middleware.request_size import RequestSizeMiddleware
+from llmstack.gateway.middleware.correlation import CorrelationMiddleware
 
 logger = logging.getLogger(__name__)
 
@@ -271,6 +272,9 @@ def create_app() -> FastAPI:
     # Middleware stack (order matters: outermost first)
     # 0. Request size limit (reject oversized payloads before processing)
     app.add_middleware(RequestSizeMiddleware, max_bytes=10 * 1024 * 1024)
+
+    # 0.5. Correlation ID (assign unique ID to every request for tracing)
+    app.add_middleware(CorrelationMiddleware)
 
     # 1. Logging (outermost — captures everything)
     app.add_middleware(LoggingMiddleware)

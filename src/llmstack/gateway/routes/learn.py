@@ -187,9 +187,7 @@ async def get_preferences() -> PreferencesResponse:
 async def trigger_training() -> TrainTriggerResponse:
     """Manually trigger a training run."""
     from llmstack.learn.dataset import DatasetGenerator
-    from llmstack.learn.scheduler import TrainScheduler, TriggerReason
     from llmstack.learn.store import FeedbackStore
-    from llmstack.learn.versions import ModelVersionManager
 
     store = FeedbackStore()
 
@@ -201,13 +199,6 @@ async def trigger_training() -> TrainTriggerResponse:
         )
 
     dataset_gen = DatasetGenerator(store=store)
-    version_mgr = ModelVersionManager(store=store)
-    scheduler = TrainScheduler(
-        store=store,
-        dataset_gen=dataset_gen,
-        version_mgr=version_mgr,
-    )
-
     # Generate dataset only (actual training requires GPU setup)
     from llmstack.learn.dataset import DatasetStrategy
     from pathlib import Path

@@ -3,7 +3,7 @@
 import pytest
 
 from llmstack.gateway.webhooks import (
-    WebhookManager, WebhookEvent, WebhookEndpoint, _compute_signature,
+    WebhookManager, WebhookEvent, _compute_signature,
 )
 
 
@@ -89,6 +89,9 @@ class TestWebhookManager:
             deliveries = manager.dispatch(WebhookEvent.REQUEST_COMPLETED, {})
             if deliveries:
                 manager.record_result(deliveries[0].id, 500, False, error="timeout")
+
+        # One more dispatch to trigger the deactivation check
+        manager.dispatch(WebhookEvent.REQUEST_COMPLETED, {})
 
         # Endpoint should be disabled
         fetched = manager.get_endpoint(ep.id)

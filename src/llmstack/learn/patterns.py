@@ -149,7 +149,7 @@ class PatternLearner:
 
     def _learn_naming(self, original: str, correction: str) -> None:
         """Learn naming convention preferences."""
-        orig_identifiers = self._extract_identifiers(original)
+        self._extract_identifiers(original)
         corr_identifiers = self._extract_identifiers(correction)
 
         if not corr_identifiers:
@@ -191,8 +191,8 @@ class PatternLearner:
             )
 
         # Line length
-        orig_long = sum(1 for l in original.split("\n") if len(l) > 100)
-        corr_long = sum(1 for l in correction.split("\n") if len(l) > 100)
+        orig_long = sum(1 for line in original.split("\n") if len(line) > 100)
+        corr_long = sum(1 for line in correction.split("\n") if len(line) > 100)
         if orig_long > corr_long and orig_long > 2:
             self._update_pattern(
                 "line_length",
@@ -222,8 +222,8 @@ class PatternLearner:
 
     def _learn_imports(self, original: str, correction: str) -> None:
         """Learn import style preferences."""
-        orig_imports = [l for l in original.split("\n") if l.startswith("import ") or l.startswith("from ")]
-        corr_imports = [l for l in correction.split("\n") if l.startswith("import ") or l.startswith("from ")]
+        orig_imports = [line for line in original.split("\n") if line.startswith("import ") or line.startswith("from ")]
+        corr_imports = [line for line in correction.split("\n") if line.startswith("import ") or line.startswith("from ")]
 
         if not corr_imports:
             return

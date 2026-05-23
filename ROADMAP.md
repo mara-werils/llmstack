@@ -78,6 +78,23 @@
 - [ ] TypeScript/JavaScript SDK
 - [ ] REST API for stack management
 
+## v0.8 — Adaptive Learning Pipeline (Shipped)
+
+- [x] Curriculum learning strategy (progressive difficulty training)
+- [x] Multi-armed bandit for model selection (Thompson, UCB1, epsilon-greedy)
+- [x] Feedback deduplication and normalization
+- [x] Data quality scoring for training examples
+- [x] Learning rate scheduler (constant, linear warmup, cosine, step decay)
+- [x] Cross-validation evaluator for model quality
+- [x] Request correlation ID middleware (X-Request-ID)
+- [x] Model alias mapping (user-friendly short names)
+- [x] API key rotation with graceful migration
+- [x] Provider health checker with status tracking
+- [x] Request deduplication for idempotent calls
+- [x] Latency percentile tracking (p50, p95, p99)
+- [x] Error rate monitoring with automatic alerting
+- [x] System resource monitor (CPU, memory, disk)
+
 ## v1.0 — Stable Release
 
 - [ ] Comprehensive test coverage (>90%)

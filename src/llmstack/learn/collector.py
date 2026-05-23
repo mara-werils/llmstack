@@ -8,7 +8,7 @@ Handles the UX of prompting users and parsing responses.
 from __future__ import annotations
 
 import logging
-from typing import Any, Callable
+from typing import Any
 
 from llmstack.learn.config import LearnConfig
 from llmstack.learn.feedback import Feedback, FeedbackType
