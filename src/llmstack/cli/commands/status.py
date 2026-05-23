@@ -5,7 +5,7 @@ from __future__ import annotations
 import httpx
 from rich.table import Table
 
-from llmstack.cli.console import console, banner, success, failure, warn, info
+from llmstack.cli.console import console, banner, success, failure, warn
 from llmstack.docker.manager import DockerManager
 
 

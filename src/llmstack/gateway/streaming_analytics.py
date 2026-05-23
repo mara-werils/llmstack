@@ -11,7 +11,6 @@ import time
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
 from threading import Lock
-from typing import Any
 
 
 @dataclass

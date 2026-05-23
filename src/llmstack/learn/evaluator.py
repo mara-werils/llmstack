@@ -12,7 +12,7 @@ import time
 from dataclasses import dataclass, field
 from typing import Any
 
-from llmstack.learn.feedback import Feedback, FeedbackType
+from llmstack.learn.feedback import FeedbackType
 from llmstack.learn.store import FeedbackStore
 
 logger = logging.getLogger(__name__)

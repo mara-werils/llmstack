@@ -54,7 +54,7 @@ def profile(
 
             results.append({"prompt": prompt[:40], "time": elapsed, "tokens": eval_count, "tps": tps, "error": False})
 
-        except Exception as exc:
+        except Exception:
             results.append({"prompt": prompt[:40], "time": 0, "tokens": 0, "tps": 0, "error": True})
 
     # Results table

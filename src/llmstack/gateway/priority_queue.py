@@ -14,7 +14,6 @@ import uuid
 from dataclasses import dataclass, field
 from enum import IntEnum
 from threading import Lock
-from typing import Any
 
 
 class Priority(IntEnum):

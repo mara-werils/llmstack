@@ -13,11 +13,11 @@ from __future__ import annotations
 import logging
 import math
 import time
-from collections import Counter, defaultdict
+from collections import Counter
 from dataclasses import dataclass, field
 from typing import Any
 
-from llmstack.learn.feedback import Feedback, FeedbackType
+from llmstack.learn.feedback import Feedback
 from llmstack.learn.store import FeedbackStore
 
 logger = logging.getLogger(__name__)

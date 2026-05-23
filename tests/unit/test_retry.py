@@ -1,6 +1,5 @@
 """Tests for smart retry with provider fallback."""
 
-import asyncio
 
 import pytest
 

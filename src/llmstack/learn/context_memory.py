@@ -15,7 +15,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from llmstack.learn.feedback import Feedback, FeedbackType
+from llmstack.learn.feedback import FeedbackType
 from llmstack.learn.store import FeedbackStore
 
 logger = logging.getLogger(__name__)

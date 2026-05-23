@@ -7,7 +7,6 @@ choose the best model for their use case.
 from __future__ import annotations
 
 import time
-from collections import defaultdict
 from dataclasses import dataclass, field
 from threading import Lock
 from typing import Any

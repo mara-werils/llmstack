@@ -1,6 +1,5 @@
 """Tests for batch processing system."""
 
-import asyncio
 
 import pytest
 

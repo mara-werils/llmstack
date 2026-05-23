@@ -263,7 +263,6 @@ class BatchProcessor:
 
         job.completed_at = time.time()
         if job.status != BatchStatus.CANCELLED:
-            has_failures = any(r.status == "failed" for r in job.results)
             all_failed = all(r.status == "failed" for r in job.results)
             if all_failed:
                 job.status = BatchStatus.FAILED

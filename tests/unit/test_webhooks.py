@@ -3,7 +3,7 @@
 import pytest
 
 from llmstack.gateway.webhooks import (
-    WebhookManager, WebhookEvent, WebhookEndpoint, _compute_signature,
+    WebhookManager, WebhookEvent, _compute_signature,
 )
 
 

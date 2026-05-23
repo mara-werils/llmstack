@@ -13,8 +13,6 @@ Subcommands:
 
 from __future__ import annotations
 
-import json
-import sys
 import time
 from pathlib import Path
 
@@ -87,7 +85,7 @@ def learn_status() -> None:
 def learn_train(force: bool = False) -> None:
     """Trigger a training run."""
     from llmstack.learn.dataset import DatasetGenerator
-    from llmstack.learn.scheduler import SchedulerConfig, TrainScheduler, TriggerReason
+    from llmstack.learn.scheduler import TrainScheduler, TriggerReason
     from llmstack.learn.store import FeedbackStore
     from llmstack.learn.versions import ModelVersionManager
 
@@ -100,7 +98,7 @@ def learn_train(force: bool = False) -> None:
         store.close()
         return
 
-    console.print(f"\n[bold]Training Pipeline[/]\n")
+    console.print("\n[bold]Training Pipeline[/]\n")
     console.print(f"  Unused feedback: {unused}")
 
     dataset_gen = DatasetGenerator(store=store)
@@ -136,7 +134,7 @@ def learn_train(force: bool = False) -> None:
     result = scheduler.trigger(TriggerReason.MANUAL)
 
     if result.get("success"):
-        console.print(f"\n[green]Training complete![/]")
+        console.print("\n[green]Training complete![/]")
         console.print(f"  Version: v{result.get('version', '?')}")
         console.print(f"  Dataset: {result.get('dataset_size', 0)} examples")
     elif "error" in result:
@@ -247,7 +245,7 @@ def learn_export(output: str | None = None, format: str = "jsonl") -> None:
 
 def learn_reset(confirm: bool = False) -> None:
     """Reset all learning data."""
-    from llmstack.learn.store import FeedbackStore, DEFAULT_DB_PATH
+    from llmstack.learn.store import DEFAULT_DB_PATH
 
     if not confirm:
         console.print("[yellow]This will delete all learning data![/]")
@@ -275,7 +273,7 @@ def learn_preferences() -> None:
 
     # Length
     length = profile.get("length", {})
-    console.print(f"[bold]Response Length[/]")
+    console.print("[bold]Response Length[/]")
     console.print(f"  Tendency:      {length.get('tendency', 'neutral')}")
     console.print(f"  Avg preferred: {length.get('avg_preferred', 0):.0f} chars")
     console.print(f"  Samples:       {length.get('samples', 0)}")

@@ -8,7 +8,7 @@ from pathlib import Path
 
 import httpx
 
-from llmstack.cli.console import console, banner, success, failure, warn, spinner
+from llmstack.cli.console import console, banner, success, failure, warn
 
 
 def quickstart(
@@ -70,7 +70,7 @@ def quickstart(
             failure(f"Model check failed: {exc}")
 
     # Step 4: Create config if needed
-    console.print(f"\n[accent]Step 4/4[/] Setting up configuration...")
+    console.print("\n[accent]Step 4/4[/] Setting up configuration...")
 
     config_path = Path.cwd() / "llmstack.yaml"
     if config_path.exists():

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
 
 from llmstack.gateway.routes.health import _START_TIME
 
@@ -14,7 +13,7 @@ def test_start_time_is_set():
 
 def test_request_size_middleware():
     """Test the request size limit middleware logic."""
-    from llmstack.gateway.middleware.request_size import RequestSizeMiddleware, DEFAULT_MAX_REQUEST_BYTES
+    from llmstack.gateway.middleware.request_size import DEFAULT_MAX_REQUEST_BYTES
 
     assert DEFAULT_MAX_REQUEST_BYTES == 10 * 1024 * 1024  # 10MB
 

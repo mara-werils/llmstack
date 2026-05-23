@@ -1,7 +1,5 @@
 """Tests for the conversation history persistence system."""
 
-import tempfile
-from pathlib import Path
 
 import pytest
 

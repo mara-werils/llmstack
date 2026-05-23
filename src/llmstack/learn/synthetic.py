@@ -12,8 +12,7 @@ import hashlib
 import logging
 import random
 import re
-from dataclasses import dataclass, field
-from typing import Any
+from dataclasses import dataclass
 
 from llmstack.learn.dataset import TrainingExample
 
@@ -116,7 +115,7 @@ class SyntheticAugmenter:
 
         # Simple paraphrase patterns
         transformations = [
-            (r"^how (do I|to|can I) ", lambda m: f"What's the way to "),
+            (r"^how (do I|to|can I) ", lambda m: "What's the way to "),
             (r"^what is ", lambda m: "Can you explain "),
             (r"^can you ", lambda m: "Please "),
             (r"^explain ", lambda m: "Help me understand "),
