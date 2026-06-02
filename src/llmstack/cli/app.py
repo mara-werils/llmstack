@@ -563,6 +563,16 @@ def learn_cmd(
         console.print(f"Available: {', '.join(actions.keys())}")
 
 
+@app.command()
+def recommend(
+    task: str = typer.Option(None, "--task", "-t", help="Task: code, review, chat, security, etc."),
+    show_all: bool = typer.Option(False, "--all", "-a", help="Show all models, even those too large"),
+) -> None:
+    """Recommend the best model for your hardware and task."""
+    from llmstack.cli.commands.recommend import recommend as _recommend
+    _recommend(task=task, show_all=show_all)
+
+
 @app.command(name="search")
 def search_cmd(
     query: str = typer.Argument(..., help="Search query"),
