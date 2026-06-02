@@ -562,6 +562,21 @@ def learn_cmd(
         console.print(f"Available: {', '.join(actions.keys())}")
 
 
+@app.command()
+def translate(
+    file: str = typer.Argument(..., help="Source file to translate"),
+    to_lang: str = typer.Argument(..., help="Target language (python, javascript, go, rust, java, etc.)"),
+    model: str = typer.Option("llama3.2", "--model", "-m", help="Model name"),
+    ollama_url: str = typer.Option("http://localhost:11434", "--ollama-url", help="Ollama API URL"),
+    output: str = typer.Option(None, "--output", "-o", help="Output file path"),
+    write: bool = typer.Option(False, "--write", "-w", help="Write translated code to file"),
+) -> None:
+    """Translate code between programming languages using AI."""
+    from llmstack.cli.commands.translate import translate as _translate
+    _translate(file=file, to_lang=to_lang, model=model, ollama_url=ollama_url,
+               output=output, write=write)
+
+
 @app.command(name="backup")
 def backup_cmd(
     output: str = typer.Option(None, "--output", "-o", help="Output archive path"),
