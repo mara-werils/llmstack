@@ -34,7 +34,8 @@ jobs:
         run: ruff check src/ tests/
 
       - name: Test
-        run: pytest tests/ -v --tb=short
+        run: pytest tests/ -v --tb=short --timeout=30 -x
+        timeout-minutes: 5
 
   docs:
     runs-on: ubuntu-latest
