@@ -563,6 +563,21 @@ def learn_cmd(
         console.print(f"Available: {', '.join(actions.keys())}")
 
 
+@app.command()
+def scaffold(
+    description: str = typer.Argument("", help="Project description"),
+    preset: str = typer.Option(None, "--preset", "-p", help="Preset: fastapi, nextjs, react, cli-python, express, etc."),
+    model: str = typer.Option("llama3.2", "--model", "-m", help="Model name"),
+    ollama_url: str = typer.Option("http://localhost:11434", "--ollama-url", help="Ollama API URL"),
+    output_dir: str = typer.Option(".", "--output", "-o", help="Output directory"),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Show structure without creating files"),
+) -> None:
+    """Generate a complete project scaffold from description or preset."""
+    from llmstack.cli.commands.scaffold import scaffold as _scaffold
+    _scaffold(description=description, preset=preset, model=model,
+              ollama_url=ollama_url, output_dir=output_dir, dry_run=dry_run)
+
+
 @app.command(name="tokens")
 def tokens_cmd(
     target: str = typer.Argument(None, help="File or directory to analyze"),
