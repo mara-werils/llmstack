@@ -563,6 +563,21 @@ def learn_cmd(
 
 
 @app.command()
+def explain(
+    target: str = typer.Argument(..., help="File to explain"),
+    symbol: str = typer.Option(None, "--symbol", "-s", help="Specific function/class to explain"),
+    model: str = typer.Option("llama3.2", "--model", "-m", help="Model name"),
+    ollama_url: str = typer.Option("http://localhost:11434", "--ollama-url", help="Ollama API URL"),
+    level: str = typer.Option("mid", "--level", "-l", help="Explanation level: beginner, mid, senior"),
+    output: str = typer.Option(None, "--output", "-o", help="Save explanation to file"),
+) -> None:
+    """Explain code in detail with diagrams and examples."""
+    from llmstack.cli.commands.explain import explain as _explain
+    _explain(target=target, symbol=symbol, model=model, ollama_url=ollama_url,
+             level=level, output=output)
+
+
+@app.command()
 def changelog(
     since: str = typer.Option(None, "--since", "-s", help="Git ref to start from (tag, commit, branch)"),
     version: str = typer.Option(None, "--version", "-v", help="Version label for the changelog"),
