@@ -563,6 +563,21 @@ def learn_cmd(
         console.print(f"Available: {', '.join(actions.keys())}")
 
 
+@app.command(name="mock")
+def mock_cmd(
+    spec: str = typer.Option(None, "--spec", "-s", help="OpenAPI spec file (JSON/YAML)"),
+    description: str = typer.Option(None, "--desc", "-d", help="API description in natural language"),
+    model: str = typer.Option("llama3.2", "--model", "-m", help="Model name"),
+    ollama_url: str = typer.Option("http://localhost:11434", "--ollama-url", help="Ollama API URL"),
+    output: str = typer.Option("mock_server.py", "--output", "-o", help="Output file"),
+    port: int = typer.Option(9000, "--port", "-p", help="Mock server port"),
+) -> None:
+    """Generate a mock API server from OpenAPI spec or description."""
+    from llmstack.cli.commands.mock_api import mock_api as _mock
+    _mock(spec=spec, description=description, model=model, ollama_url=ollama_url,
+          output=output, port=port)
+
+
 @app.command()
 def recommend(
     task: str = typer.Option(None, "--task", "-t", help="Task: code, review, chat, security, etc."),
