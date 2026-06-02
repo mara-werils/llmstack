@@ -563,6 +563,20 @@ def learn_cmd(
         console.print(f"Available: {', '.join(actions.keys())}")
 
 
+@app.command(name="complexity")
+def complexity_cmd(
+    target: str = typer.Argument(None, help="File or directory to analyze"),
+    threshold: int = typer.Option(10, "--threshold", "-t", help="Cyclomatic complexity threshold"),
+    sort_by: str = typer.Option("complexity", "--sort", "-s", help="Sort by: complexity, cognitive, lines, name"),
+    output: str = typer.Option(None, "--output", "-o", help="Save report to JSON"),
+    show_all: bool = typer.Option(False, "--all", "-a", help="Show all functions, not just complex ones"),
+) -> None:
+    """Analyze code complexity — cyclomatic, cognitive, and maintainability index."""
+    from llmstack.cli.commands.complexity import complexity as _complexity
+    _complexity(target=target, threshold=threshold, sort_by=sort_by,
+                output=output, show_all=show_all)
+
+
 @app.command(name="hooks")
 def hooks_cmd(
     action: str = typer.Argument("list", help="Action: list, install, install-all, remove, show"),
