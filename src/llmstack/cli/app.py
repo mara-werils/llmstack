@@ -563,6 +563,18 @@ def learn_cmd(
         console.print(f"Available: {', '.join(actions.keys())}")
 
 
+@app.command(name="tokens")
+def tokens_cmd(
+    target: str = typer.Argument(None, help="File or directory to analyze"),
+    model: str = typer.Option("llama3.2", "--model", "-m", help="Model for context window reference"),
+    no_recursive: bool = typer.Option(False, "--no-recursive", help="Don't recurse into subdirectories"),
+    no_files: bool = typer.Option(False, "--no-files", help="Only show summary"),
+) -> None:
+    """Count tokens in files and check if they fit in the model's context window."""
+    from llmstack.cli.commands.tokens import tokens as _tokens
+    _tokens(target=target, model=model, recursive=not no_recursive, show_files=not no_files)
+
+
 @app.command(name="prompt")
 def prompt_cmd(
     action: str = typer.Argument("list", help="Action: list, show, use, create, delete"),
