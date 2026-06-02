@@ -563,6 +563,23 @@ def learn_cmd(
         console.print(f"Available: {', '.join(actions.keys())}")
 
 
+@app.command(name="bookmarks")
+def bookmarks_cmd(
+    action: str = typer.Argument("list", help="Action: add, list, show, search, delete, categories"),
+    query: str = typer.Argument("", help="Search query or bookmark ID"),
+    title: str = typer.Option(None, "--title", "-t", help="Bookmark title"),
+    content: str = typer.Option(None, "--content", "-c", help="Bookmark content"),
+    category: str = typer.Option("general", "--category", help="Category"),
+    tags: str = typer.Option(None, "--tags", help="Comma-separated tags"),
+    notes: str = typer.Option("", "--notes", "-n", help="Additional notes"),
+    limit: int = typer.Option(50, "--limit", help="Max results"),
+) -> None:
+    """Save and manage important conversation snippets and code examples."""
+    from llmstack.cli.commands.bookmarks import bookmarks as _bookmarks
+    _bookmarks(action=action, query=query, title=title, content=content,
+               category=category, tags=tags, notes=notes, limit=limit)
+
+
 @app.command(name="env-check")
 def env_check_cmd(
     target: str = typer.Argument(None, help="Directory to check"),
