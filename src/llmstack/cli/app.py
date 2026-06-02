@@ -563,6 +563,21 @@ def learn_cmd(
         console.print(f"Available: {', '.join(actions.keys())}")
 
 
+@app.command(name="deps")
+def deps_cmd(
+    target: str = typer.Argument(None, help="Project directory to analyze"),
+    model: str = typer.Option("llama3.2", "--model", "-m", help="Model for AI analysis"),
+    ollama_url: str = typer.Option("http://localhost:11434", "--ollama-url", help="Ollama API URL"),
+    output: str = typer.Option(None, "--output", "-o", help="Save report to JSON"),
+    no_security: bool = typer.Option(False, "--no-security", help="Skip AI security analysis"),
+    no_updates: bool = typer.Option(False, "--no-updates", help="Skip update check"),
+) -> None:
+    """Analyze project dependencies — security, updates, and licensing."""
+    from llmstack.cli.commands.deps import deps as _deps
+    _deps(target=target, check_updates=not no_updates, check_security=not no_security,
+          model=model, ollama_url=ollama_url, output=output)
+
+
 @app.command(name="snippet")
 def snippet_cmd(
     action: str = typer.Argument("list", help="Action: save, search, show, delete, tags, export, stats"),
