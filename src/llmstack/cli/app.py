@@ -563,6 +563,33 @@ def learn_cmd(
         console.print(f"Available: {', '.join(actions.keys())}")
 
 
+@app.command(name="workflow")
+def workflow_cmd(
+    action: str = typer.Argument("list", help="Action: list, show, run, create, delete"),
+    name: str = typer.Argument("", help="Workflow name"),
+    steps: str = typer.Option(None, "--steps", help="JSON steps for create"),
+    description: str = typer.Option("", "--desc", "-d", help="Workflow description"),
+) -> None:
+    """Run automated command pipelines — chain multiple llmstack commands."""
+    from llmstack.cli.commands.workflow import (
+        workflow_list, workflow_show, workflow_run,
+        workflow_create, workflow_delete,
+    )
+
+    actions = {
+        "list": lambda: workflow_list(),
+        "show": lambda: workflow_show(name),
+        "run": lambda: workflow_run(name),
+        "create": lambda: workflow_create(name, steps or "[]", description),
+        "delete": lambda: workflow_delete(name),
+    }
+    handler = actions.get(action)
+    if handler:
+        handler()
+    else:
+        console.print(f"[error]Unknown action: {action}[/]")
+
+
 @app.command(name="dead-code")
 def dead_code_cmd(
     target: str = typer.Argument(None, help="Directory to scan"),
