@@ -563,6 +563,34 @@ def learn_cmd(
         console.print(f"Available: {', '.join(actions.keys())}")
 
 
+@app.command(name="prompt")
+def prompt_cmd(
+    action: str = typer.Argument("list", help="Action: list, show, use, create, delete"),
+    name: str = typer.Argument("", help="Template name"),
+    var: list[str] = typer.Option(None, "--var", "-v", help="Variable: key=value"),
+    template: str = typer.Option(None, "--template", "-t", help="Template text for create"),
+    description: str = typer.Option("", "--desc", "-d", help="Template description"),
+    category: str = typer.Option("custom", "--category", "-c", help="Template category"),
+) -> None:
+    """Manage reusable prompt templates — 12 built-in + custom templates."""
+    from llmstack.cli.commands.prompt import (
+        prompt_list, prompt_show, prompt_use, prompt_create, prompt_delete,
+    )
+
+    actions = {
+        "list": lambda: prompt_list(category=category if category != "custom" else None),
+        "show": lambda: prompt_show(name=name),
+        "use": lambda: prompt_use(name=name, variables=var),
+        "create": lambda: prompt_create(name=name, template=template or "", description=description, category=category),
+        "delete": lambda: prompt_delete(name=name),
+    }
+    handler = actions.get(action)
+    if handler:
+        handler()
+    else:
+        console.print(f"[error]Unknown action: {action}[/]")
+
+
 @app.command()
 def diagram(
     target: str = typer.Argument(None, help="File or directory to diagram"),
