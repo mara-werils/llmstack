@@ -563,6 +563,16 @@ def learn_cmd(
         console.print(f"Available: {', '.join(actions.keys())}")
 
 
+@app.command(name="git-stats")
+def git_stats_cmd(
+    days: int = typer.Option(30, "--days", "-d", help="Number of days to analyze"),
+    author: str = typer.Option(None, "--author", "-a", help="Filter by author"),
+) -> None:
+    """Visualize git repository statistics — contributors, activity, file types."""
+    from llmstack.cli.commands.git_stats import git_stats as _stats
+    _stats(days=days, author=author)
+
+
 @app.command(name="mock")
 def mock_cmd(
     spec: str = typer.Option(None, "--spec", "-s", help="OpenAPI spec file (JSON/YAML)"),
