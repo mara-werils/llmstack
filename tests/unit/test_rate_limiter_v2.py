@@ -1,7 +1,6 @@
 """Tests for advanced rate limiter v2."""
 
 import time
-import pytest
 from llmstack.gateway.rate_limiter_v2 import (
     AdvancedRateLimiter, RateLimitTier, SlidingWindowCounter,
 )

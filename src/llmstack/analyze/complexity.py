@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import ast
-import re
 from dataclasses import dataclass
 from pathlib import Path
 from math import log2
@@ -142,8 +141,8 @@ def analyze_python_file(file_path: Path) -> FileMetrics | None:
 
     lines = content.split("\n")
     total_lines = len(lines)
-    blank_lines = sum(1 for l in lines if not l.strip())
-    comment_lines = sum(1 for l in lines if l.strip().startswith("#"))
+    blank_lines = sum(1 for line in lines if not line.strip())
+    comment_lines = sum(1 for line in lines if line.strip().startswith("#"))
     code_lines = total_lines - blank_lines - comment_lines
 
     function_metrics = []

@@ -2,7 +2,6 @@
 
 import time
 import pytest
-from pathlib import Path
 from llmstack.analytics.tracker import AnalyticsTracker, UsageEvent
 
 

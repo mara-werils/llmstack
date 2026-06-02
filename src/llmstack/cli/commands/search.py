@@ -29,10 +29,7 @@ def search(
     output: str | None = None,
 ) -> None:
     """Search code with smart matching."""
-    from rich.table import Table
-    from rich.panel import Panel
     from rich.syntax import Syntax
-    from rich.text import Text
 
     directory = Path(target) if target else Path.cwd()
 

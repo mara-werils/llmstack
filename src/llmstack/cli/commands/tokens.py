@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import re
 from pathlib import Path
 
 from llmstack.cli.console import console
@@ -184,5 +183,5 @@ def tokens(
         largest = sorted(results, key=lambda x: -x["tokens"])[:3]
         for r in largest:
             console.print(f"  • Consider splitting: {r['file']} ({r['tokens']:,} tokens)")
-        console.print(f"  • Use --top-k to limit context in llmstack ask")
-        console.print(f"  • Try a model with larger context (e.g., llama3.1 = 128K)")
+        console.print("  • Use --top-k to limit context in llmstack ask")
+        console.print("  • Try a model with larger context (e.g., llama3.1 = 128K)")

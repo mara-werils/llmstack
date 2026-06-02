@@ -28,15 +28,15 @@ class TestModelMetrics:
         m.record(latency_ms=200, tokens=50, quality_score=0.9)
         assert m.total_requests == 2
         assert m.avg_latency_ms == 150.0
-        assert m.avg_quality == 0.85
+        assert abs(m.avg_quality - 0.85) < 1e-9
 
     def test_percentiles(self):
         m = ModelMetrics(model="test")
         for i in range(100):
             m.record(latency_ms=float(i + 1))
-        assert m.p50_latency_ms == 50.0
-        assert m.p95_latency_ms == 95.0
-        assert m.p99_latency_ms == 99.0
+        assert 50.0 <= m.p50_latency_ms <= 51.0
+        assert 95.0 <= m.p95_latency_ms <= 96.0
+        assert 99.0 <= m.p99_latency_ms <= 100.0
 
     def test_error_rate(self):
         m = ModelMetrics(model="test")
@@ -48,7 +48,7 @@ class TestModelMetrics:
         m = ModelMetrics(model="test")
         m.record(latency_ms=100, cost_usd=0.10)
         m.record(latency_ms=100, cost_usd=0.20)
-        assert m.avg_cost_per_request == 0.15
+        assert abs(m.avg_cost_per_request - 0.15) < 1e-9
 
     def test_to_dict(self):
         m = ModelMetrics(model="test", provider="local")

@@ -1,7 +1,6 @@
 """Tests for prompt template engine."""
 
 import pytest
-from pathlib import Path
 from llmstack.prompts.templates import TemplateManager, BUILTIN_TEMPLATES
 
 

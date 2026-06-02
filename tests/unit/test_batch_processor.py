@@ -1,6 +1,5 @@
 """Tests for batch processor."""
 
-import pytest
 from llmstack.sdk.batch import BatchItem, BatchProcessor, BatchSummary, BatchResult
 
 

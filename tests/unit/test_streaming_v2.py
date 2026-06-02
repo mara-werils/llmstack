@@ -1,6 +1,5 @@
 """Tests for enhanced streaming support."""
 
-import asyncio
 import pytest
 from llmstack.gateway.streaming import StreamProcessor, StreamBuffer, StreamMultiplexer
 

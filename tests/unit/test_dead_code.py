@@ -1,7 +1,6 @@
 """Tests for dead code detector."""
 
 import pytest
-from pathlib import Path
 from llmstack.analyze.dead_code import DeadCodeDetector
 
 
@@ -52,7 +51,6 @@ def test_detects_unused_functions(project_dir):
     detector = DeadCodeDetector(project_dir)
     items = detector.scan()
 
-    func_names = {i.name for i in items if i.type == "function"}
     # These might be detected depending on reference analysis
     assert len(items) > 0
 

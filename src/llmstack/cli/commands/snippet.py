@@ -68,7 +68,6 @@ def snippet_search(
 ) -> None:
     """Search saved snippets."""
     from rich.table import Table
-    from rich.syntax import Syntax
     from llmstack.snippets.manager import SnippetManager
 
     mgr = SnippetManager()
@@ -106,7 +105,6 @@ def snippet_search(
 
 def snippet_show(snippet_id: str) -> None:
     """Show a specific snippet."""
-    from rich.panel import Panel
     from rich.syntax import Syntax
     from llmstack.snippets.manager import SnippetManager
 

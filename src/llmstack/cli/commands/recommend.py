@@ -128,7 +128,7 @@ def recommend(
     gpu = sys_info["gpu"]
 
     console.print()
-    console.print(f"[bold]llmstack recommend[/]")
+    console.print("[bold]llmstack recommend[/]")
     console.print()
 
     # System info panel

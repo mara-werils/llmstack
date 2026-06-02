@@ -1,7 +1,5 @@
 """Tests for snippet manager."""
 
-import tempfile
-from pathlib import Path
 
 import pytest
 

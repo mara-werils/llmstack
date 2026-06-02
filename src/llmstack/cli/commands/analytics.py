@@ -11,7 +11,6 @@ def analytics(days: int = 30, output: str | None = None) -> None:
     from pathlib import Path
     from rich.table import Table
     from rich.panel import Panel
-    from rich.columns import Columns
     from llmstack.analytics.tracker import AnalyticsTracker
 
     tracker = AnalyticsTracker()

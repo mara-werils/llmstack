@@ -17,8 +17,6 @@ def context(
 ) -> None:
     """Build optimized context from codebase for a query."""
     from rich.table import Table
-    from rich.panel import Panel
-    from rich.syntax import Syntax
     from llmstack.context.builder import ContextBuilder
 
     directory = Path(target) if target else Path.cwd()

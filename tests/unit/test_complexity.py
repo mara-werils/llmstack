@@ -1,7 +1,5 @@
 """Tests for code complexity analyzer."""
 
-import tempfile
-from pathlib import Path
 
 import pytest
 

@@ -156,7 +156,6 @@ def hooks(
 ) -> None:
     """Manage AI-powered git hooks."""
     from rich.table import Table
-    from rich.panel import Panel
     from rich.syntax import Syntax
 
     git_dir = Path.cwd() / ".git"
@@ -213,7 +212,7 @@ def hooks(
             hook_path.write_text(info["script"])
             hook_path.chmod(hook_path.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
             console.print(f"  [green]OK[/] {name}")
-        console.print(f"\n[green]All hooks installed.[/]")
+        console.print("\n[green]All hooks installed.[/]")
 
     elif action == "remove" and hook_name:
         hook_path = hooks_dir / hook_name

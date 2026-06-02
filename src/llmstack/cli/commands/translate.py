@@ -179,7 +179,7 @@ Output only the translated {to_lang} code, no explanations."""
         if not translated:
             # fallback: just strip first and last ``` lines
             translated = "\n".join(
-                l for l in lines if not l.strip().startswith("```")
+                ln for ln in lines if not ln.strip().startswith("```")
             ).strip()
 
     # Display result

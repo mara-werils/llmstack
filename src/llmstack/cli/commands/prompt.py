@@ -47,7 +47,6 @@ def prompt_list(category: str | None = None) -> None:
 def prompt_show(name: str) -> None:
     """Show a specific template."""
     from rich.panel import Panel
-    from rich.syntax import Syntax
     from llmstack.prompts.templates import TemplateManager
 
     mgr = TemplateManager()

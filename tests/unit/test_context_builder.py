@@ -1,7 +1,6 @@
 """Tests for smart context builder."""
 
 import pytest
-from pathlib import Path
 from llmstack.context.builder import ContextBuilder
 
 

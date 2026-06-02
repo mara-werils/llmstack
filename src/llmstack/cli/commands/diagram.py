@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 import json
-import os
 from pathlib import Path
 
 from llmstack.cli.console import console
