@@ -1,0 +1,43 @@
+# Team preset — multi-user setup with auth, rate limiting, and observability
+version: '1'
+
+models:
+  chat:
+    name: llama3.1:8b
+    backend: auto
+    context_length: 16384
+  embeddings:
+    name: bge-m3
+    backend: auto
+
+services:
+  vectors:
+    provider: qdrant
+    port: 6333
+  cache:
+    provider: redis
+    port: 6379
+
+providers:
+  enabled: true
+  strategy: balanced
+  providers:
+    - name: local
+    - name: openai
+      api_key_env: OPENAI_API_KEY
+      fallback: [local]
+
+gateway:
+  port: 8000
+  auth: api_key
+  rate_limit: 30/min
+  cors: ['*']
+  request_timeout: 120
+  multitenancy: true
+
+observe:
+  metrics: true
+  dashboard_port: 8080
+  quality_tracking: true
+  alert_threshold: 0.4
+  drift_threshold: -0.1

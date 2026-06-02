@@ -1,0 +1,37 @@
+# Performance preset — optimized for speed and throughput
+version: '1'
+
+models:
+  chat:
+    name: llama3.2:1b
+    backend: auto
+    context_length: 4096
+    gpu_layers: -1
+  embeddings:
+    name: nomic-embed-text
+    backend: auto
+
+services:
+  vectors:
+    provider: qdrant
+    port: 6333
+  cache:
+    provider: redis
+    port: 6379
+
+providers:
+  enabled: true
+  strategy: latency
+  providers:
+    - name: local
+
+gateway:
+  port: 8000
+  auth: none
+  rate_limit: 500/min
+  cors: ['*']
+  request_timeout: 30
+
+observe:
+  metrics: true
+  quality_tracking: false
