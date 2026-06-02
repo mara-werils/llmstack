@@ -139,17 +139,17 @@ class TemplateManager:
             """)
             conn.commit()
 
-    def render(self, name: str, **variables) -> str:
+    def render(self, template_name: str, **variables) -> str:
         """Render a template with variables."""
-        template = self.get(name)
+        template = self.get(template_name)
         if not template:
-            raise ValueError(f"Template not found: {name}")
+            raise ValueError(f"Template not found: {template_name}")
 
         # Increment usage
         with sqlite3.connect(self.db_path) as conn:
             conn.execute(
                 "UPDATE templates SET usage_count = usage_count + 1 WHERE name = ?",
-                (name,),
+                (template_name,),
             )
             conn.commit()
 
