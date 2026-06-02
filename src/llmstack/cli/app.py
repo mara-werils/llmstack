@@ -563,6 +563,17 @@ def learn_cmd(
         console.print(f"Available: {', '.join(actions.keys())}")
 
 
+@app.command(name="hooks")
+def hooks_cmd(
+    action: str = typer.Argument("list", help="Action: list, install, install-all, remove, show"),
+    hook_name: str = typer.Argument(None, help="Hook name: pre-commit, commit-msg, pre-push, post-checkout"),
+    force: bool = typer.Option(False, "--force", help="Overwrite existing hooks"),
+) -> None:
+    """Set up AI-powered git hooks for automated code quality."""
+    from llmstack.cli.commands.hooks import hooks as _hooks
+    _hooks(action=action, hook_name=hook_name, force=force)
+
+
 @app.command()
 def scaffold(
     description: str = typer.Argument("", help="Project description"),
