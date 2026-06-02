@@ -563,6 +563,27 @@ def learn_cmd(
         console.print(f"Available: {', '.join(actions.keys())}")
 
 
+@app.command(name="plugin")
+def plugin_cmd(
+    action: str = typer.Argument("list", help="Action: list, enable, disable, info"),
+    name: str = typer.Argument("", help="Plugin name"),
+) -> None:
+    """Discover and manage llmstack plugins."""
+    from llmstack.cli.commands.plugin import plugin_list, plugin_enable, plugin_disable, plugin_info
+
+    actions = {
+        "list": lambda: plugin_list(),
+        "enable": lambda: plugin_enable(name),
+        "disable": lambda: plugin_disable(name),
+        "info": lambda: plugin_info(name),
+    }
+    handler = actions.get(action)
+    if handler:
+        handler()
+    else:
+        console.print(f"[error]Unknown action: {action}[/]")
+
+
 @app.command(name="bookmarks")
 def bookmarks_cmd(
     action: str = typer.Argument("list", help="Action: add, list, show, search, delete, categories"),
