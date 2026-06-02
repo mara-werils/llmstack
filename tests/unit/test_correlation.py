@@ -6,6 +6,7 @@ import pytest
 from starlette.applications import Starlette
 from starlette.requests import Request
 from starlette.responses import PlainTextResponse
+from starlette.routing import Route
 from starlette.testclient import TestClient
 
 from llmstack.gateway.middleware.correlation import (
@@ -15,14 +16,16 @@ from llmstack.gateway.middleware.correlation import (
 )
 
 
+async def _test_route(request: Request):
+    cid = get_correlation_id(request)
+    return PlainTextResponse(cid)
+
+
 def _create_app():
-    app = Starlette()
-
-    @app.route("/test")
-    async def test_route(request: Request):
-        cid = get_correlation_id(request)
-        return PlainTextResponse(cid)
-
+    app = Starlette(
+        routes=[Route("/test", _test_route)],
+        middleware=[],
+    )
     app.add_middleware(CorrelationMiddleware)
     return app
 
