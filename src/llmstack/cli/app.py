@@ -563,6 +563,21 @@ def learn_cmd(
 
 
 @app.command()
+def changelog(
+    since: str = typer.Option(None, "--since", "-s", help="Git ref to start from (tag, commit, branch)"),
+    version: str = typer.Option(None, "--version", "-v", help="Version label for the changelog"),
+    model: str = typer.Option("llama3.2", "--model", "-m", help="Model name"),
+    ollama_url: str = typer.Option("http://localhost:11434", "--ollama-url", help="Ollama API URL"),
+    output: str = typer.Option(None, "--output", "-o", help="Save changelog to file"),
+    max_commits: int = typer.Option(100, "--max-commits", help="Maximum commits to include"),
+) -> None:
+    """Auto-generate a changelog from git history using AI."""
+    from llmstack.cli.commands.changelog import changelog as _changelog
+    _changelog(since=since, version=version, model=model, ollama_url=ollama_url,
+               output=output, max_commits=max_commits)
+
+
+@app.command()
 def translate(
     file: str = typer.Argument(..., help="Source file to translate"),
     to_lang: str = typer.Argument(..., help="Target language (python, javascript, go, rust, java, etc.)"),
