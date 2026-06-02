@@ -563,6 +563,20 @@ def learn_cmd(
         console.print(f"Available: {', '.join(actions.keys())}")
 
 
+@app.command()
+def diagram(
+    target: str = typer.Argument(None, help="File or directory to diagram"),
+    diagram_type: str = typer.Option("architecture", "--type", "-t", help="Type: architecture, class, sequence, flow, er, dependency, state"),
+    model: str = typer.Option("llama3.2", "--model", "-m", help="Model name"),
+    ollama_url: str = typer.Option("http://localhost:11434", "--ollama-url", help="Ollama API URL"),
+    output: str = typer.Option(None, "--output", "-o", help="Save diagram to file (.md or .mmd)"),
+) -> None:
+    """Generate Mermaid architecture diagrams from code using AI."""
+    from llmstack.cli.commands.diagram import diagram as _diagram
+    _diagram(target=target, diagram_type=diagram_type, model=model,
+             ollama_url=ollama_url, output=output)
+
+
 @app.command(name="deps")
 def deps_cmd(
     target: str = typer.Argument(None, help="Project directory to analyze"),
