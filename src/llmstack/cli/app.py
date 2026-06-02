@@ -563,6 +563,22 @@ def learn_cmd(
         console.print(f"Available: {', '.join(actions.keys())}")
 
 
+@app.command(name="search")
+def search_cmd(
+    query: str = typer.Argument(..., help="Search query"),
+    target: str = typer.Option(None, "--target", "-t", help="Directory to search"),
+    mode: str = typer.Option("smart", "--mode", "-M", help="Mode: smart, regex, symbol, definition, usage"),
+    file_pattern: str = typer.Option(None, "--pattern", "-p", help="File glob pattern (e.g., '*.py')"),
+    max_results: int = typer.Option(50, "--max", "-n", help="Max results"),
+    context_lines: int = typer.Option(2, "--context", "-C", help="Context lines around match"),
+    output: str = typer.Option(None, "--output", "-o", help="Save results to JSON"),
+) -> None:
+    """Smart code search — regex, symbol, definition, and usage search."""
+    from llmstack.cli.commands.search import search as _search
+    _search(query=query, target=target, mode=mode, file_pattern=file_pattern,
+            max_results=max_results, context_lines=context_lines, output=output)
+
+
 @app.command(name="context")
 def context_cmd(
     query: str = typer.Argument(..., help="Query to build context for"),
