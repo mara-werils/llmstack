@@ -563,6 +563,21 @@ def learn_cmd(
 
 
 @app.command()
+def refactor(
+    target: str = typer.Argument(..., help="File to analyze for refactoring"),
+    strategy: str = typer.Option("clean", "--strategy", "-s", help="Strategy: clean, performance, type-safety, solid, testability"),
+    model: str = typer.Option("llama3.2", "--model", "-m", help="Model name"),
+    ollama_url: str = typer.Option("http://localhost:11434", "--ollama-url", help="Ollama API URL"),
+    output: str = typer.Option(None, "--output", "-o", help="Save report to JSON file"),
+    apply: bool = typer.Option(False, "--apply", help="Apply suggested refactoring"),
+) -> None:
+    """AI-powered refactoring suggestions with multiple strategies."""
+    from llmstack.cli.commands.refactor import refactor as _refactor
+    _refactor(target=target, strategy=strategy, model=model, ollama_url=ollama_url,
+              output=output, apply=apply)
+
+
+@app.command()
 def explain(
     target: str = typer.Argument(..., help="File to explain"),
     symbol: str = typer.Option(None, "--symbol", "-s", help="Specific function/class to explain"),
