@@ -563,6 +563,18 @@ def learn_cmd(
         console.print(f"Available: {', '.join(actions.keys())}")
 
 
+@app.command(name="dead-code")
+def dead_code_cmd(
+    target: str = typer.Argument(None, help="Directory to scan"),
+    confidence: str = typer.Option(None, "--confidence", "-c", help="Filter: high, medium, low"),
+    code_type: str = typer.Option(None, "--type", "-t", help="Filter: function, class, import"),
+    output: str = typer.Option(None, "--output", "-o", help="Save report to JSON"),
+) -> None:
+    """Find unused functions, classes, and imports in your codebase."""
+    from llmstack.cli.commands.dead_code import dead_code as _dead_code
+    _dead_code(target=target, confidence=confidence, code_type=code_type, output=output)
+
+
 @app.command(name="complexity")
 def complexity_cmd(
     target: str = typer.Argument(None, help="File or directory to analyze"),
