@@ -563,6 +563,16 @@ def learn_cmd(
         console.print(f"Available: {', '.join(actions.keys())}")
 
 
+@app.command(name="env-check")
+def env_check_cmd(
+    target: str = typer.Argument(None, help="Directory to check"),
+    fix: bool = typer.Option(False, "--fix", help="Auto-fix simple issues"),
+) -> None:
+    """Validate .env files, detect leaked secrets, and check framework requirements."""
+    from llmstack.cli.commands.env_check import env_check as _env_check
+    _env_check(target=target, fix=fix)
+
+
 @app.command(name="git-stats")
 def git_stats_cmd(
     days: int = typer.Option(30, "--days", "-d", help="Number of days to analyze"),
