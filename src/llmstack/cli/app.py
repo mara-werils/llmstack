@@ -563,6 +563,21 @@ def learn_cmd(
         console.print(f"Available: {', '.join(actions.keys())}")
 
 
+@app.command(name="context")
+def context_cmd(
+    query: str = typer.Argument(..., help="Query to build context for"),
+    target: str = typer.Option(None, "--target", "-t", help="Directory to search"),
+    strategy: str = typer.Option("smart", "--strategy", "-s", help="Strategy: smart, git, imports, related"),
+    max_tokens: int = typer.Option(8000, "--max-tokens", help="Token budget"),
+    output: str = typer.Option(None, "--output", "-o", help="Save context to file"),
+    copy: bool = typer.Option(False, "--copy", "-c", help="Copy to clipboard"),
+) -> None:
+    """Build optimized context from your codebase for LLM prompts."""
+    from llmstack.cli.commands.context import context as _context
+    _context(query=query, target=target, strategy=strategy,
+             max_tokens=max_tokens, output=output, copy=copy)
+
+
 @app.command(name="analytics")
 def analytics_cmd(
     days: int = typer.Option(30, "--days", "-d", help="Number of days to analyze"),
