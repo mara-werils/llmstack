@@ -7,6 +7,7 @@ from pathlib import Path
 import typer
 
 from llmstack import __version__
+from llmstack.cli.console import console
 
 
 app = typer.Typer(
@@ -559,6 +560,43 @@ def learn_cmd(
     else:
         from llmstack.cli.console import console
         console.print(f"[red]Unknown action: {action}[/]")
+        console.print(f"Available: {', '.join(actions.keys())}")
+
+
+@app.command(name="snippet")
+def snippet_cmd(
+    action: str = typer.Argument("list", help="Action: save, search, show, delete, tags, export, stats"),
+    query: str = typer.Argument("", help="Search query or snippet ID"),
+    file: str = typer.Option(None, "--file", "-f", help="File to save as snippet"),
+    title: str = typer.Option(None, "--title", "-t", help="Snippet title"),
+    tags: str = typer.Option(None, "--tags", help="Comma-separated tags"),
+    description: str = typer.Option("", "--desc", "-d", help="Snippet description"),
+    lines: str = typer.Option(None, "--lines", "-l", help="Line range (e.g., 10-20)"),
+    language: str = typer.Option(None, "--language", help="Filter by language"),
+    output: str = typer.Option(None, "--output", "-o", help="Export output file"),
+    limit: int = typer.Option(20, "--limit", "-n", help="Max results"),
+) -> None:
+    """Manage your code snippet library — save, search, and reuse code."""
+    from llmstack.cli.commands.snippet import (
+        snippet_save, snippet_search, snippet_show,
+        snippet_delete, snippet_tags, snippet_export, snippet_stats,
+    )
+
+    actions = {
+        "save": lambda: snippet_save(file=file, title=title, tags=tags, description=description, lines=lines),
+        "search": lambda: snippet_search(query=query, language=language, limit=limit),
+        "list": lambda: snippet_search(query="", language=language, limit=limit),
+        "show": lambda: snippet_show(snippet_id=query),
+        "delete": lambda: snippet_delete(snippet_id=query),
+        "tags": lambda: snippet_tags(),
+        "export": lambda: snippet_export(output=output),
+        "stats": lambda: snippet_stats(),
+    }
+    handler = actions.get(action)
+    if handler:
+        handler()
+    else:
+        console.print(f"[error]Unknown action: {action}[/]")
         console.print(f"Available: {', '.join(actions.keys())}")
 
 
