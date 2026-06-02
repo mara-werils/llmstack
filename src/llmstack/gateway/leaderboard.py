@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass, field
-from threading import Lock
+from threading import RLock
 from typing import Any
 
 
@@ -131,7 +131,7 @@ class Leaderboard:
     """Model performance leaderboard with ranking and comparison."""
 
     def __init__(self):
-        self._lock = Lock()
+        self._lock = RLock()
         self._models: dict[str, ModelMetrics] = {}
 
     def record(
