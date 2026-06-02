@@ -563,6 +563,16 @@ def learn_cmd(
         console.print(f"Available: {', '.join(actions.keys())}")
 
 
+@app.command(name="analytics")
+def analytics_cmd(
+    days: int = typer.Option(30, "--days", "-d", help="Number of days to analyze"),
+    output: str = typer.Option(None, "--output", "-o", help="Export analytics to JSON"),
+) -> None:
+    """View usage statistics, trends, and performance metrics."""
+    from llmstack.cli.commands.analytics import analytics as _analytics
+    _analytics(days=days, output=output)
+
+
 @app.command(name="workflow")
 def workflow_cmd(
     action: str = typer.Argument("list", help="Action: list, show, run, create, delete"),
