@@ -12,18 +12,30 @@ from llmstack.cli.console import console
 
 app = typer.Typer(
     name="llmstack",
-    help="One command. Full LLM stack. Zero config.",
+    help=(
+        "One command. Full LLM stack. Zero config.\n\n"
+        "LLMStack gives you smart model routing, fine-tuning, agents, RAG, "
+        "observability, and an OpenAI-compatible gateway on top of Ollama "
+        "and cloud providers."
+    ),
     no_args_is_help=True,
     add_completion=False,
+    rich_markup_mode="rich",
+    epilog=(
+        "Docs:  https://github.com/mara-werils/llmstack#readme\n"
+        "Bugs:  https://github.com/mara-werils/llmstack/issues"
+    ),
 )
 
 
 def version_callback(value: bool) -> None:
+    """Print version, Python, and platform info then exit."""
     if value:
         import platform
         import sys
         typer.echo(f"llmstack {__version__}")
-        typer.echo(f"Python {sys.version.split()[0]} on {platform.platform()}")
+        typer.echo(f"Python  {sys.version.split()[0]}")
+        typer.echo(f"Platform {platform.platform()}")
         raise typer.Exit()
 
 
@@ -33,10 +45,18 @@ def main(
         False, "--version", "-V",
         callback=version_callback,
         is_eager=True,
-        help="Show version and exit.",
+        help="Show llmstack version, Python version, and platform then exit.",
     ),
 ) -> None:
-    """LLMStack — One command. Full LLM stack. Zero config."""
+    """LLMStack -- smart model routing, fine-tuning, agents, RAG, and observability for local LLMs.
+
+    Get started in seconds:
+
+        llmstack quickstart          # pull a model and create config\n
+        llmstack up                  # start all services\n
+        llmstack chat                # interactive chat\n
+        llmstack doctor              # diagnose issues
+    """
 
 
 @app.command()
