@@ -229,28 +229,92 @@ async def lifespan(app: FastAPI):
 def create_app() -> FastAPI:
     app = FastAPI(
         title="LLMStack Gateway",
+        summary="OpenAI-compatible API gateway for local and cloud LLMs",
         description=(
-            "OpenAI-compatible API gateway with smart routing, semantic caching, "
-            "RAG, observability, and multi-provider resilience. "
-            "Drop-in replacement for the OpenAI API — works with any OpenAI SDK."
+            "LLMStack Gateway is a drop-in replacement for the OpenAI API that adds "
+            "smart model routing, semantic caching, RAG, observability, and "
+            "multi-provider resilience on top of Ollama, OpenAI, Anthropic, Google, "
+            "and other LLM providers.\n\n"
+            "## Key Features\n\n"
+            "- **Smart Routing** — automatically pick the cheapest model that can handle each request\n"
+            "- **Semantic Caching** — deduplicate similar prompts to cut costs and latency\n"
+            "- **RAG Pipeline** — ingest documents and query them with retrieval-augmented generation\n"
+            "- **Multi-Provider** — unified API across Ollama, OpenAI, Anthropic, Google, Groq, and more\n"
+            "- **Observability** — traces, quality scoring, A/B testing, cost tracking, and alerts\n"
+            "- **Batch Processing** — fan out requests in parallel for bulk workloads\n\n"
+            "Works with any OpenAI-compatible SDK or client library."
         ),
         version="1.0.0",
         lifespan=lifespan,
+        contact={
+            "name": "LLMStack",
+            "url": "https://github.com/mara-werils/llmstack",
+        },
+        license_info={
+            "name": "Apache-2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0",
+        },
         openapi_tags=[
-            {"name": "Chat", "description": "OpenAI-compatible chat completions"},
-            {"name": "Embeddings", "description": "Text embedding generation"},
-            {"name": "Models", "description": "List available models across providers"},
-            {"name": "RAG", "description": "Document ingestion and semantic search"},
-            {"name": "Observe", "description": "Traces, quality tracking, alerts, A/B tests"},
-            {"name": "Learn", "description": "Adaptive learning feedback and training"},
-            {"name": "Templates", "description": "Prompt template management and versioning"},
-            {"name": "Conversations", "description": "Persistent conversation history"},
-            {"name": "Cost", "description": "Cost tracking, budgets, and alerts"},
-            {"name": "Webhooks", "description": "Event-driven webhook notifications"},
-            {"name": "Batch", "description": "Batch processing for parallel requests"},
-            {"name": "Leaderboard", "description": "Model performance rankings and comparison"},
-            {"name": "Router", "description": "Smart model routing stats and decisions"},
-            {"name": "Health", "description": "Health checks, readiness probes, metrics"},
+            {
+                "name": "Chat",
+                "description": "OpenAI-compatible chat completions with streaming support. "
+                "Supports smart model routing and semantic caching.",
+            },
+            {
+                "name": "Embeddings",
+                "description": "Generate vector embeddings for text using local or cloud models.",
+            },
+            {
+                "name": "Models",
+                "description": "List and inspect available models across all configured providers.",
+            },
+            {
+                "name": "RAG",
+                "description": "Document ingestion, chunking, and semantic search for "
+                "retrieval-augmented generation workflows.",
+            },
+            {
+                "name": "Observe",
+                "description": "AI observability: request traces, quality scoring, drift alerts, "
+                "and A/B test management.",
+            },
+            {
+                "name": "Learn",
+                "description": "Adaptive learning pipeline: collect feedback and fine-tune "
+                "model behavior over time.",
+            },
+            {
+                "name": "Templates",
+                "description": "Create, version, and render reusable prompt templates with variables.",
+            },
+            {
+                "name": "Conversations",
+                "description": "Persistent, multi-turn conversation history with search and export.",
+            },
+            {
+                "name": "Cost",
+                "description": "Real-time cost tracking, budget enforcement, and savings reports.",
+            },
+            {
+                "name": "Webhooks",
+                "description": "Event-driven notifications for cost alerts, quality drift, and errors.",
+            },
+            {
+                "name": "Batch",
+                "description": "Submit and manage batch jobs for parallel request processing.",
+            },
+            {
+                "name": "Leaderboard",
+                "description": "Compare model performance across latency, quality, and cost metrics.",
+            },
+            {
+                "name": "Router",
+                "description": "Smart model routing statistics, decision logs, and strategy configuration.",
+            },
+            {
+                "name": "Health",
+                "description": "Liveness and readiness probes, Prometheus-compatible metrics endpoint.",
+            },
         ],
         docs_url="/docs",
         redoc_url="/redoc",
