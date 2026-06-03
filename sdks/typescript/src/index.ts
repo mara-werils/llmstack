@@ -1,8 +1,33 @@
-export { LLMStackClient, createClient } from "./client.js";
+export { LLMStackClient, LLMStackError, createClient } from "./client.js";
+export type { RequestOptions } from "./client.js";
+export { parseSSEStream } from "./streaming.js";
 export type {
-  Message, ChatRequest, ChatResponse, ChatChunk,
-  EmbeddingRequest, EmbeddingResponse,
-  RouterClassifyRequest, RouterClassifyResponse,
-  RAGIngestRequest, RAGQueryRequest,
   LLMStackClientOptions,
+  // Chat
+  ChatMessage,
+  ChatCompletionRequest,
+  ChatCompletionResponse,
+  ChatChoice,
+  ChatDelta,
+  ChatChunkChoice,
+  ChatCompletionChunk,
+  Usage,
+  // Embeddings
+  EmbeddingRequest,
+  EmbeddingResponse,
+  Embedding,
+  // Models
+  Model,
+  ModelsResponse,
+  // RAG
+  RAGIngestRequest,
+  RAGIngestResponse,
+  RAGQueryRequest,
+  RAGQueryResponse,
+  RAGStreamDelta,
+  RAGStatusResponse,
+  // Health
+  HealthResponse,
+  // Errors
+  LLMStackErrorDetail,
 } from "./types.js";
