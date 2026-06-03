@@ -31,11 +31,18 @@ body:
       label: Alternatives considered
       description: Any other approaches you've thought about or tried?
 
+  - type: textarea
+    id: implementation
+    attributes:
+      label: Implementation ideas
+      description: If you have thoughts on how this could be implemented, share them here.
+
   - type: dropdown
     id: component
     attributes:
       label: Component
       description: Which part of llmstack would this affect?
+      multiple: true
       options:
         - CLI
         - Gateway / API
@@ -46,6 +53,7 @@ body:
         - Configuration
         - SDK / Client libraries
         - Documentation
+        - Fine-tuning
         - New service / plugin
         - Other
     validations:
@@ -57,8 +65,8 @@ body:
       label: How important is this to you?
       options:
         - Nice to have
-        - Important — affects my workflow
-        - Critical — blocking my use case
+        - Important - affects my workflow
+        - Critical - blocking my use case
     validations:
       required: true
 
