@@ -1,0 +1,17 @@
+apiVersion: v2
+name: llmstack
+description: LLM platform with smart routing, fine-tuning, agents, and observability
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+maintainers:
+  - name: mara-werils
+    url: https://github.com/mara-werils
+keywords:
+  - llm
+  - ai
+  - gateway
+  - inference
+home: https://github.com/mara-werils/llmstack
+sources:
+  - https://github.com/mara-werils/llmstack
