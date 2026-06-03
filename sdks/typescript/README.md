@@ -1,6 +1,8 @@
 # @llmstack/client
 
-Official TypeScript/JavaScript SDK for [LLMStack](https://github.com/mara-werils/llmstack).
+Official TypeScript/JavaScript SDK for [LLMStack](https://github.com/mara-werils/llmstack) -- an OpenAI-compatible AI gateway.
+
+**Zero dependencies.** Uses native `fetch` (Node 18+, Bun, Deno, browsers).
 
 ## Installation
 
@@ -11,57 +13,218 @@ npm install @llmstack/client
 ## Quick Start
 
 ```typescript
-import { createClient } from "@llmstack/client";
+import { LLMStackClient } from "@llmstack/client";
 
-const client = createClient({ baseUrl: "http://localhost:8000" });
+const client = new LLMStackClient({
+  baseUrl: "http://localhost:8000",
+  apiKey: "sk-...", // optional
+});
 
 // Chat completion
-const response = await client.chat({
-  messages: [{ role: "user", content: "Hello!" }],
+const response = await client.chat.completions.create({
   model: "llama3.2",
+  messages: [{ role: "user", content: "Hello!" }],
 });
 console.log(response.choices[0].message.content);
-
-// Streaming
-for await (const chunk of client.chatStream({
-  messages: [{ role: "user", content: "Tell me a story" }],
-})) {
-  process.stdout.write(chunk);
-}
-
-// Embeddings
-const embeddings = await client.embed({ input: "Hello world" });
-
-// RAG
-await client.ragIngest({
-  documents: [{ content: "LLMStack is awesome", source: "docs.md" }],
-});
-const answer = await client.ragQuery({ query: "What is LLMStack?" });
 ```
 
 ## Environment Variables
 
 | Variable | Default | Description |
-|----------|---------|-------------|
+|---|---|---|
 | `LLMSTACK_URL` | `http://localhost:8000` | Gateway URL |
-| `LLMSTACK_API_KEY` | — | API key (if auth enabled) |
+| `LLMSTACK_API_KEY` | -- | Bearer API key (if auth is enabled) |
+
+When no options are provided, the client reads these automatically:
+
+```typescript
+const client = new LLMStackClient(); // uses env vars
+```
 
 ## API Reference
 
-### `createClient(options?)`
+### Constructor
 
-Create a new client instance. Options:
-- `baseUrl` — Gateway URL
-- `apiKey` — Bearer token
-- `timeout` — Request timeout in ms (default: 60000)
+```typescript
+new LLMStackClient({
+  baseUrl?: string,       // default: LLMSTACK_URL or "http://localhost:8000"
+  apiKey?: string,        // default: LLMSTACK_API_KEY
+  timeout?: number,       // default: 120000 (2 minutes)
+  maxRetries?: number,    // default: 2 (retries on 5xx/network errors)
+  fetch?: typeof fetch,   // custom fetch implementation
+});
+```
 
-### Methods
+### `client.chat.completions.create(request)`
 
-- `client.chat(request)` — Non-streaming chat completion
-- `client.chatStream(request)` — Streaming chat (AsyncGenerator)
-- `client.embed(request)` — Get text embeddings
-- `client.classify(request)` — Smart router classification
-- `client.ragIngest(request)` — Ingest documents into RAG
-- `client.ragQuery(request)` — Query RAG knowledge base
-- `client.health()` — Health check
-- `client.models()` — List available models
+OpenAI-compatible chat completion.
+
+```typescript
+// Non-streaming
+const res = await client.chat.completions.create({
+  model: "llama3.2",
+  messages: [
+    { role: "system", content: "You are helpful." },
+    { role: "user", content: "Explain quantum computing." },
+  ],
+  temperature: 0.7,
+  max_tokens: 1024,
+});
+
+console.log(res.choices[0].message.content);
+console.log(res.usage); // { prompt_tokens, completion_tokens, total_tokens }
+console.log(res.cached); // true if served from cache
+```
+
+### Streaming
+
+```typescript
+const stream = await client.chat.completions.create({
+  model: "llama3.2",
+  messages: [{ role: "user", content: "Tell me a story" }],
+  stream: true,
+});
+
+for await (const chunk of stream) {
+  const content = chunk.choices[0]?.delta?.content;
+  if (content) process.stdout.write(content);
+}
+```
+
+### `client.embed(request)`
+
+Generate text embeddings.
+
+```typescript
+const res = await client.embed({
+  input: ["Hello world", "Goodbye world"],
+  model: "bge-m3",
+});
+
+console.log(res.data[0].embedding); // number[]
+```
+
+### `client.models.list()`
+
+List available models.
+
+```typescript
+const { data } = await client.models.list();
+for (const model of data) {
+  console.log(`${model.id} (${model.owned_by})`);
+}
+```
+
+### `client.rag.ingest(request)`
+
+Ingest a document into the RAG store.
+
+```typescript
+const res = await client.rag.ingest({
+  text: "LLMStack is an open-source AI gateway...",
+  source: "docs/overview.md",
+  chunk_size: 512,
+  metadata: { category: "docs" },
+});
+
+console.log(res.chunks_stored); // number of chunks created
+```
+
+### `client.rag.query(request)`
+
+Query the RAG pipeline.
+
+```typescript
+// Non-streaming
+const answer = await client.rag.query({
+  question: "What is LLMStack?",
+  top_k: 5,
+});
+console.log(answer.answer);
+console.log(answer.sources);
+
+// Streaming
+const stream = await client.rag.query({
+  question: "What is LLMStack?",
+  stream: true,
+});
+for await (const delta of stream) {
+  if (delta.token) process.stdout.write(delta.token);
+  if (delta.done) console.log("\nSources:", delta.sources);
+}
+```
+
+### `client.rag.status()`
+
+Check RAG pipeline status.
+
+```typescript
+const status = await client.rag.status();
+console.log(status.documents_count, status.chunks_count);
+```
+
+### `client.health()`
+
+Gateway health check.
+
+```typescript
+const health = await client.health();
+console.log(health.status);       // "healthy"
+console.log(health.services);     // { inference: true, rag: true, ... }
+console.log(health.circuit_breaker);
+```
+
+## Cancellation
+
+Every request accepts an `AbortSignal`:
+
+```typescript
+const controller = new AbortController();
+setTimeout(() => controller.abort(), 5000);
+
+const res = await client.chat.completions.create(
+  { model: "llama3.2", messages: [{ role: "user", content: "Hi" }] },
+  { signal: controller.signal },
+);
+```
+
+## Error Handling
+
+```typescript
+import { LLMStackError } from "@llmstack/client";
+
+try {
+  await client.chat.completions.create({ messages: [] });
+} catch (err) {
+  if (err instanceof LLMStackError) {
+    console.error(err.status); // HTTP status code
+    console.error(err.body);   // parsed error body
+  }
+}
+```
+
+## Retries
+
+The client automatically retries on transient failures (status 408, 429, 500, 502, 503, 504) and network errors, up to `maxRetries` times with exponential back-off and jitter.
+
+## Custom Fetch
+
+Useful for testing or environments with a non-standard `fetch`:
+
+```typescript
+const client = new LLMStackClient({
+  fetch: myCustomFetch,
+});
+```
+
+## Building from Source
+
+```bash
+npm install
+npm run build     # outputs to dist/
+npm run typecheck  # type-check only
+```
+
+## License
+
+Apache-2.0
