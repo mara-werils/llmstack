@@ -1,0 +1,56 @@
+# Version control
+.git
+.gitignore
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.egg-info
+dist/
+build/
+.eggs/
+
+# Virtual environments
+.venv
+venv
+env
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Testing
+.pytest_cache
+.coverage
+htmlcov/
+.tox
+
+# Documentation
+docs/
+mkdocs.yml
+*.md
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+
+# Docker
+.dockerignore
+docker-compose*.yml
+
+# Deployment configs
+deploy/
+
+# Claude
+.claude/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Data and logs
+data/
+*.log
