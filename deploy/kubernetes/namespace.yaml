@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: llmstack
+  labels:
+    app.kubernetes.io/name: llmstack
+    app.kubernetes.io/managed-by: kubectl
