@@ -1,0 +1,60 @@
+# LLMStack Docker Quickstart
+# Start Ollama + LLMStack gateway in two minutes.
+#
+# Usage:
+#   docker compose up -d
+#   curl http://localhost:8000/v1/chat/completions \
+#     -H "Content-Type: application/json" \
+#     -d '{"model": "llama3.2", "messages": [{"role": "user", "content": "Hello!"}]}'
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    # Uncomment the next two lines for NVIDIA GPU support:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Pull the default model after Ollama is healthy
+  ollama-pull:
+    image: ollama/ollama:latest
+    depends_on:
+      ollama:
+        condition: service_healthy
+    entrypoint: ["ollama", "pull", "llama3.2"]
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+    restart: "no"
+
+  gateway:
+    image: ghcr.io/mara-werils/llmstack-gateway:latest
+    build:
+      context: ../../
+      dockerfile: src/llmstack/gateway/Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      OLLAMA_BASE_URL: http://ollama:11434
+      LLMSTACK_LOG_LEVEL: INFO
+      # Uncomment to require an API key:
+      # LLMSTACK_API_KEYS: "my-secret-key"
+    depends_on:
+      ollama:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  ollama_data:
