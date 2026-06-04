@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import AsyncIterator
@@ -11,6 +12,8 @@ import httpx
 
 from llmstack.ask.embeddings import LocalEmbeddings
 from llmstack.ask.parsers import TextChunk, collect_files, parse_file
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -117,9 +120,8 @@ class AskEngine:
             try:
                 chunks = parse_file(fpath)
                 all_chunks.extend(chunks)
-            except Exception:
-                # Skip files that can't be parsed
-                pass
+            except Exception as exc:
+                logger.debug("Skipping unparseable file %s: %s", fpath, exc)
             if parse_cb:
                 parse_cb("parse", i + 1, len(all_files))
 
