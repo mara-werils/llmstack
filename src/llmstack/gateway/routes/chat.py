@@ -8,8 +8,11 @@ import time
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, StreamingResponse
 
+from pydantic import ValidationError
+
 from llmstack.gateway.circuit_breaker import CircuitBreakerError
 from llmstack.gateway.proxy import proxy_chat_completion
+from llmstack.gateway.schemas import ChatCompletionRequest
 
 logger = logging.getLogger(__name__)
 
@@ -184,7 +187,20 @@ def _record_stats(
 
 @router.post("/chat/completions")
 async def chat_completions(request: Request):
-    payload = await request.json()
+    try:
+        raw = await request.json()
+        validated = ChatCompletionRequest.model_validate(raw)
+        payload = validated.model_dump(exclude_none=True)
+    except ValidationError as exc:
+        return JSONResponse(
+            status_code=422,
+            content={
+                "error": {
+                    "message": str(exc),
+                    "type": "validation_error",
+                }
+            },
+        )
     stream = payload.get("stream", False)
 
     # Smart routing (now returns provider too)

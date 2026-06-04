@@ -322,6 +322,11 @@ def create_app() -> FastAPI:
 
     # CORS
     cors_origins = os.getenv("LLMSTACK_CORS_ORIGINS", "*").split(",")
+    if cors_origins == ["*"] and os.getenv("LLMSTACK_ENV", "") == "production":
+        logger.warning(
+            "CORS is set to allow all origins ('*') in production mode. "
+            "Set LLMSTACK_CORS_ORIGINS to restrict allowed origins."
+        )
     app.add_middleware(
         CORSMiddleware,
         allow_origins=cors_origins,
