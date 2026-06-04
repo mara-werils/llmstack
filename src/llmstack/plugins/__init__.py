@@ -2,6 +2,6 @@
 
 from __future__ import annotations
 
-__all__ = ["PluginSpec", "PluginLoader"]
+__all__ = ["PluginInfo", "PluginRegistry"]
 
-from llmstack.plugins.registry import PluginSpec, PluginLoader
+from llmstack.plugins.registry import PluginInfo, PluginRegistry
