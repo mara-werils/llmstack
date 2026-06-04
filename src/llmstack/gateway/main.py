@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import os
+import time
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -223,6 +225,16 @@ async def lifespan(app: FastAPI):
     _init_providers()
     _init_observe()
     yield
+    # Graceful shutdown: wait for in-flight requests to drain
+    from llmstack.gateway.middleware.metrics import get_active_requests
+
+    deadline = time.monotonic() + 30  # 30 s drain timeout
+    while get_active_requests() > 0 and time.monotonic() < deadline:
+        await asyncio.sleep(0.5)
+    # Close persistent connection pool
+    from llmstack.gateway.proxy import close_pool
+
+    await close_pool()
     await cache.close()
 
 

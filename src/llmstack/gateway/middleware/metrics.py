@@ -14,6 +14,7 @@ _request_count: dict[str, int] = defaultdict(int)
 _error_count: dict[str, int] = defaultdict(int)
 _tokens_in: int = 0
 _tokens_out: int = 0
+_active_requests: int = 0
 
 # Histogram buckets for latency
 _BUCKETS = [0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0, 60.0, 120.0]
@@ -24,12 +25,19 @@ _latency_count: dict[str, int] = defaultdict(int)
 
 class MetricsMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
+        global _active_requests
         path = request.url.path
         if path in ("/metrics", "/healthz"):
             return await call_next(request)
 
+        with _lock:
+            _active_requests += 1
         start = time.monotonic()
-        response = await call_next(request)
+        try:
+            response = await call_next(request)
+        finally:
+            with _lock:
+                _active_requests -= 1
         duration = time.monotonic() - start
 
         with _lock:
@@ -48,6 +56,12 @@ class MetricsMiddleware(BaseHTTPMiddleware):
                 _error_count[path] += 1
 
         return response
+
+
+def get_active_requests() -> int:
+    """Return the number of currently in-flight requests."""
+    with _lock:
+        return _active_requests
 
 
 def record_tokens(input_tokens: int = 0, output_tokens: int = 0) -> None:
@@ -71,6 +85,7 @@ def get_metrics() -> dict:
                 ) if _latency_count[path] else 0,
             }
         result["tokens"] = {"input": _tokens_in, "output": _tokens_out}
+        result["active_requests"] = _active_requests
         return result
 
 
@@ -110,6 +125,13 @@ def get_prometheus_metrics() -> str:
         lines.append("# TYPE llmstack_tokens_total counter")
         lines.append(f'llmstack_tokens_total{{type="input"}} {_tokens_in}')
         lines.append(f'llmstack_tokens_total{{type="output"}} {_tokens_out}')
+
+        # Active requests gauge
+        lines.append(
+            "# HELP llmstack_active_requests Current in-flight requests"
+        )
+        lines.append("# TYPE llmstack_active_requests gauge")
+        lines.append(f"llmstack_active_requests {_active_requests}")
 
     lines.append("")
     return "\n".join(lines)

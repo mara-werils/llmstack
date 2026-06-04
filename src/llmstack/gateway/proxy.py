@@ -22,6 +22,34 @@ EMBEDDINGS_URL = os.getenv("LLMSTACK_EMBEDDINGS_URL", "")
 # Timeout for inference (can be long for large models)
 REQUEST_TIMEOUT = int(os.getenv("LLMSTACK_REQUEST_TIMEOUT", "120"))
 
+# ---------------------------------------------------------------------------
+# Persistent connection pool — reused across all requests.
+# ---------------------------------------------------------------------------
+_pool: httpx.AsyncClient | None = None
+
+
+def _get_pool() -> httpx.AsyncClient:
+    """Return the module-level ``httpx.AsyncClient``, creating it lazily."""
+    global _pool
+    if _pool is None or _pool.is_closed:
+        _pool = httpx.AsyncClient(
+            timeout=httpx.Timeout(REQUEST_TIMEOUT, connect=10),
+            limits=httpx.Limits(
+                max_connections=100,
+                max_keepalive_connections=20,
+            ),
+            http2=True,
+        )
+    return _pool
+
+
+async def close_pool() -> None:
+    """Gracefully close the connection pool (called during shutdown)."""
+    global _pool
+    if _pool is not None:
+        await _pool.aclose()
+        _pool = None
+
 
 async def proxy_chat_completion(
     payload: dict,
@@ -61,10 +89,10 @@ async def proxy_chat_completion(
         return _stream_response(url, payload, timeout)
 
     try:
-        async with httpx.AsyncClient(timeout=timeout) as client:
-            resp = await client.post(url, json=payload)
-            resp.raise_for_status()
-            result = resp.json()
+        client = _get_pool()
+        resp = await client.post(url, json=payload)
+        resp.raise_for_status()
+        result = resp.json()
 
         breaker.record_success()
 
@@ -130,16 +158,20 @@ async def _proxy_via_provider(
     return result
 
 
-async def _stream_response(url: str, payload: dict, timeout: httpx.Timeout) -> AsyncIterator[bytes]:
+async def _stream_response(
+    url: str,
+    payload: dict,
+    timeout: httpx.Timeout,  # noqa: ARG001 — kept for signature compat
+) -> AsyncIterator[bytes]:
     """Stream SSE chunks from the inference backend with circuit breaker tracking."""
     breaker = get_inference_breaker()
     try:
-        async with httpx.AsyncClient(timeout=timeout) as client:
-            async with client.stream("POST", url, json=payload) as resp:
-                resp.raise_for_status()
-                breaker.record_success()
-                async for chunk in resp.aiter_bytes():
-                    yield chunk
+        client = _get_pool()
+        async with client.stream("POST", url, json=payload) as resp:
+            resp.raise_for_status()
+            breaker.record_success()
+            async for chunk in resp.aiter_bytes():
+                yield chunk
     except (httpx.ConnectError, httpx.ReadTimeout, httpx.ConnectTimeout):
         breaker.record_failure()
         raise
@@ -151,16 +183,16 @@ async def proxy_embeddings(payload: dict) -> dict:
     if not url.endswith("/embeddings"):
         url = f"{url}/embeddings"
 
-    async with httpx.AsyncClient(timeout=30) as client:
-        resp = await client.post(url, json=payload)
-        resp.raise_for_status()
-        return resp.json()
+    client = _get_pool()
+    resp = await client.post(url, json=payload)
+    resp.raise_for_status()
+    return resp.json()
 
 
 async def proxy_models() -> dict:
     """List available models from the inference backend."""
     url = f"{INFERENCE_URL}/models"
-    async with httpx.AsyncClient(timeout=10) as client:
-        resp = await client.get(url)
-        resp.raise_for_status()
-        return resp.json()
+    client = _get_pool()
+    resp = await client.get(url)
+    resp.raise_for_status()
+    return resp.json()

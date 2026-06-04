@@ -8,6 +8,13 @@ import time
 from dataclasses import dataclass
 from typing import AsyncIterator
 
+_MAX_STREAM_BYTES = 50 * 1024 * 1024  # 50 MB default cap
+_CHUNK_TIMEOUT = 30.0  # seconds
+
+
+class StreamTimeoutError(Exception):
+    """Raised when no data is received within the chunk timeout."""
+
 
 @dataclass
 class StreamMetrics:
@@ -34,9 +41,17 @@ class StreamChunk:
 class StreamProcessor:
     """Process and enhance streaming responses."""
 
-    def __init__(self, model: str = "", request_id: str = ""):
+    def __init__(
+        self,
+        model: str = "",
+        request_id: str = "",
+        chunk_timeout: float = _CHUNK_TIMEOUT,
+        max_bytes: int = _MAX_STREAM_BYTES,
+    ):
         self.model = model
         self.request_id = request_id
+        self.chunk_timeout: float = chunk_timeout
+        self.max_bytes: int = max_bytes
         self.metrics = StreamMetrics()
         self._start_time: float = 0
         self._first_token_time: float = 0
@@ -49,11 +64,26 @@ class StreamProcessor:
         """Process a raw token stream into formatted output."""
         self._start_time = time.time()
         token_index = 0
+        aiter = source.__aiter__()
 
-        async for token in source:
+        while True:
+            try:
+                token = await asyncio.wait_for(
+                    aiter.__anext__(), timeout=self.chunk_timeout,
+                )
+            except asyncio.TimeoutError:
+                self.metrics.errors += 1
+                raise StreamTimeoutError(
+                    f"No data received for {self.chunk_timeout}s"
+                )
+            except StopAsyncIteration:
+                break
+
             if token_index == 0:
                 self._first_token_time = time.time()
-                self.metrics.first_token_ms = (self._first_token_time - self._start_time) * 1000
+                self.metrics.first_token_ms = (
+                    (self._first_token_time - self._start_time) * 1000
+                )
 
             token_index += 1
             self.metrics.total_tokens = token_index
@@ -74,6 +104,11 @@ class StreamProcessor:
                 formatted = token
 
             self.metrics.bytes_sent += len(formatted.encode())
+            if self.metrics.bytes_sent > self.max_bytes:
+                self.metrics.errors += 1
+                raise StreamTimeoutError(
+                    f"Stream exceeded max size of {self.max_bytes} bytes"
+                )
             yield formatted
 
         # Send final metrics

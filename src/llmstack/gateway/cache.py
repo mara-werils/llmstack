@@ -10,6 +10,7 @@ import hashlib
 import json
 import os
 import time
+from collections import deque
 from dataclasses import dataclass, field
 
 import redis.asyncio as aioredis
@@ -29,12 +30,16 @@ class CacheStats:
     misses: int = 0
     evictions: int = 0
     avg_hit_latency_ms: float = 0.0
-    _hit_latencies: list[float] = field(default_factory=list, repr=False)
+    _hit_latencies: deque[float] = field(
+        default_factory=lambda: deque(maxlen=1000), repr=False,
+    )
 
     def record_hit(self, latency_ms: float) -> None:
         self.hits += 1
         self._hit_latencies.append(latency_ms)
-        self.avg_hit_latency_ms = sum(self._hit_latencies) / len(self._hit_latencies)
+        self.avg_hit_latency_ms = sum(self._hit_latencies) / len(
+            self._hit_latencies
+        )
 
     def record_miss(self) -> None:
         self.misses += 1
