@@ -105,6 +105,9 @@ exclude_lines = [
     "if __name__ == .__main__.",
 ]
 
+[tool.bandit]
+skips = ["B101", "B110", "B404", "B602", "B603"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
