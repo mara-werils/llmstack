@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
+import logging
+
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse
+
+logger = logging.getLogger(__name__)
 
 # Default: 10MB
 DEFAULT_MAX_REQUEST_BYTES = 10 * 1024 * 1024
@@ -20,6 +24,15 @@ class RequestSizeMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         content_length = request.headers.get("content-length")
         if content_length and int(content_length) > self.max_bytes:
+            client_ip = request.client.host if request.client else "unknown"
+            logger.warning(
+                "Rejected oversized request: path=%s client=%s "
+                "content_length=%s max_allowed=%d",
+                request.url.path,
+                client_ip,
+                content_length,
+                self.max_bytes,
+            )
             return JSONResponse(
                 status_code=413,
                 content={
