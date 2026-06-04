@@ -7,6 +7,8 @@ import time
 
 import httpx
 from fastapi import APIRouter
+
+from llmstack import __version__
 from fastapi.responses import JSONResponse, PlainTextResponse
 
 router = APIRouter()
@@ -110,7 +112,7 @@ async def healthz():
     return JSONResponse(
         content={
             "status": "ok" if all_ok else "degraded",
-            "version": "1.0.0",
+            "version": __version__,
             "uptime_s": round(uptime_s, 1),
             "services": checks,
             **extras,
