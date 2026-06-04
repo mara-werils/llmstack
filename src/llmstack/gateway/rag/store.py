@@ -55,10 +55,13 @@ class VectorStore:
             url = f"{url}/embeddings"
 
         async with httpx.AsyncClient(timeout=60) as client:
-            resp = await client.post(url, json={
-                "input": texts,
-                "model": "bge-m3",
-            })
+            resp = await client.post(
+                url,
+                json={
+                    "input": texts,
+                    "model": "bge-m3",
+                },
+            )
             resp.raise_for_status()
             data = resp.json()
 
@@ -101,7 +104,7 @@ class VectorStore:
         chunks: list[Chunk] = []
 
         for i in range(0, len(words), CHUNK_SIZE - CHUNK_OVERLAP):
-            chunk_words = words[i:i + CHUNK_SIZE]
+            chunk_words = words[i : i + CHUNK_SIZE]
             if not chunk_words:
                 break
 
@@ -109,15 +112,17 @@ class VectorStore:
             content_hash = hashlib.md5(chunk_text.encode()).hexdigest()[:12]
             chunk_id = str(uuid.uuid5(uuid.NAMESPACE_URL, content_hash))
 
-            chunks.append(Chunk(
-                id=chunk_id,
-                text=chunk_text,
-                metadata={
-                    "source": source,
-                    "chunk_index": len(chunks),
-                    "word_count": len(chunk_words),
-                },
-            ))
+            chunks.append(
+                Chunk(
+                    id=chunk_id,
+                    text=chunk_text,
+                    metadata={
+                        "source": source,
+                        "chunk_index": len(chunks),
+                        "word_count": len(chunk_words),
+                    },
+                )
+            )
 
         return chunks
 
@@ -147,16 +152,18 @@ class VectorStore:
                 "chunk_index": chunk.metadata.get("chunk_index", 0),
                 **({} if metadata is None else metadata),
             }
-            points.append({
-                "id": chunk.id,
-                "vector": embedding,
-                "payload": payload,
-            })
+            points.append(
+                {
+                    "id": chunk.id,
+                    "vector": embedding,
+                    "payload": payload,
+                }
+            )
 
         # Upsert in batches of 100
         async with httpx.AsyncClient(timeout=30) as client:
             for i in range(0, len(points), 100):
-                batch = points[i:i + 100]
+                batch = points[i : i + 100]
                 resp = await client.put(
                     f"{self._qdrant}/collections/{COLLECTION_NAME}/points",
                     json={"points": batch},
@@ -191,11 +198,13 @@ class VectorStore:
         results = []
         for hit in data.get("result", []):
             payload = hit.get("payload", {})
-            results.append(SearchResult(
-                text=payload.get("text", ""),
-                score=hit.get("score", 0.0),
-                metadata={k: v for k, v in payload.items() if k != "text"},
-            ))
+            results.append(
+                SearchResult(
+                    text=payload.get("text", ""),
+                    score=hit.get("score", 0.0),
+                    metadata={k: v for k, v in payload.items() if k != "text"},
+                )
+            )
 
         return results
 

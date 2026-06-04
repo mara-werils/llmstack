@@ -36,12 +36,8 @@ class LengthPreference:
 
     def update(self, preferred_len: float, rejected_len: float) -> None:
         n = self.samples + 1
-        self.avg_preferred_length = (
-            self.avg_preferred_length * self.samples + preferred_len
-        ) / n
-        self.avg_rejected_length = (
-            self.avg_rejected_length * self.samples + rejected_len
-        ) / n
+        self.avg_preferred_length = (self.avg_preferred_length * self.samples + preferred_len) / n
+        self.avg_rejected_length = (self.avg_rejected_length * self.samples + rejected_len) / n
         self.samples = n
         self._update_tendency()
 
@@ -60,7 +56,7 @@ class LengthPreference:
 class FormatPreference:
     """Learned preference for response formatting."""
 
-    prefers_code_blocks: float = 0.5   # 0-1 (higher = prefers)
+    prefers_code_blocks: float = 0.5  # 0-1 (higher = prefers)
     prefers_bullet_lists: float = 0.5
     prefers_headers: float = 0.5
     prefers_markdown: float = 0.5
@@ -108,9 +104,9 @@ class FormatPreference:
 class TonePreference:
     """Learned preference for response tone."""
 
-    formality: float = 0.5      # 0=casual, 1=formal
-    directness: float = 0.5     # 0=hedging, 1=direct
-    technicality: float = 0.5   # 0=simple, 1=technical
+    formality: float = 0.5  # 0=casual, 1=formal
+    directness: float = 0.5  # 0=hedging, 1=direct
+    technicality: float = 0.5  # 0=simple, 1=technical
     samples: int = 0
 
     def update(self, correction: str, original: str) -> None:
@@ -238,12 +234,8 @@ class PreferenceLearner:
         """Rebuild preferences from all historical feedback."""
         self.preferences = UserPreferences()
 
-        corrections = self.store.get_feedback(
-            feedback_type=FeedbackType.CORRECTION, limit=limit
-        )
-        edits = self.store.get_feedback(
-            feedback_type=FeedbackType.EDIT, limit=limit
-        )
+        corrections = self.store.get_feedback(feedback_type=FeedbackType.CORRECTION, limit=limit)
+        edits = self.store.get_feedback(feedback_type=FeedbackType.EDIT, limit=limit)
 
         for fb in corrections + edits:
             if fb.correction:
@@ -252,9 +244,7 @@ class PreferenceLearner:
 
         self.preferences.last_updated = time.time()
         self._save()
-        logger.info(
-            "Rebuilt preferences from %d signals", self.preferences.total_signals
-        )
+        logger.info("Rebuilt preferences from %d signals", self.preferences.total_signals)
 
     def get_system_prompt_additions(self) -> str:
         """Get learned preferences as system prompt text."""
@@ -302,6 +292,4 @@ class PreferenceLearner:
     def _save(self) -> None:
         """Save preferences to disk."""
         self.preferences_path.parent.mkdir(parents=True, exist_ok=True)
-        self.preferences_path.write_text(
-            json.dumps(self.preferences.to_dict(), indent=2)
-        )
+        self.preferences_path.write_text(json.dumps(self.preferences.to_dict(), indent=2))

@@ -60,6 +60,7 @@ def status() -> None:
     # Quick gateway health check
     try:
         from llmstack.config.loader import load_config
+
         config = load_config()
         gw_url = f"http://localhost:{config.gateway.port}"
         resp = httpx.get(f"{gw_url}/healthz", timeout=3)

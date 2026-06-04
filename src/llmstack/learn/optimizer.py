@@ -140,9 +140,7 @@ class PromptOptimizer:
         if quality_score > 0:
             # Running average
             n = variant.total_uses
-            variant.avg_quality = (
-                variant.avg_quality * (n - 1) + quality_score
-            ) / n
+            variant.avg_quality = (variant.avg_quality * (n - 1) + quality_score) / n
 
         self._save_variant(variant)
 
@@ -170,23 +168,22 @@ class PromptOptimizer:
 
         # Pattern: frequent shortening (users want conciseness)
         shortened = sum(
-            1 for f in corrections
-            if f.correction and len(f.correction) < len(f.response) * 0.7
+            1 for f in corrections if f.correction and len(f.correction) < len(f.response) * 0.7
         )
         if shortened > len(corrections) * 0.3:
             patterns.append("Users frequently shorten responses — model is too verbose")
 
         # Pattern: frequent lengthening (users want detail)
         lengthened = sum(
-            1 for f in corrections
-            if f.correction and len(f.correction) > len(f.response) * 1.5
+            1 for f in corrections if f.correction and len(f.correction) > len(f.response) * 1.5
         )
         if lengthened > len(corrections) * 0.3:
             patterns.append("Users frequently expand responses — model lacks detail")
 
         # Pattern: code formatting corrections
         code_corrections = sum(
-            1 for f in corrections
+            1
+            for f in corrections
             if f.correction and "```" in f.correction and "```" not in f.response
         )
         if code_corrections > 3:
@@ -194,12 +191,15 @@ class PromptOptimizer:
 
         # Pattern: removing hedging language
         hedging = sum(
-            1 for f in corrections
-            if f.response and any(
+            1
+            for f in corrections
+            if f.response
+            and any(
                 h in f.response.lower()
                 for h in ["i think", "perhaps", "maybe", "it seems", "might be"]
             )
-            and f.correction and not any(
+            and f.correction
+            and not any(
                 h in f.correction.lower()
                 for h in ["i think", "perhaps", "maybe", "it seems", "might be"]
             )
@@ -209,8 +209,10 @@ class PromptOptimizer:
 
         # Pattern: adding structure (lists, headers)
         structure_added = sum(
-            1 for f in corrections
-            if f.correction and (
+            1
+            for f in corrections
+            if f.correction
+            and (
                 f.correction.count("\n- ") > f.response.count("\n- ") + 2
                 or f.correction.count("\n#") > f.response.count("\n#")
             )
@@ -227,17 +229,13 @@ class PromptOptimizer:
 
         for pattern in patterns:
             if "too verbose" in pattern:
-                suggestions.append(
-                    "Add instruction: 'Be concise. Avoid unnecessary explanation.'"
-                )
+                suggestions.append("Add instruction: 'Be concise. Avoid unnecessary explanation.'")
             elif "lacks detail" in pattern:
                 suggestions.append(
                     "Add instruction: 'Provide detailed explanations with examples.'"
                 )
             elif "format code" in pattern:
-                suggestions.append(
-                    "Add instruction: 'Always wrap code in ```language blocks.'"
-                )
+                suggestions.append("Add instruction: 'Always wrap code in ```language blocks.'")
             elif "hedging" in pattern:
                 suggestions.append(
                     "Add instruction: 'Be direct and confident. Avoid hedging words.'"
@@ -251,10 +249,7 @@ class PromptOptimizer:
 
     def get_best_variant(self, name: str) -> PromptVariant | None:
         """Get the best-performing variant of a named prompt."""
-        variants = [
-            v for v in self._variants.values()
-            if v.name == name and v.total_uses >= 5
-        ]
+        variants = [v for v in self._variants.values() if v.name == name and v.total_uses >= 5]
         if not variants:
             return None
         return max(variants, key=lambda v: v.satisfaction_rate)

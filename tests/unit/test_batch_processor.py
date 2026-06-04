@@ -45,13 +45,25 @@ def test_batch_processor_progress_callback():
 def test_batch_summary():
     results = [
         BatchResult(id=1, prompt="a", response="b", tokens_used=10, duration=1.0, success=True),
-        BatchResult(id=2, prompt="c", response="", tokens_used=0, duration=0.5, success=False, error="timeout"),
+        BatchResult(
+            id=2,
+            prompt="c",
+            response="",
+            tokens_used=0,
+            duration=0.5,
+            success=False,
+            error="timeout",
+        ),
     ]
 
     summary = BatchSummary(
-        total=2, completed=1, failed=1,
-        total_tokens=10, total_duration=1.5,
-        avg_duration=0.75, results=results,
+        total=2,
+        completed=1,
+        failed=1,
+        total_tokens=10,
+        total_duration=1.5,
+        avg_duration=0.75,
+        results=results,
     )
 
     assert summary.total == 2

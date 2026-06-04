@@ -102,6 +102,7 @@ def _handle_feedback(args: dict[str, Any]) -> dict[str, Any]:
     # Update preference learner if correction
     if feedback.has_correction:
         from llmstack.learn.preferences import PreferenceLearner
+
         learner = PreferenceLearner(store=store)
         learner.learn_from_feedback(feedback)
 

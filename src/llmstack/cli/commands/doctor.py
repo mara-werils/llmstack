@@ -25,6 +25,7 @@ from llmstack.core.hardware import detect_hardware
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _check_port(port: int) -> bool:
     """Return True if port is available (not in use)."""
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -62,6 +63,7 @@ def _check_redis() -> tuple[int, int]:
     redis_url = os.getenv("LLMSTACK_REDIS_URL", "redis://localhost:6379")
     try:
         import redis as _redis
+
         r = _redis.from_url(redis_url, socket_connect_timeout=2)
         r.ping()
         success(f"Redis is reachable at {redis_url}")
@@ -79,11 +81,13 @@ def _check_disk_space() -> tuple[int, int]:
     """Return (issues, warnings) for available disk space."""
     issues = warnings = 0
     usage = psutil.disk_usage(os.path.expanduser("~"))
-    free_gb = usage.free / (1024 ** 3)
-    total_gb = usage.total / (1024 ** 3)
+    free_gb = usage.free / (1024**3)
+    total_gb = usage.total / (1024**3)
     pct_free = 100 - usage.percent
     if free_gb >= 20:
-        success(f"Disk space: {free_gb:.1f} GB free / {total_gb:.0f} GB total ({pct_free:.0f}% free)")
+        success(
+            f"Disk space: {free_gb:.1f} GB free / {total_gb:.0f} GB total ({pct_free:.0f}% free)"
+        )
     elif free_gb >= 5:
         warn(f"Low disk space: {free_gb:.1f} GB free ({pct_free:.0f}% free). Models need space.")
         warnings += 1
@@ -163,13 +167,12 @@ def doctor() -> None:
 
     try:
         import docker
+
         client = docker.from_env()
         client.ping()
         success("Docker daemon is running")
         docker_info = client.info()
-        gpu_runtime = (
-            "nvidia" if "nvidia" in str(docker_info.get("Runtimes", {})) else "default"
-        )
+        gpu_runtime = "nvidia" if "nvidia" in str(docker_info.get("Runtimes", {})) else "default"
         info(
             f"Docker version: {docker_info.get('ServerVersion', 'unknown')} "
             f"(runtime: {gpu_runtime})"
@@ -189,10 +192,7 @@ def doctor() -> None:
             models = resp.json().get("models", [])
             if models:
                 model_names = [m["name"] for m in models[:5]]
-                info(
-                    f"Models: {', '.join(model_names)}"
-                    + (" ..." if len(models) > 5 else "")
-                )
+                info(f"Models: {', '.join(model_names)}" + (" ..." if len(models) > 5 else ""))
             else:
                 warn("No models pulled. Run: ollama pull llama3.2")
                 warnings += 1
@@ -232,6 +232,7 @@ def doctor() -> None:
     console.print("\n[accent]Configuration[/]")
     try:
         from llmstack.config.loader import load_config
+
         config = load_config()
         success(f"llmstack.yaml is valid (model: {config.models.chat.name})")
     except FileNotFoundError:
@@ -247,6 +248,7 @@ def doctor() -> None:
     for dep in ["typer", "rich", "httpx", "pydantic", "docker", "numpy", "psutil"]:
         try:
             from importlib.metadata import version
+
             ver = version(dep)
             success(f"{dep} {ver}")
         except Exception:
@@ -276,4 +278,103 @@ def doctor() -> None:
         console.print(f"[bold yellow]{warnings} warning(s), but no blocking issues.[/]")
     else:
         console.print(f"[bold red]{issues} issue(s) and {warnings} warning(s) found.[/]")
+    console.print()
+
+
+def doctor_fix() -> None:
+    """Auto-fix common issues detected by doctor."""
+    import subprocess
+
+    banner("LLMStack Doctor --fix", "Auto-remediation for common issues")
+    console.print()
+    fixed = 0
+
+    # 1. Ollama not running
+    console.print("[accent]Ollama[/]")
+    ollama_url = "http://localhost:11434"
+    if not _check_url(ollama_url):
+        if shutil.which("ollama"):
+            warn("Ollama is not running but binary is available")
+            info("Start Ollama with: ollama serve")
+            info("Or run in background: nohup ollama serve &")
+        else:
+            failure("Ollama is not installed")
+            info("Install from: https://ollama.com/download")
+    else:
+        success("Ollama is already running")
+
+        # No models pulled — pull a small one
+        console.print("\n[accent]Models[/]")
+        try:
+            resp = httpx.get(f"{ollama_url}/api/tags", timeout=5)
+            models = resp.json().get("models", [])
+            if not models:
+                warn("No models pulled. Pulling llama3.2:1b ...")
+                result = subprocess.run(
+                    ["ollama", "pull", "llama3.2:1b"],
+                    capture_output=False,
+                    check=False,
+                )
+                if result.returncode == 0:
+                    success("Pulled llama3.2:1b")
+                    fixed += 1
+                else:
+                    failure("Failed to pull llama3.2:1b")
+            else:
+                model_names = [m["name"] for m in models[:5]]
+                success(f"Models available: {', '.join(model_names)}")
+        except Exception:
+            warn("Could not check models")
+
+    # 2. No llmstack.yaml — create from default preset
+    console.print("\n[accent]Configuration[/]")
+    try:
+        from llmstack.config.loader import load_config
+
+        load_config()
+        success("llmstack.yaml exists and is valid")
+    except FileNotFoundError:
+        warn("No llmstack.yaml found — creating from default preset")
+        try:
+            from llmstack.cli.commands.init import init as _init
+
+            _init(preset="chat", directory=None)
+            success("Created llmstack.yaml with 'chat' preset")
+            fixed += 1
+        except Exception as e:
+            failure(f"Failed to create config: {e}")
+    except SystemExit:
+        warn("llmstack.yaml has validation errors — run 'llmstack init' to recreate")
+
+    # 3. Redis not running
+    console.print("\n[accent]Redis[/]")
+    redis_url = os.getenv("LLMSTACK_REDIS_URL", "redis://localhost:6379")
+    redis_ok = False
+    try:
+        import redis as _redis
+
+        r = _redis.from_url(redis_url, socket_connect_timeout=2)
+        r.ping()
+        redis_ok = True
+    except ImportError:
+        info("redis package not installed (optional)")
+    except Exception:
+        pass
+
+    if redis_ok:
+        success("Redis is reachable")
+    elif shutil.which("docker"):
+        warn("Redis is not reachable — Docker is available")
+        info("Start Redis with: docker run -d -p 6379:6379 redis:7")
+    else:
+        info("Redis is not reachable and Docker is not installed (Redis is optional)")
+
+    # Summary
+    console.print()
+    if fixed:
+        console.print(f"[bold green]Fixed {fixed} issue(s).[/]")
+    else:
+        console.print(
+            "[bold]No auto-fixable issues found. Run 'llmstack doctor' for full check.[/]"
+        )
     console.print()

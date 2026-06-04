@@ -23,12 +23,12 @@ class QuotaPeriod(str, Enum):
 class QuotaLimit:
     """A quota limit configuration."""
 
-    api_key: str = "*"             # "*" applies to all keys
-    max_requests: int = 0          # 0 = unlimited
-    max_tokens: int = 0            # 0 = unlimited
-    max_cost_usd: float = 0.0     # 0 = unlimited
+    api_key: str = "*"  # "*" applies to all keys
+    max_requests: int = 0  # 0 = unlimited
+    max_tokens: int = 0  # 0 = unlimited
+    max_cost_usd: float = 0.0  # 0 = unlimited
     period: QuotaPeriod = QuotaPeriod.DAILY
-    model: str | None = None       # None = all models
+    model: str | None = None  # None = all models
 
 
 @dataclass
@@ -112,8 +112,7 @@ class QuotaManager:
                     )
                 if limit.max_tokens > 0 and toks >= limit.max_tokens:
                     raise QuotaExceededError(
-                        f"Token quota exceeded: {toks}/{limit.max_tokens} "
-                        f"({limit.period.value})",
+                        f"Token quota exceeded: {toks}/{limit.max_tokens} ({limit.period.value})",
                         quota_name=f"{api_key}:tokens",
                     )
                 if limit.max_cost_usd > 0 and cost >= limit.max_cost_usd:
@@ -124,7 +123,11 @@ class QuotaManager:
                     )
 
     def record_usage(
-        self, api_key: str, model: str = "", tokens: int = 0, cost_usd: float = 0.0,
+        self,
+        api_key: str,
+        model: str = "",
+        tokens: int = 0,
+        cost_usd: float = 0.0,
     ) -> None:
         """Record usage after a successful request."""
         with self._lock:
@@ -146,9 +149,21 @@ class QuotaManager:
                     daily_r, daily_t, daily_c = usage.get_usage_in_period(QuotaPeriod.DAILY)
                     monthly_r, monthly_t, monthly_c = usage.get_usage_in_period(QuotaPeriod.MONTHLY)
                     results[model_part] = {
-                        "daily": {"requests": daily_r, "tokens": daily_t, "cost_usd": round(daily_c, 6)},
-                        "monthly": {"requests": monthly_r, "tokens": monthly_t, "cost_usd": round(monthly_c, 6)},
-                        "total": {"requests": usage.requests, "tokens": usage.tokens, "cost_usd": round(usage.cost_usd, 6)},
+                        "daily": {
+                            "requests": daily_r,
+                            "tokens": daily_t,
+                            "cost_usd": round(daily_c, 6),
+                        },
+                        "monthly": {
+                            "requests": monthly_r,
+                            "tokens": monthly_t,
+                            "cost_usd": round(monthly_c, 6),
+                        },
+                        "total": {
+                            "requests": usage.requests,
+                            "tokens": usage.tokens,
+                            "cost_usd": round(usage.cost_usd, 6),
+                        },
                     }
             return results
 

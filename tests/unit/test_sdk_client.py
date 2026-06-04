@@ -141,7 +141,13 @@ class TestSyncClient:
             "id": "test-id",
             "object": "chat.completion",
             "model": "test",
-            "choices": [{"index": 0, "message": {"role": "assistant", "content": "Hi!"}, "finish_reason": "stop"}],
+            "choices": [
+                {
+                    "index": 0,
+                    "message": {"role": "assistant", "content": "Hi!"},
+                    "finish_reason": "stop",
+                }
+            ],
             "usage": {"prompt_tokens": 5, "completion_tokens": 2, "total_tokens": 7},
         }
         mock_resp.headers = {}
@@ -238,7 +244,13 @@ class TestSyncClient:
             "id": "c1",
             "object": "chat.completion",
             "model": "test",
-            "choices": [{"index": 0, "message": {"role": "assistant", "content": "42"}, "finish_reason": "stop"}],
+            "choices": [
+                {
+                    "index": 0,
+                    "message": {"role": "assistant", "content": "42"},
+                    "finish_reason": "stop",
+                }
+            ],
         }
         mock_resp.headers = {}
 
@@ -270,7 +282,13 @@ class TestSyncClient:
             "id": "c1",
             "object": "chat.completion",
             "model": "test",
-            "choices": [{"index": 0, "message": {"role": "assistant", "content": "result"}, "finish_reason": "stop"}],
+            "choices": [
+                {
+                    "index": 0,
+                    "message": {"role": "assistant", "content": "result"},
+                    "finish_reason": "stop",
+                }
+            ],
         }
         mock_resp.headers = {}
 
@@ -288,7 +306,13 @@ class TestSyncClient:
             "id": "c1",
             "object": "chat.completion",
             "model": "test",
-            "choices": [{"index": 0, "message": {"role": "assistant", "content": "ok"}, "finish_reason": "stop"}],
+            "choices": [
+                {
+                    "index": 0,
+                    "message": {"role": "assistant", "content": "ok"},
+                    "finish_reason": "stop",
+                }
+            ],
         }
         mock_resp.headers = {}
 
@@ -323,7 +347,13 @@ class TestAsyncClient:
             "id": "test-id",
             "object": "chat.completion",
             "model": "test",
-            "choices": [{"index": 0, "message": {"role": "assistant", "content": "Hello!"}, "finish_reason": "stop"}],
+            "choices": [
+                {
+                    "index": 0,
+                    "message": {"role": "assistant", "content": "Hello!"},
+                    "finish_reason": "stop",
+                }
+            ],
         }
         mock_resp.headers = {}
 
@@ -400,7 +430,13 @@ class TestAsyncClient:
             "id": "c1",
             "object": "chat.completion",
             "model": "test",
-            "choices": [{"index": 0, "message": {"role": "assistant", "content": "answer"}, "finish_reason": "stop"}],
+            "choices": [
+                {
+                    "index": 0,
+                    "message": {"role": "assistant", "content": "answer"},
+                    "finish_reason": "stop",
+                }
+            ],
         }
         mock_resp.headers = {}
 
@@ -417,12 +453,20 @@ class TestAsyncClient:
             "id": "c1",
             "object": "chat.completion",
             "model": "test",
-            "choices": [{"index": 0, "message": {"role": "assistant", "content": "done"}, "finish_reason": "stop"}],
+            "choices": [
+                {
+                    "index": 0,
+                    "message": {"role": "assistant", "content": "done"},
+                    "finish_reason": "stop",
+                }
+            ],
         }
         mock_resp.headers = {}
 
         async with AsyncClient() as c:
-            with patch.object(c._client, "post", new_callable=AsyncMock, return_value=mock_resp) as mock_post:
+            with patch.object(
+                c._client, "post", new_callable=AsyncMock, return_value=mock_resp
+            ) as mock_post:
                 result = await c.complete("prompt", system="sys")
                 assert result == "done"
                 payload = mock_post.call_args[1]["json"]

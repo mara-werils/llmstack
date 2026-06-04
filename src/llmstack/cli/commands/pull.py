@@ -56,7 +56,9 @@ def pull(model: str, ollama_url: str = "http://localhost:11434") -> None:
                     completed = data.get("completed", 0)
 
                     if total > 0:
-                        progress.update(task_id, total=total, completed=completed, description=status)
+                        progress.update(
+                            task_id, total=total, completed=completed, description=status
+                        )
                     else:
                         progress.update(task_id, description=status)
 

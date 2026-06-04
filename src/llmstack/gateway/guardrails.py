@@ -16,9 +16,9 @@ from threading import Lock
 
 
 class GuardrailAction(str, Enum):
-    BLOCK = "block"     # Block the request/response entirely
-    FLAG = "flag"       # Allow but flag for review
-    REDACT = "redact"   # Redact matched content
+    BLOCK = "block"  # Block the request/response entirely
+    FLAG = "flag"  # Allow but flag for review
+    REDACT = "redact"  # Redact matched content
 
 
 class GuardrailTarget(str, Enum):
@@ -34,14 +34,14 @@ class GuardrailRule:
     id: str = ""
     name: str = ""
     description: str = ""
-    pattern: str = ""              # regex pattern
+    pattern: str = ""  # regex pattern
     keywords: list[str] = field(default_factory=list)
     action: GuardrailAction = GuardrailAction.BLOCK
     target: GuardrailTarget = GuardrailTarget.BOTH
     enabled: bool = True
-    priority: int = 0              # higher = checked first
+    priority: int = 0  # higher = checked first
     category: str = "custom"
-    message: str = ""              # custom block message
+    message: str = ""  # custom block message
 
     def __post_init__(self):
         if not self.id:
@@ -131,27 +131,31 @@ class GuardrailEngine:
         """Load built-in PII and prompt injection rules."""
         # PII detection rules
         for name, pattern in PII_PATTERNS.items():
-            self.add_rule(GuardrailRule(
-                name=f"pii-{name}",
-                description=f"Detect {name.replace('_', ' ')} in content",
-                pattern=pattern,
-                action=GuardrailAction.REDACT,
-                target=GuardrailTarget.OUTPUT,
-                category="pii",
-                priority=10,
-            ))
+            self.add_rule(
+                GuardrailRule(
+                    name=f"pii-{name}",
+                    description=f"Detect {name.replace('_', ' ')} in content",
+                    pattern=pattern,
+                    action=GuardrailAction.REDACT,
+                    target=GuardrailTarget.OUTPUT,
+                    category="pii",
+                    priority=10,
+                )
+            )
 
         # Prompt injection detection
-        self.add_rule(GuardrailRule(
-            name="prompt-injection",
-            description="Detect common prompt injection attempts",
-            keywords=HARMFUL_KEYWORDS,
-            action=GuardrailAction.BLOCK,
-            target=GuardrailTarget.INPUT,
-            category="injection",
-            priority=100,
-            message="Request blocked: potential prompt injection detected",
-        ))
+        self.add_rule(
+            GuardrailRule(
+                name="prompt-injection",
+                description="Detect common prompt injection attempts",
+                keywords=HARMFUL_KEYWORDS,
+                action=GuardrailAction.BLOCK,
+                target=GuardrailTarget.INPUT,
+                category="injection",
+                priority=100,
+                message="Request blocked: potential prompt injection detected",
+            )
+        )
 
     def check(
         self,
@@ -236,7 +240,9 @@ class GuardrailEngine:
     def check_output(self, content: str, request_id: str = "") -> str:
         """Check assistant response content."""
         processed, _ = self.check(
-            content, GuardrailTarget.OUTPUT, request_id=request_id,
+            content,
+            GuardrailTarget.OUTPUT,
+            request_id=request_id,
         )
         return processed
 

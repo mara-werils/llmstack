@@ -67,8 +67,8 @@ class Budget:
     name: str
     limit_usd: float
     period: BudgetPeriod = BudgetPeriod.MONTHLY
-    model: str | None = None       # None = applies to all models
-    provider: str | None = None    # None = applies to all providers
+    model: str | None = None  # None = applies to all models
+    provider: str | None = None  # None = applies to all providers
     alert_at_percent: float = 80.0  # alert when usage hits this %
 
 
@@ -112,7 +112,10 @@ class CostTracker:
             self._custom_pricing[model] = (input_per_m, output_per_m)
 
     def calculate_cost(
-        self, model: str, input_tokens: int, output_tokens: int,
+        self,
+        model: str,
+        input_tokens: int,
+        output_tokens: int,
     ) -> float:
         """Calculate cost for a request based on token counts."""
         pricing = self._custom_pricing.get(model) or MODEL_PRICING.get(model)
@@ -210,24 +213,14 @@ class CostTracker:
                 "total_input_tokens": total_input,
                 "total_output_tokens": total_output,
                 "cost_by_model": {
-                    k: round(v, 6) for k, v in sorted(
-                        by_model.items(), key=lambda x: -x[1]
-                    )
+                    k: round(v, 6) for k, v in sorted(by_model.items(), key=lambda x: -x[1])
                 },
                 "cost_by_provider": {
-                    k: round(v, 6) for k, v in sorted(
-                        by_provider.items(), key=lambda x: -x[1]
-                    )
+                    k: round(v, 6) for k, v in sorted(by_provider.items(), key=lambda x: -x[1])
                 },
-                "daily_spend": round(
-                    self.get_spend(BudgetPeriod.DAILY), 6
-                ),
-                "weekly_spend": round(
-                    self.get_spend(BudgetPeriod.WEEKLY), 6
-                ),
-                "monthly_spend": round(
-                    self.get_spend(BudgetPeriod.MONTHLY), 6
-                ),
+                "daily_spend": round(self.get_spend(BudgetPeriod.DAILY), 6),
+                "weekly_spend": round(self.get_spend(BudgetPeriod.WEEKLY), 6),
+                "monthly_spend": round(self.get_spend(BudgetPeriod.MONTHLY), 6),
             }
 
     def get_alerts(self, limit: int = 50) -> list[BudgetAlert]:
@@ -241,16 +234,20 @@ class CostTracker:
             results = []
             for b in self._budgets.values():
                 spend = self.get_spend(b.period, model=b.model, provider=b.provider)
-                results.append({
-                    "name": b.name,
-                    "limit_usd": b.limit_usd,
-                    "period": b.period.value,
-                    "model": b.model,
-                    "provider": b.provider,
-                    "current_spend": round(spend, 6),
-                    "percent_used": round((spend / b.limit_usd) * 100, 2) if b.limit_usd > 0 else 0,
-                    "alert_at_percent": b.alert_at_percent,
-                })
+                results.append(
+                    {
+                        "name": b.name,
+                        "limit_usd": b.limit_usd,
+                        "period": b.period.value,
+                        "model": b.model,
+                        "provider": b.provider,
+                        "current_spend": round(spend, 6),
+                        "percent_used": round((spend / b.limit_usd) * 100, 2)
+                        if b.limit_usd > 0
+                        else 0,
+                        "alert_at_percent": b.alert_at_percent,
+                    }
+                )
             return results
 
     def _check_budgets(self, entry: CostEntry) -> None:

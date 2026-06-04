@@ -25,11 +25,20 @@ def ask(
     use_git: bool = True,
 ) -> None:
     """Ask questions about local files using a local LLM."""
-    asyncio.run(_ask_async(
-        question=question, files=files, model=model, embed_model=embed_model,
-        top_k=top_k, ollama_url=ollama_url, show_sources=show_sources,
-        interactive=interactive, no_cache=no_cache, use_git=use_git,
-    ))
+    asyncio.run(
+        _ask_async(
+            question=question,
+            files=files,
+            model=model,
+            embed_model=embed_model,
+            top_k=top_k,
+            ollama_url=ollama_url,
+            show_sources=show_sources,
+            interactive=interactive,
+            no_cache=no_cache,
+            use_git=use_git,
+        )
+    )
 
 
 async def _ask_async(
@@ -48,8 +57,12 @@ async def _ask_async(
     import typer
     from rich.panel import Panel
     from rich.progress import (
-        BarColumn, MofNCompleteColumn, Progress, SpinnerColumn,
-        TextColumn, TimeElapsedColumn,
+        BarColumn,
+        MofNCompleteColumn,
+        Progress,
+        SpinnerColumn,
+        TextColumn,
+        TimeElapsedColumn,
     )
 
     from llmstack.ask.parsers import TextChunk, collect_files, parse_file
@@ -67,12 +80,15 @@ async def _ask_async(
                 console.print("[error]Ollama is not responding correctly.[/]")
                 raise typer.Exit(1)
     except httpx.ConnectError:
-        console.print(Panel(
-            "[error]Cannot connect to Ollama.[/]\n\n"
-            "Make sure Ollama is running:\n  [bold cyan]ollama serve[/]\n\n"
-            f"Tried: {ollama_url}",
-            title="Connection Error", border_style="red",
-        ))
+        console.print(
+            Panel(
+                "[error]Cannot connect to Ollama.[/]\n\n"
+                "Make sure Ollama is running:\n  [bold cyan]ollama serve[/]\n\n"
+                f"Tried: {ollama_url}",
+                title="Connection Error",
+                border_style="red",
+            )
+        )
         raise typer.Exit(1)
     except httpx.HTTPError as exc:
         console.print(f"[error]Error connecting to Ollama: {exc}[/]")
@@ -89,12 +105,14 @@ async def _ask_async(
         stdin_content = sys.stdin.read()
         if stdin_content.strip():
             lines = stdin_content.splitlines()
-            stdin_chunks = [TextChunk(
-                content=stdin_content.strip(),
-                source="<stdin>",
-                start_line=1,
-                end_line=max(len(lines), 1),
-            )]
+            stdin_chunks = [
+                TextChunk(
+                    content=stdin_content.strip(),
+                    source="<stdin>",
+                    start_line=1,
+                    end_line=max(len(lines), 1),
+                )
+            ]
 
     # ── Collect files ────────────────────────────────────────────────────
     paths: list[Path] = []
@@ -117,10 +135,13 @@ async def _ask_async(
     git_context_text = ""
     if use_git:
         from llmstack.ask.git_context import get_git_info
+
         git_info = get_git_info(project_root)
         if git_info.is_repo:
             git_context_text = git_info.to_context()
-            console.print(f"  [dim]Git: {git_info.branch} ({len(git_info.recent_commits)} recent commits)[/]")
+            console.print(
+                f"  [dim]Git: {git_info.branch} ({len(git_info.recent_commits)} recent commits)[/]"
+            )
 
     # ── Persistent index: check what changed ─────────────────────────────
     index = PersistentIndex(project_root) if not no_cache else None
@@ -157,7 +178,8 @@ async def _ask_async(
             parse_set = {str(p.resolve()) for p in files_to_parse}
             try:
                 cached_chunks = [
-                    c for c in cached_chunks
+                    c
+                    for c in cached_chunks
                     if str((project_root / c.source).resolve()) not in parse_set
                 ]
             except Exception:
@@ -184,8 +206,18 @@ async def _ask_async(
                         # Use AST chunker for code files
                         ext = fpath.suffix.lower()
                         code_exts = {
-                            ".py", ".js", ".jsx", ".ts", ".tsx", ".go", ".rs",
-                            ".java", ".c", ".cpp", ".h", ".rb",
+                            ".py",
+                            ".js",
+                            ".jsx",
+                            ".ts",
+                            ".tsx",
+                            ".go",
+                            ".rs",
+                            ".java",
+                            ".c",
+                            ".cpp",
+                            ".h",
+                            ".rb",
                         }
                         if ext in code_exts:
                             source = fpath.read_text(errors="replace")
@@ -199,6 +231,7 @@ async def _ask_async(
                         rel_path = str(fpath.resolve().relative_to(project_root))
                         new_file_chunks[rel_path] = chunks
                         from llmstack.ask.index import _file_hash
+
                         file_hashes[rel_path] = _file_hash(fpath)
                     except Exception:
                         pass
@@ -246,15 +279,25 @@ async def _ask_async(
     try:
         if interactive:
             await _interactive_loop(
-                searcher=searcher, embeddings=embeddings, all_chunks=all_chunks,
-                model=model, ollama_url=ollama_url, top_k=top_k,
-                show_sources=show_sources, git_context=git_context_text,
+                searcher=searcher,
+                embeddings=embeddings,
+                all_chunks=all_chunks,
+                model=model,
+                ollama_url=ollama_url,
+                top_k=top_k,
+                show_sources=show_sources,
+                git_context=git_context_text,
             )
         else:
             await _single_query(
-                question=question, searcher=searcher, embeddings=embeddings,
-                model=model, ollama_url=ollama_url, top_k=top_k,
-                show_sources=show_sources, git_context=git_context_text,
+                question=question,
+                searcher=searcher,
+                embeddings=embeddings,
+                model=model,
+                ollama_url=ollama_url,
+                top_k=top_k,
+                show_sources=show_sources,
+                git_context=git_context_text,
             )
     except httpx.ReadTimeout:
         console.print(
@@ -264,10 +307,7 @@ async def _ask_async(
         )
     except httpx.HTTPStatusError as exc:
         if exc.response.status_code == 404:
-            console.print(
-                f"\n[error]Model not found.[/] Run:\n"
-                f"  [bold cyan]ollama pull {model}[/]"
-            )
+            console.print(f"\n[error]Model not found.[/] Run:\n  [bold cyan]ollama pull {model}[/]")
         else:
             console.print(f"\n[error]HTTP error: {exc.response.status_code}[/]")
     except Exception as exc:
@@ -316,8 +356,13 @@ async def _single_query(
     timeout = httpx.Timeout(300, connect=10, read=300, write=30)
     async with httpx.AsyncClient(timeout=timeout) as client:
         async with client.stream(
-            "POST", f"{ollama_url}/api/chat",
-            json={"model": model, "messages": [{"role": "user", "content": prompt}], "stream": True},
+            "POST",
+            f"{ollama_url}/api/chat",
+            json={
+                "model": model,
+                "messages": [{"role": "user", "content": prompt}],
+                "stream": True,
+            },
         ) as resp:
             resp.raise_for_status()
             async for line in resp.aiter_lines():
@@ -357,16 +402,20 @@ async def _interactive_loop(
     from llmstack.learn.collector import FeedbackCollector
 
     conv = ConversationEngine(
-        ollama_url=ollama_url, model=model, git_context=git_context,
+        ollama_url=ollama_url,
+        model=model,
+        git_context=git_context,
     )
     collector = FeedbackCollector()
 
     console.print()
-    console.print(Panel(
-        "[bold]Interactive mode[/] — chat with your codebase\n"
-        "[dim]Commands: /clear (reset), /sources (show last), /fb (feedback), /quit (exit)[/]",
-        border_style="cyan",
-    ))
+    console.print(
+        Panel(
+            "[bold]Interactive mode[/] — chat with your codebase\n"
+            "[dim]Commands: /clear (reset), /sources (show last), /fb (feedback), /quit (exit)[/]",
+            border_style="cyan",
+        )
+    )
 
     try:
         while True:
@@ -429,8 +478,10 @@ async def _interactive_loop(
             # Track interaction for learning
             if response_text:
                 collector.record_interaction(
-                    query=question, response=response_text,
-                    model=model, command="ask",
+                    query=question,
+                    response=response_text,
+                    model=model,
+                    command="ask",
                 )
 
             if show_sources and results:
@@ -460,8 +511,11 @@ def _print_sources(results) -> None:
 
     console.print()
     table = Table(
-        title="Sources", show_header=True,
-        header_style="bold cyan", border_style="dim", padding=(0, 1),
+        title="Sources",
+        show_header=True,
+        header_style="bold cyan",
+        border_style="dim",
+        padding=(0, 1),
     )
     table.add_column("File", style="bold")
     table.add_column("Lines", style="dim")

@@ -1,6 +1,5 @@
 """Tests for code complexity analyzer."""
 
-
 import pytest
 
 from llmstack.analyze.complexity import analyze_python_file, analyze_directory
@@ -8,13 +7,13 @@ from llmstack.analyze.complexity import analyze_python_file, analyze_directory
 
 @pytest.fixture
 def simple_py(tmp_path):
-    code = '''
+    code = """
 def hello():
     print("hello")
 
 def add(a, b):
     return a + b
-'''
+"""
     f = tmp_path / "simple.py"
     f.write_text(code)
     return f
@@ -22,7 +21,7 @@ def add(a, b):
 
 @pytest.fixture
 def complex_py(tmp_path):
-    code = '''
+    code = """
 def complex_function(data, config, mode):
     if mode == "a":
         for item in data:
@@ -53,7 +52,7 @@ def complex_function(data, config, mode):
                 if data[i] > data[j]:
                     data[i], data[j] = data[j], data[i]
     return data
-'''
+"""
     f = tmp_path / "complex.py"
     f.write_text(code)
     return f
@@ -128,7 +127,7 @@ def test_empty_file(tmp_path):
 
 
 def test_class_methods(tmp_path):
-    code = '''
+    code = """
 class MyClass:
     def method_a(self):
         return 1
@@ -137,7 +136,7 @@ class MyClass:
         if x > 0:
             return x
         return -x
-'''
+"""
     f = tmp_path / "cls.py"
     f.write_text(code)
     metrics = analyze_python_file(f)

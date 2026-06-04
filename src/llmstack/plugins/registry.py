@@ -14,6 +14,7 @@ from pathlib import Path
 @dataclass
 class PluginInfo:
     """Information about a plugin."""
+
     name: str
     version: str
     description: str
@@ -71,21 +72,23 @@ class PluginRegistry:
             try:
                 eps = importlib.metadata.entry_points()
                 # Python 3.12+ returns SelectableGroups
-                if hasattr(eps, 'select'):
+                if hasattr(eps, "select"):
                     group_eps = eps.select(group=group)
                 else:
                     group_eps = eps.get(group, [])
 
                 for ep in group_eps:
-                    plugins.append(PluginInfo(
-                        name=ep.name,
-                        version=getattr(ep.dist, 'version', '0.0.0') if ep.dist else '0.0.0',
-                        description=f"Plugin: {ep.name}",
-                        author="",
-                        entry_point=str(ep),
-                        plugin_type=plugin_type,
-                        installed=True,
-                    ))
+                    plugins.append(
+                        PluginInfo(
+                            name=ep.name,
+                            version=getattr(ep.dist, "version", "0.0.0") if ep.dist else "0.0.0",
+                            description=f"Plugin: {ep.name}",
+                            author="",
+                            entry_point=str(ep),
+                            plugin_type=plugin_type,
+                            installed=True,
+                        )
+                    )
             except Exception:
                 pass
 
@@ -93,17 +96,19 @@ class PluginRegistry:
         with sqlite3.connect(self.db_path) as conn:
             conn.row_factory = sqlite3.Row
             for row in conn.execute("SELECT * FROM plugins").fetchall():
-                plugins.append(PluginInfo(
-                    name=row["name"],
-                    version=row["version"],
-                    description=row["description"],
-                    author=row["author"],
-                    entry_point=row["entry_point"],
-                    plugin_type=row["plugin_type"],
-                    installed=True,
-                    enabled=bool(row["enabled"]),
-                    config=json.loads(row["config"]),
-                ))
+                plugins.append(
+                    PluginInfo(
+                        name=row["name"],
+                        version=row["version"],
+                        description=row["description"],
+                        author=row["author"],
+                        entry_point=row["entry_point"],
+                        plugin_type=row["plugin_type"],
+                        installed=True,
+                        enabled=bool(row["enabled"]),
+                        config=json.loads(row["config"]),
+                    )
+                )
 
         return plugins
 
@@ -114,9 +119,17 @@ class PluginRegistry:
                 """INSERT OR REPLACE INTO plugins
                    (name, version, description, author, entry_point, plugin_type, enabled, config, installed_at)
                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-                (plugin.name, plugin.version, plugin.description, plugin.author,
-                 plugin.entry_point, plugin.plugin_type, int(plugin.enabled),
-                 json.dumps(plugin.config or {}), time.time()),
+                (
+                    plugin.name,
+                    plugin.version,
+                    plugin.description,
+                    plugin.author,
+                    plugin.entry_point,
+                    plugin.plugin_type,
+                    int(plugin.enabled),
+                    json.dumps(plugin.config or {}),
+                    time.time(),
+                ),
             )
             conn.commit()
 

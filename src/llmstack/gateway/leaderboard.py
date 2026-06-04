@@ -166,10 +166,7 @@ class Leaderboard:
         sort_by: quality, latency, cost, speed, requests, error_rate
         """
         with self._lock:
-            models = [
-                m for m in self._models.values()
-                if m.total_requests >= min_requests
-            ]
+            models = [m for m in self._models.values() if m.total_requests >= min_requests]
 
         sort_keys = {
             "quality": lambda m: -m.avg_quality,
@@ -183,10 +180,7 @@ class Leaderboard:
         key_fn = sort_keys.get(sort_by, sort_keys["quality"])
         sorted_models = sorted(models, key=key_fn)
 
-        return [
-            {**m.to_dict(), "rank": i + 1}
-            for i, m in enumerate(sorted_models)
-        ]
+        return [{**m.to_dict(), "rank": i + 1} for i, m in enumerate(sorted_models)]
 
     def compare(self, models: list[str]) -> list[dict]:
         """Compare specific models side by side."""
@@ -210,9 +204,7 @@ class Leaderboard:
             return {
                 "total_models": len(self._models),
                 "total_requests": sum(m.total_requests for m in self._models.values()),
-                "total_cost_usd": round(
-                    sum(m.total_cost_usd for m in self._models.values()), 6
-                ),
+                "total_cost_usd": round(sum(m.total_cost_usd for m in self._models.values()), 6),
                 "top_by_quality": self.get_rankings("quality", min_requests=1)[:3],
                 "top_by_speed": self.get_rankings("speed", min_requests=1)[:3],
                 "top_by_cost": self.get_rankings("cost", min_requests=1)[:3],

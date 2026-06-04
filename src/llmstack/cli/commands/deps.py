@@ -34,11 +34,16 @@ def deps(
     output: str | None = None,
 ) -> None:
     """Analyze project dependencies."""
-    asyncio.run(_deps_async(
-        target=target, check_updates=check_updates,
-        check_security=check_security, model=model,
-        ollama_url=ollama_url, output=output,
-    ))
+    asyncio.run(
+        _deps_async(
+            target=target,
+            check_updates=check_updates,
+            check_security=check_security,
+            model=model,
+            ollama_url=ollama_url,
+            output=output,
+        )
+    )
 
 
 def _detect_manifests(directory: Path) -> dict[str, Path]:
@@ -76,10 +81,13 @@ def _parse_package_json(path: Path) -> list[dict]:
         data = json.loads(path.read_text())
         for section in ("dependencies", "devDependencies"):
             for name, version in data.get(section, {}).items():
-                deps.append({
-                    "name": name, "version": version,
-                    "dev": section == "devDependencies",
-                })
+                deps.append(
+                    {
+                        "name": name,
+                        "version": version,
+                        "dev": section == "devDependencies",
+                    }
+                )
     except json.JSONDecodeError:
         pass
     return deps
@@ -167,7 +175,9 @@ async def _deps_async(
 
     if not manifests:
         console.print("[warning]No dependency manifest files found.[/]")
-        console.print("[dim]Supported: requirements.txt, package.json, go.mod, Cargo.toml, pyproject.toml[/]")
+        console.print(
+            "[dim]Supported: requirements.txt, package.json, go.mod, Cargo.toml, pyproject.toml[/]"
+        )
         return
 
     console.print()
@@ -177,9 +187,15 @@ async def _deps_async(
 
     all_deps = []
     parsers = {
-        "pip": lambda p: _parse_requirements_txt(p) if p.name == "requirements.txt" else _parse_pyproject_toml(p),
+        "pip": lambda p: (
+            _parse_requirements_txt(p) if p.name == "requirements.txt" else _parse_pyproject_toml(p)
+        ),
         "npm": _parse_package_json,
-        "yarn": lambda p: _parse_package_json(directory / "package.json") if (directory / "package.json").exists() else [],
+        "yarn": lambda p: (
+            _parse_package_json(directory / "package.json")
+            if (directory / "package.json").exists()
+            else []
+        ),
         "go": _parse_go_mod,
         "cargo": _parse_cargo_toml,
     }
@@ -232,8 +248,7 @@ async def _deps_async(
             return
 
         dep_summary = "\n".join(
-            f"- {d['name']} {d.get('version', '')} ({d.get('manager', '')})"
-            for d in all_deps[:50]
+            f"- {d['name']} {d.get('version', '')} ({d.get('manager', '')})" for d in all_deps[:50]
         )
 
         prompt = f"""Analyze these project dependencies for potential issues:
@@ -260,11 +275,15 @@ Output a brief, actionable analysis."""
             timeout = httpx.Timeout(120, connect=10, read=120, write=30)
             async with httpx.AsyncClient(timeout=timeout) as client:
                 async with client.stream(
-                    "POST", f"{ollama_url}/api/chat",
+                    "POST",
+                    f"{ollama_url}/api/chat",
                     json={
                         "model": model,
                         "messages": [
-                            {"role": "system", "content": "You are a software security expert analyzing project dependencies."},
+                            {
+                                "role": "system",
+                                "content": "You are a software security expert analyzing project dependencies.",
+                            },
                             {"role": "user", "content": prompt},
                         ],
                         "stream": True,
@@ -288,14 +307,20 @@ Output a brief, actionable analysis."""
 
         if analysis:
             from rich.markdown import Markdown
+
             console.print()
-            console.print(Panel(
-                Markdown(analysis),
-                title="Dependency Analysis",
-                border_style="cyan",
-            ))
+            console.print(
+                Panel(
+                    Markdown(analysis),
+                    title="Dependency Analysis",
+                    border_style="cyan",
+                )
+            )
 
     if output:
-        out_data = {"dependencies": all_deps, "manifests": {k: str(v) for k, v in manifests.items()}}
+        out_data = {
+            "dependencies": all_deps,
+            "manifests": {k: str(v) for k, v in manifests.items()},
+        }
         Path(output).write_text(json.dumps(out_data, indent=2))
         console.print(f"\n[green]Report saved to {output}[/]")

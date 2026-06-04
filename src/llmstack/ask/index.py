@@ -111,9 +111,7 @@ class PersistentIndex:
         """)
 
         # Check schema version
-        row = self._conn.execute(
-            "SELECT value FROM meta WHERE key='schema_version'"
-        ).fetchone()
+        row = self._conn.execute("SELECT value FROM meta WHERE key='schema_version'").fetchone()
         if row is None:
             self._conn.execute(
                 "INSERT INTO meta (key, value) VALUES ('schema_version', ?)",
@@ -230,12 +228,14 @@ class PersistentIndex:
         ).fetchall()
 
         for row in rows:
-            chunks.append(TextChunk(
-                content=row[1],
-                source=row[0],
-                start_line=row[2],
-                end_line=row[3],
-            ))
+            chunks.append(
+                TextChunk(
+                    content=row[1],
+                    source=row[0],
+                    start_line=row[2],
+                    end_line=row[3],
+                )
+            )
         return chunks
 
     def load_embeddings(self) -> np.ndarray | None:

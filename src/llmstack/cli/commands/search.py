@@ -9,14 +9,57 @@ from llmstack.cli.console import console
 
 
 CODE_EXTS = {
-    ".py", ".js", ".ts", ".tsx", ".jsx", ".go", ".rs", ".java", ".cpp", ".c",
-    ".h", ".hpp", ".rb", ".php", ".swift", ".kt", ".scala", ".dart", ".lua",
-    ".sh", ".bash", ".zsh", ".sql", ".html", ".css", ".scss", ".yaml", ".yml",
-    ".json", ".toml", ".md", ".txt", ".xml", ".proto",
+    ".py",
+    ".js",
+    ".ts",
+    ".tsx",
+    ".jsx",
+    ".go",
+    ".rs",
+    ".java",
+    ".cpp",
+    ".c",
+    ".h",
+    ".hpp",
+    ".rb",
+    ".php",
+    ".swift",
+    ".kt",
+    ".scala",
+    ".dart",
+    ".lua",
+    ".sh",
+    ".bash",
+    ".zsh",
+    ".sql",
+    ".html",
+    ".css",
+    ".scss",
+    ".yaml",
+    ".yml",
+    ".json",
+    ".toml",
+    ".md",
+    ".txt",
+    ".xml",
+    ".proto",
 }
 
-IGNORE_DIRS = {"__pycache__", ".git", "node_modules", "venv", ".venv", "dist", "build",
-               ".tox", ".eggs", ".mypy_cache", ".pytest_cache", "target", "vendor"}
+IGNORE_DIRS = {
+    "__pycache__",
+    ".git",
+    "node_modules",
+    "venv",
+    ".venv",
+    "dist",
+    "build",
+    ".tox",
+    ".eggs",
+    ".mypy_cache",
+    ".pytest_cache",
+    "target",
+    "vendor",
+}
 
 
 def search(
@@ -82,8 +125,15 @@ def search(
 
         # Detect language for syntax highlighting
         ext = Path(r["file"]).suffix
-        lang_map = {".py": "python", ".js": "javascript", ".ts": "typescript",
-                    ".go": "go", ".rs": "rust", ".java": "java", ".rb": "ruby"}
+        lang_map = {
+            ".py": "python",
+            ".js": "javascript",
+            ".ts": "typescript",
+            ".go": "go",
+            ".rs": "rust",
+            ".java": "java",
+            ".rb": "ruby",
+        }
         lang = lang_map.get(ext, "text")
 
         header = f"[bold cyan]{rel_path}[/]:[bold]{r['line']}[/]"
@@ -91,16 +141,22 @@ def search(
             header += f"  [dim]{r['symbol']}[/]"
 
         console.print(header)
-        console.print(Syntax(
-            r["context"], lang, theme="monokai",
-            line_numbers=True, start_line=r.get("start_line", r["line"]),
-            highlight_lines={r["line"]},
-        ))
+        console.print(
+            Syntax(
+                r["context"],
+                lang,
+                theme="monokai",
+                line_numbers=True,
+                start_line=r.get("start_line", r["line"]),
+                highlight_lines={r["line"]},
+            )
+        )
         console.print()
 
     # Export
     if output:
         import json
+
         Path(output).write_text(json.dumps(results, indent=2, default=str))
         console.print(f"[green]Results saved to {output}[/]")
 
@@ -137,14 +193,16 @@ def _search_smart(files: list[Path], query: str, context: int) -> list[dict]:
             start = max(0, i - context)
             end = min(len(lines), i + context + 1)
 
-            results.append({
-                "file": str(file_path),
-                "line": i + 1,
-                "start_line": start + 1,
-                "context": "\n".join(lines[start:end]),
-                "match": line.strip(),
-                "score": score,
-            })
+            results.append(
+                {
+                    "file": str(file_path),
+                    "line": i + 1,
+                    "start_line": start + 1,
+                    "context": "\n".join(lines[start:end]),
+                    "match": line.strip(),
+                    "score": score,
+                }
+            )
 
     return sorted(results, key=lambda r: -r["score"])
 
@@ -153,7 +211,7 @@ def _flexible_match(query: str, line: str) -> bool:
     """Match CamelCase, snake_case, and partial names."""
     # Convert query to flexible pattern
     # "get user" -> matches getUserById, get_user_name, etc.
-    parts = re.split(r'[\s_-]+', query.lower())
+    parts = re.split(r"[\s_-]+", query.lower())
     line_lower = line.lower()
     return all(part in line_lower for part in parts)
 
@@ -178,13 +236,15 @@ def _search_regex(files: list[Path], pattern: str, context: int) -> list[dict]:
             if regex.search(line):
                 start = max(0, i - context)
                 end = min(len(lines), i + context + 1)
-                results.append({
-                    "file": str(file_path),
-                    "line": i + 1,
-                    "start_line": start + 1,
-                    "context": "\n".join(lines[start:end]),
-                    "match": line.strip(),
-                })
+                results.append(
+                    {
+                        "file": str(file_path),
+                        "line": i + 1,
+                        "start_line": start + 1,
+                        "context": "\n".join(lines[start:end]),
+                        "match": line.strip(),
+                    }
+                )
 
     return results
 
@@ -195,15 +255,15 @@ def _search_symbols(files: list[Path], query: str) -> list[dict]:
     query_lower = query.lower()
 
     patterns = [
-        (r'(?:def|async def)\s+(\w*{q}\w*)', "function"),
-        (r'class\s+(\w*{q}\w*)', "class"),
-        (r'(\w*{q}\w*)\s*=\s*', "variable"),
-        (r'function\s+(\w*{q}\w*)', "function"),
-        (r'(?:const|let|var)\s+(\w*{q}\w*)', "variable"),
-        (r'func\s+(\w*{q}\w*)', "function"),
-        (r'fn\s+(\w*{q}\w*)', "function"),
-        (r'type\s+(\w*{q}\w*)', "type"),
-        (r'interface\s+(\w*{q}\w*)', "interface"),
+        (r"(?:def|async def)\s+(\w*{q}\w*)", "function"),
+        (r"class\s+(\w*{q}\w*)", "class"),
+        (r"(\w*{q}\w*)\s*=\s*", "variable"),
+        (r"function\s+(\w*{q}\w*)", "function"),
+        (r"(?:const|let|var)\s+(\w*{q}\w*)", "variable"),
+        (r"func\s+(\w*{q}\w*)", "function"),
+        (r"fn\s+(\w*{q}\w*)", "function"),
+        (r"type\s+(\w*{q}\w*)", "type"),
+        (r"interface\s+(\w*{q}\w*)", "interface"),
     ]
 
     for file_path in files:
@@ -220,14 +280,16 @@ def _search_symbols(files: list[Path], query: str) -> list[dict]:
                 if match:
                     start = max(0, i - 1)
                     end = min(len(lines), i + 5)
-                    results.append({
-                        "file": str(file_path),
-                        "line": i + 1,
-                        "start_line": start + 1,
-                        "context": "\n".join(lines[start:end]),
-                        "match": line.strip(),
-                        "symbol": f"{symbol_type}: {match.group(1) if match.lastindex else match.group()}",
-                    })
+                    results.append(
+                        {
+                            "file": str(file_path),
+                            "line": i + 1,
+                            "start_line": start + 1,
+                            "context": "\n".join(lines[start:end]),
+                            "match": line.strip(),
+                            "symbol": f"{symbol_type}: {match.group(1) if match.lastindex else match.group()}",
+                        }
+                    )
                     break
 
     return results
@@ -242,7 +304,7 @@ def _search_usages(files: list[Path], query: str) -> list[dict]:
     """Search for where something is used (excluding definitions)."""
     results = []
     def_patterns = re.compile(
-        rf'(?:def|class|function|func|fn|const|let|var|type|interface)\s+{re.escape(query)}',
+        rf"(?:def|class|function|func|fn|const|let|var|type|interface)\s+{re.escape(query)}",
         re.IGNORECASE,
     )
 
@@ -254,7 +316,7 @@ def _search_usages(files: list[Path], query: str) -> list[dict]:
 
         lines = content.split("\n")
         for i, line in enumerate(lines):
-            if re.search(rf'\b{re.escape(query)}\b', line, re.IGNORECASE):
+            if re.search(rf"\b{re.escape(query)}\b", line, re.IGNORECASE):
                 # Exclude definitions
                 if def_patterns.search(line):
                     continue
@@ -264,12 +326,14 @@ def _search_usages(files: list[Path], query: str) -> list[dict]:
 
                 start = max(0, i - 1)
                 end = min(len(lines), i + 3)
-                results.append({
-                    "file": str(file_path),
-                    "line": i + 1,
-                    "start_line": start + 1,
-                    "context": "\n".join(lines[start:end]),
-                    "match": line.strip(),
-                })
+                results.append(
+                    {
+                        "file": str(file_path),
+                        "line": i + 1,
+                        "start_line": start + 1,
+                        "context": "\n".join(lines[start:end]),
+                        "match": line.strip(),
+                    }
+                )
 
     return results

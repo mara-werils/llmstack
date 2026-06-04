@@ -97,11 +97,13 @@ class LearningRateScheduler:
         step_size = max(1, total // num_points)
         points = []
         for step in range(0, total, step_size):
-            points.append({
-                "step": step,
-                "lr": round(self.get_lr(step), 8),
-                "progress": round(step / total, 4),
-            })
+            points.append(
+                {
+                    "step": step,
+                    "lr": round(self.get_lr(step), 8),
+                    "progress": round(step / total, 4),
+                }
+            )
         return points
 
     def get_summary(self) -> dict[str, Any]:
@@ -149,7 +151,7 @@ class LearningRateScheduler:
 
     def _step_decay(self, step: int) -> float:
         num_decays = step // self.config.decay_every
-        lr = self.config.initial_lr * (self.config.decay_factor ** num_decays)
+        lr = self.config.initial_lr * (self.config.decay_factor**num_decays)
         return max(self.config.min_lr, lr)
 
     def _linear_decay(self, step: int) -> float:

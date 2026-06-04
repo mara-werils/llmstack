@@ -1,56 +1,27 @@
-# Version control
 .git
-.gitignore
-
-# Python
+.github
+.claude
+.venv
 __pycache__
 *.pyc
 *.pyo
+.pytest_cache
+.mypy_cache
+.ruff_cache
+tests/
+docs/
+examples/
+deploy/
+*.md
+!README.md
+Makefile
+mkdocs.yml
+.pre-commit-config.yaml
+.env
+.env.*
 *.egg-info
 dist/
 build/
-.eggs/
-
-# Virtual environments
-.venv
-venv
-env
-
-# IDE
-.vscode
-.idea
-*.swp
-*.swo
-
-# Testing
-.pytest_cache
-.coverage
+.secrets.baseline
+coverage.xml
 htmlcov/
-.tox
-
-# Documentation
-docs/
-mkdocs.yml
-*.md
-
-# CI/CD
-.github/
-.gitlab-ci.yml
-
-# Docker
-.dockerignore
-docker-compose*.yml
-
-# Deployment configs
-deploy/
-
-# Claude
-.claude/
-
-# OS files
-.DS_Store
-Thumbs.db
-
-# Data and logs
-data/
-*.log

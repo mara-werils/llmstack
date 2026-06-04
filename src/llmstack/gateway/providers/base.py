@@ -21,11 +21,11 @@ class ProviderError(Exception):
 class ProviderModel:
     """A model available through a provider."""
 
-    id: str                         # e.g. "gpt-4o", "claude-sonnet-4-20250514"
-    provider: str                   # e.g. "openai", "anthropic"
+    id: str  # e.g. "gpt-4o", "claude-sonnet-4-20250514"
+    provider: str  # e.g. "openai", "anthropic"
     display_name: str | None = None
     context_length: int = 8192
-    cost_per_m_input: float = 0.0   # $ per 1M input tokens
+    cost_per_m_input: float = 0.0  # $ per 1M input tokens
     cost_per_m_output: float = 0.0  # $ per 1M output tokens
 
 
@@ -44,27 +44,33 @@ class ProviderResponse:
 
     def to_openai_dict(self) -> dict:
         """Return an OpenAI-compatible response dict."""
-        return self.raw if self.raw else {
-            "id": f"chatcmpl-{int(time.time())}",
-            "object": "chat.completion",
-            "created": int(time.time()),
-            "model": self.model,
-            "choices": [{
-                "index": 0,
-                "message": {"role": "assistant", "content": self.content},
-                "finish_reason": "stop",
-            }],
-            "usage": {
-                "prompt_tokens": self.input_tokens,
-                "completion_tokens": self.output_tokens,
-                "total_tokens": self.input_tokens + self.output_tokens,
-            },
-            "x_llmstack": {
-                "provider": self.provider,
-                "cost_usd": self.cost_usd,
-                "latency_ms": round(self.latency_ms, 1),
-            },
-        }
+        return (
+            self.raw
+            if self.raw
+            else {
+                "id": f"chatcmpl-{int(time.time())}",
+                "object": "chat.completion",
+                "created": int(time.time()),
+                "model": self.model,
+                "choices": [
+                    {
+                        "index": 0,
+                        "message": {"role": "assistant", "content": self.content},
+                        "finish_reason": "stop",
+                    }
+                ],
+                "usage": {
+                    "prompt_tokens": self.input_tokens,
+                    "completion_tokens": self.output_tokens,
+                    "total_tokens": self.input_tokens + self.output_tokens,
+                },
+                "x_llmstack": {
+                    "provider": self.provider,
+                    "cost_usd": self.cost_usd,
+                    "latency_ms": round(self.latency_ms, 1),
+                },
+            }
+        )
 
 
 class Provider(ABC):

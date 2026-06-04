@@ -23,6 +23,7 @@ from llmstack.gateway.router.stats import RouterStats
 # Mock provider for testing
 # ---------------------------------------------------------------------------
 
+
 class MockProvider(Provider):
     """A test provider that returns canned responses."""
 
@@ -34,10 +35,12 @@ class MockProvider(Provider):
         self._retryable = retryable
         self._call_count = 0
         self._models = [
-            ProviderModel(id="mock-small", provider="mock",
-                          cost_per_m_input=0.10, cost_per_m_output=0.30),
-            ProviderModel(id="mock-large", provider="mock",
-                          cost_per_m_input=5.00, cost_per_m_output=15.00),
+            ProviderModel(
+                id="mock-small", provider="mock", cost_per_m_input=0.10, cost_per_m_output=0.30
+            ),
+            ProviderModel(
+                id="mock-large", provider="mock", cost_per_m_input=5.00, cost_per_m_output=15.00
+            ),
         ]
 
     async def chat(self, payload: dict) -> ProviderResponse:
@@ -58,7 +61,7 @@ class MockProvider(Provider):
     async def chat_stream(self, payload: dict):
         if self._should_fail:
             raise ProviderError("Mock stream failure", retryable=self._retryable)
-        yield b"data: {\"choices\": [{\"delta\": {\"content\": \"Hello\"}}]}\n\n"
+        yield b'data: {"choices": [{"delta": {"content": "Hello"}}]}\n\n'
         yield b"data: [DONE]\n\n"
 
     async def list_models(self) -> list[ProviderModel]:
@@ -71,14 +74,16 @@ class MockProvider2(MockProvider):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self._models = [
-            ProviderModel(id="mock2-medium", provider="mock2",
-                          cost_per_m_input=1.00, cost_per_m_output=3.00),
+            ProviderModel(
+                id="mock2-medium", provider="mock2", cost_per_m_input=1.00, cost_per_m_output=3.00
+            ),
         ]
 
 
 # ===================================================================
 # Provider base class tests
 # ===================================================================
+
 
 class TestProviderBase:
     def test_calculate_cost(self):
@@ -155,6 +160,7 @@ class TestProviderError:
 # Registry tests
 # ===================================================================
 
+
 class TestProviderRegistry:
     @pytest.fixture
     def registry(self):
@@ -205,6 +211,7 @@ class TestProviderRegistry:
 # ===================================================================
 # Fallback chain tests
 # ===================================================================
+
 
 class TestFallbackChain:
     def test_fallback_chain_length(self):
@@ -328,6 +335,7 @@ class TestRegistryFallback:
 # Provider guess tests
 # ===================================================================
 
+
 class TestProviderGuess:
     def test_guess_openai(self):
         r = ProviderRegistry()
@@ -369,6 +377,7 @@ class TestProviderGuess:
 # ===================================================================
 # Anthropic format translation tests
 # ===================================================================
+
 
 class TestAnthropicTranslation:
     def test_basic_translation(self):
@@ -468,25 +477,56 @@ class TestAnthropicTranslation:
 # Cost-aware routing tests
 # ===================================================================
 
+
 class TestCostAwareRouting:
     @pytest.fixture
     def models_with_costs(self):
         return [
-            ModelTier(name="gpt-4o-mini", tier="simple", speed_score=3.0,
-                      quality_score=0.7, provider="openai",
-                      cost_per_m_input=0.15, cost_per_m_output=0.60),
-            ModelTier(name="llama3.2:1b", tier="simple", speed_score=2.5,
-                      quality_score=0.6, provider="local",
-                      cost_per_m_input=0.0, cost_per_m_output=0.0),
-            ModelTier(name="gpt-4o", tier="medium", speed_score=1.5,
-                      quality_score=0.9, provider="openai",
-                      cost_per_m_input=2.50, cost_per_m_output=10.00),
-            ModelTier(name="claude-sonnet-4-20250514", tier="medium", speed_score=1.2,
-                      quality_score=0.95, provider="anthropic",
-                      cost_per_m_input=3.00, cost_per_m_output=15.00),
-            ModelTier(name="claude-opus-4-20250514", tier="complex", speed_score=0.5,
-                      quality_score=1.0, provider="anthropic",
-                      cost_per_m_input=15.00, cost_per_m_output=75.00),
+            ModelTier(
+                name="gpt-4o-mini",
+                tier="simple",
+                speed_score=3.0,
+                quality_score=0.7,
+                provider="openai",
+                cost_per_m_input=0.15,
+                cost_per_m_output=0.60,
+            ),
+            ModelTier(
+                name="llama3.2:1b",
+                tier="simple",
+                speed_score=2.5,
+                quality_score=0.6,
+                provider="local",
+                cost_per_m_input=0.0,
+                cost_per_m_output=0.0,
+            ),
+            ModelTier(
+                name="gpt-4o",
+                tier="medium",
+                speed_score=1.5,
+                quality_score=0.9,
+                provider="openai",
+                cost_per_m_input=2.50,
+                cost_per_m_output=10.00,
+            ),
+            ModelTier(
+                name="claude-sonnet-4-20250514",
+                tier="medium",
+                speed_score=1.2,
+                quality_score=0.95,
+                provider="anthropic",
+                cost_per_m_input=3.00,
+                cost_per_m_output=15.00,
+            ),
+            ModelTier(
+                name="claude-opus-4-20250514",
+                tier="complex",
+                speed_score=0.5,
+                quality_score=1.0,
+                provider="anthropic",
+                cost_per_m_input=15.00,
+                cost_per_m_output=75.00,
+            ),
         ]
 
     def test_cost_strategy_picks_free_local(self, models_with_costs):
@@ -500,9 +540,14 @@ class TestCostAwareRouting:
     def test_cost_strategy_medium_prefers_cheaper(self, models_with_costs):
         """For medium queries, cost strategy picks the cheaper cloud option."""
         router = ModelRouter(models=models_with_costs, strategy="cost")
-        d = router.route([{"role": "user", "content":
-            "Explain how neural networks learn through backpropagation and compare different optimizers"
-        }])
+        d = router.route(
+            [
+                {
+                    "role": "user",
+                    "content": "Explain how neural networks learn through backpropagation and compare different optimizers",
+                }
+            ]
+        )
         if d.profile.tier == "medium":
             # gpt-4o ($12.50/M total) is cheaper than claude-sonnet ($18/M total)
             assert d.model == "gpt-4o"
@@ -532,6 +577,7 @@ class TestCostAwareRouting:
 # ===================================================================
 # Stats cost tracking tests
 # ===================================================================
+
 
 class TestStatsCostTracking:
     @pytest.fixture
@@ -603,9 +649,11 @@ class TestStatsCostTracking:
 # OpenAI-compatible provider tests
 # ===================================================================
 
+
 class TestOpenAICompatProviders:
     def test_groq_has_models(self):
         from llmstack.gateway.providers.openai_compat import GroqProvider
+
         p = GroqProvider(api_key="test")
         assert p.name == "groq"
         assert len(p._models) > 0
@@ -613,12 +661,14 @@ class TestOpenAICompatProviders:
 
     def test_together_has_models(self):
         from llmstack.gateway.providers.openai_compat import TogetherProvider
+
         p = TogetherProvider(api_key="test")
         assert p.name == "together"
         assert len(p._models) > 0
 
     def test_mistral_has_models(self):
         from llmstack.gateway.providers.openai_compat import MistralProvider
+
         p = MistralProvider(api_key="test")
         assert p.name == "mistral"
         assert len(p._models) > 0
@@ -626,6 +676,7 @@ class TestOpenAICompatProviders:
 
     def test_openai_has_pricing(self):
         from llmstack.gateway.providers.openai_provider import OpenAIProvider
+
         p = OpenAIProvider(api_key="test")
         assert p.name == "openai"
         ci, co = p.get_model_cost("gpt-4o")
@@ -634,6 +685,7 @@ class TestOpenAICompatProviders:
 
     def test_anthropic_has_pricing(self):
         from llmstack.gateway.providers.anthropic_provider import AnthropicProvider
+
         p = AnthropicProvider(api_key="test")
         ci, co = p.get_model_cost("claude-sonnet-4-20250514")
         assert ci == 3.00
@@ -641,6 +693,7 @@ class TestOpenAICompatProviders:
 
     def test_google_has_pricing(self):
         from llmstack.gateway.providers.google_provider import GoogleProvider
+
         p = GoogleProvider(api_key="test")
         ci, co = p.get_model_cost("gemini-2.5-flash")
         assert ci == 0.15
@@ -651,19 +704,38 @@ class TestOpenAICompatProviders:
 # Integration-style: router + providers combined
 # ===================================================================
 
+
 class TestRouterWithProviders:
     def test_multi_provider_routing(self):
         """Router should work across multiple providers."""
         models = [
-            ModelTier(name="llama3.2:1b", tier="simple", provider="local",
-                      speed_score=3.0, quality_score=0.5,
-                      cost_per_m_input=0.0, cost_per_m_output=0.0),
-            ModelTier(name="gpt-4o-mini", tier="simple", provider="openai",
-                      speed_score=5.0, quality_score=0.7,
-                      cost_per_m_input=0.15, cost_per_m_output=0.60),
-            ModelTier(name="claude-sonnet-4-20250514", tier="medium", provider="anthropic",
-                      speed_score=1.2, quality_score=0.95,
-                      cost_per_m_input=3.00, cost_per_m_output=15.00),
+            ModelTier(
+                name="llama3.2:1b",
+                tier="simple",
+                provider="local",
+                speed_score=3.0,
+                quality_score=0.5,
+                cost_per_m_input=0.0,
+                cost_per_m_output=0.0,
+            ),
+            ModelTier(
+                name="gpt-4o-mini",
+                tier="simple",
+                provider="openai",
+                speed_score=5.0,
+                quality_score=0.7,
+                cost_per_m_input=0.15,
+                cost_per_m_output=0.60,
+            ),
+            ModelTier(
+                name="claude-sonnet-4-20250514",
+                tier="medium",
+                provider="anthropic",
+                speed_score=1.2,
+                quality_score=0.95,
+                cost_per_m_input=3.00,
+                cost_per_m_output=15.00,
+            ),
         ]
 
         # Cost strategy should pick free local for simple
@@ -680,9 +752,14 @@ class TestRouterWithProviders:
 
     def test_model_tier_has_all_fields(self):
         m = ModelTier(
-            name="gpt-4o", tier="medium", provider="openai",
-            cost_per_m_input=2.50, cost_per_m_output=10.00,
-            speed_score=1.5, quality_score=0.9, max_context=128_000,
+            name="gpt-4o",
+            tier="medium",
+            provider="openai",
+            cost_per_m_input=2.50,
+            cost_per_m_output=10.00,
+            speed_score=1.5,
+            quality_score=0.9,
+            max_context=128_000,
         )
         assert m.provider == "openai"
         assert m.cost_per_m_input == 2.50

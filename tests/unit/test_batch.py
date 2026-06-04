@@ -1,10 +1,13 @@
 """Tests for batch processing system."""
 
-
 import pytest
 
 from llmstack.gateway.batch import (
-    BatchProcessor, BatchJob, BatchRequest, BatchResult, BatchStatus,
+    BatchProcessor,
+    BatchJob,
+    BatchRequest,
+    BatchResult,
+    BatchStatus,
 )
 
 

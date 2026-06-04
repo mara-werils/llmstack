@@ -3,7 +3,9 @@
 import pytest
 
 from llmstack.gateway.middleware.rate_limit_tiers import (
-    TieredRateLimiter, TierConfig, DEFAULT_TIERS,
+    TieredRateLimiter,
+    TierConfig,
+    DEFAULT_TIERS,
 )
 
 
@@ -42,10 +44,13 @@ class TestTieredRateLimiter:
         assert allowed is True  # Enterprise allows 1000/min
 
     def test_concurrent_limit(self, limiter):
-        limiter.add_tier(TierConfig(
-            name="test", concurrent_requests=2,
-            requests_per_minute=1000,
-        ))
+        limiter.add_tier(
+            TierConfig(
+                name="test",
+                concurrent_requests=2,
+                requests_per_minute=1000,
+            )
+        )
         limiter.set_key_tier("key1", "test")
 
         limiter.record_request("key1")
@@ -56,10 +61,13 @@ class TestTieredRateLimiter:
         assert "Concurrent" in reason
 
     def test_record_completion_frees_slot(self, limiter):
-        limiter.add_tier(TierConfig(
-            name="test", concurrent_requests=1,
-            requests_per_minute=1000,
-        ))
+        limiter.add_tier(
+            TierConfig(
+                name="test",
+                concurrent_requests=1,
+                requests_per_minute=1000,
+            )
+        )
         limiter.set_key_tier("key1", "test")
 
         limiter.record_request("key1")
@@ -81,9 +89,12 @@ class TestTieredRateLimiter:
         assert "enterprise" in names
 
     def test_custom_tier(self, limiter):
-        limiter.add_tier(TierConfig(
-            name="vip", requests_per_minute=5000,
-        ))
+        limiter.add_tier(
+            TierConfig(
+                name="vip",
+                requests_per_minute=5000,
+            )
+        )
         limiter.set_key_tier("vip-key", "vip")
         limits = limiter.get_limits("vip-key")
         assert limits["requests_per_minute"] == 5000

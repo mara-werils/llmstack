@@ -222,7 +222,9 @@ class TestAgentToolCalls:
 
         responses = iter([tool_response, final_response])
 
-        with patch.object(agent, "_call_llm", new_callable=AsyncMock, side_effect=lambda *a, **k: next(responses)):
+        with patch.object(
+            agent, "_call_llm", new_callable=AsyncMock, side_effect=lambda *a, **k: next(responses)
+        ):
             events = []
             async for event in agent.run("call unknown"):
                 events.append(event)
@@ -245,7 +247,9 @@ class TestAgentToolCalls:
         final_response = {"message": {"role": "assistant", "content": "done"}}
         responses = iter([tool_response, final_response])
 
-        with patch.object(agent, "_call_llm", new_callable=AsyncMock, side_effect=lambda *a, **k: next(responses)):
+        with patch.object(
+            agent, "_call_llm", new_callable=AsyncMock, side_effect=lambda *a, **k: next(responses)
+        ):
             events = []
             async for event in agent.run("use failing"):
                 events.append(event)
@@ -268,7 +272,9 @@ class TestAgentToolCalls:
         final_response = {"message": {"role": "assistant", "content": "done"}}
         responses = iter([tool_response, final_response])
 
-        with patch.object(agent, "_call_llm", new_callable=AsyncMock, side_effect=lambda *a, **k: next(responses)):
+        with patch.object(
+            agent, "_call_llm", new_callable=AsyncMock, side_effect=lambda *a, **k: next(responses)
+        ):
             events = []
             async for event in agent.run("go"):
                 events.append(event)
@@ -291,7 +297,9 @@ class TestAgentToolCalls:
         final_response = {"message": {"role": "assistant", "content": "done"}}
         responses = iter([tool_response, final_response])
 
-        with patch.object(agent, "_call_llm", new_callable=AsyncMock, side_effect=lambda *a, **k: next(responses)):
+        with patch.object(
+            agent, "_call_llm", new_callable=AsyncMock, side_effect=lambda *a, **k: next(responses)
+        ):
             events = []
             async for event in agent.run("go"):
                 events.append(event)
@@ -308,7 +316,9 @@ class TestAgentToolCalls:
 class TestAgentErrors:
     @pytest.mark.asyncio
     async def test_llm_error_yields_error_event(self, agent: AgentLoop) -> None:
-        with patch.object(agent, "_call_llm", new_callable=AsyncMock, side_effect=RuntimeError("LLM down")):
+        with patch.object(
+            agent, "_call_llm", new_callable=AsyncMock, side_effect=RuntimeError("LLM down")
+        ):
             events = []
             async for event in agent.run("task"):
                 events.append(event)
@@ -377,7 +387,9 @@ class TestCallLLMRouting:
         config = AgentConfig(api_url="http://localhost:11434")
         agent = AgentLoop(config, ToolRegistry())
         with (
-            patch.object(agent, "_call_ollama", new_callable=AsyncMock, return_value={}) as mock_ollama,
+            patch.object(
+                agent, "_call_ollama", new_callable=AsyncMock, return_value={}
+            ) as mock_ollama,
             patch.object(agent, "_call_openai_compat", new_callable=AsyncMock) as mock_openai,
         ):
             await agent._call_llm([], True)
@@ -390,7 +402,9 @@ class TestCallLLMRouting:
         agent = AgentLoop(config, ToolRegistry())
         with (
             patch.object(agent, "_call_ollama", new_callable=AsyncMock) as mock_ollama,
-            patch.object(agent, "_call_openai_compat", new_callable=AsyncMock, return_value={}) as mock_openai,
+            patch.object(
+                agent, "_call_openai_compat", new_callable=AsyncMock, return_value={}
+            ) as mock_openai,
         ):
             await agent._call_llm([], False)
             mock_openai.assert_awaited_once()

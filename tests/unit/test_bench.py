@@ -121,7 +121,9 @@ class TestPromptResult:
 # ---------------------------------------------------------------------------
 
 
-def _make_prompt_result(ttft_ms: float, tps: float, total_s: float, error: str | None = None) -> PromptResult:
+def _make_prompt_result(
+    ttft_ms: float, tps: float, total_s: float, error: str | None = None
+) -> PromptResult:
     return PromptResult(
         suite="test",
         prompt="test prompt",
@@ -136,33 +138,45 @@ def _make_prompt_result(ttft_ms: float, tps: float, total_s: float, error: str |
 
 class TestSuiteResult:
     def test_avg_ttft(self):
-        sr = SuiteResult(name="simple", prompts=[
-            _make_prompt_result(40.0, 80.0, 0.4),
-            _make_prompt_result(60.0, 70.0, 0.5),
-        ])
+        sr = SuiteResult(
+            name="simple",
+            prompts=[
+                _make_prompt_result(40.0, 80.0, 0.4),
+                _make_prompt_result(60.0, 70.0, 0.5),
+            ],
+        )
         assert sr.avg_ttft_ms == pytest.approx(50.0)
 
     def test_avg_tokens_per_second(self):
-        sr = SuiteResult(name="simple", prompts=[
-            _make_prompt_result(40.0, 80.0, 0.4),
-            _make_prompt_result(60.0, 60.0, 0.5),
-        ])
+        sr = SuiteResult(
+            name="simple",
+            prompts=[
+                _make_prompt_result(40.0, 80.0, 0.4),
+                _make_prompt_result(60.0, 60.0, 0.5),
+            ],
+        )
         assert sr.avg_tokens_per_second == pytest.approx(70.0)
 
     def test_errors_excluded_from_averages(self):
-        sr = SuiteResult(name="simple", prompts=[
-            _make_prompt_result(40.0, 80.0, 0.4),
-            _make_prompt_result(0, 0, 0.1, error="fail"),
-        ])
+        sr = SuiteResult(
+            name="simple",
+            prompts=[
+                _make_prompt_result(40.0, 80.0, 0.4),
+                _make_prompt_result(0, 0, 0.1, error="fail"),
+            ],
+        )
         assert sr.avg_ttft_ms == pytest.approx(40.0)
         assert sr.avg_tokens_per_second == pytest.approx(80.0)
         assert sr.errors == 1
 
     def test_total_time(self):
-        sr = SuiteResult(name="simple", prompts=[
-            _make_prompt_result(40.0, 80.0, 1.0),
-            _make_prompt_result(60.0, 70.0, 2.0),
-        ])
+        sr = SuiteResult(
+            name="simple",
+            prompts=[
+                _make_prompt_result(40.0, 80.0, 1.0),
+                _make_prompt_result(60.0, 70.0, 2.0),
+            ],
+        )
         assert sr.total_time == pytest.approx(3.0)
 
     def test_empty_suite(self):
@@ -179,12 +193,18 @@ class TestSuiteResult:
 
 class TestModelResult:
     def test_aggregation(self):
-        sr1 = SuiteResult(name="simple", prompts=[
-            _make_prompt_result(40.0, 80.0, 0.4),
-        ])
-        sr2 = SuiteResult(name="reasoning", prompts=[
-            _make_prompt_result(100.0, 60.0, 2.0),
-        ])
+        sr1 = SuiteResult(
+            name="simple",
+            prompts=[
+                _make_prompt_result(40.0, 80.0, 0.4),
+            ],
+        )
+        sr2 = SuiteResult(
+            name="reasoning",
+            prompts=[
+                _make_prompt_result(100.0, 60.0, 2.0),
+            ],
+        )
         mr = ModelResult(model="llama3.2", suites=[sr1, sr2])
         assert mr.avg_ttft_ms == pytest.approx(70.0)
         assert mr.avg_tokens_per_second == pytest.approx(70.0)
@@ -192,10 +212,13 @@ class TestModelResult:
         assert mr.total_errors == 0
 
     def test_total_time(self):
-        sr = SuiteResult(name="simple", prompts=[
-            _make_prompt_result(40.0, 80.0, 1.0),
-            _make_prompt_result(60.0, 70.0, 2.0),
-        ])
+        sr = SuiteResult(
+            name="simple",
+            prompts=[
+                _make_prompt_result(40.0, 80.0, 1.0),
+                _make_prompt_result(60.0, 70.0, 2.0),
+            ],
+        )
         mr = ModelResult(model="test", suites=[sr])
         assert mr.total_time == pytest.approx(3.0)
 
@@ -207,9 +230,12 @@ class TestModelResult:
 
 class TestResultsToDict:
     def test_structure(self):
-        sr = SuiteResult(name="simple", prompts=[
-            _make_prompt_result(45.0, 82.3, 0.4),
-        ])
+        sr = SuiteResult(
+            name="simple",
+            prompts=[
+                _make_prompt_result(45.0, 82.3, 0.4),
+            ],
+        )
         mr = ModelResult(model="llama3.2", suites=[sr])
         data = _results_to_dict([mr])
 
@@ -222,9 +248,12 @@ class TestResultsToDict:
         assert len(data[0]["suites"][0]["prompts"]) == 1
 
     def test_serializable(self):
-        sr = SuiteResult(name="simple", prompts=[
-            _make_prompt_result(45.0, 82.3, 0.4),
-        ])
+        sr = SuiteResult(
+            name="simple",
+            prompts=[
+                _make_prompt_result(45.0, 82.3, 0.4),
+            ],
+        )
         mr = ModelResult(model="llama3.2", suites=[sr])
         data = _results_to_dict([mr])
         # Should not raise
@@ -234,10 +263,12 @@ class TestResultsToDict:
     def test_multiple_models(self):
         sr1 = SuiteResult(name="simple", prompts=[_make_prompt_result(40.0, 80.0, 0.4)])
         sr2 = SuiteResult(name="simple", prompts=[_make_prompt_result(80.0, 40.0, 1.0)])
-        data = _results_to_dict([
-            ModelResult(model="fast-model", suites=[sr1]),
-            ModelResult(model="slow-model", suites=[sr2]),
-        ])
+        data = _results_to_dict(
+            [
+                ModelResult(model="fast-model", suites=[sr1]),
+                ModelResult(model="slow-model", suites=[sr2]),
+            ]
+        )
         assert len(data) == 2
         assert data[0]["model"] == "fast-model"
         assert data[1]["model"] == "slow-model"
@@ -252,10 +283,13 @@ class TestDisplay:
     def _make_model_result(self, model: str = "llama3.2") -> ModelResult:
         suites = []
         for name in ["simple", "reasoning"]:
-            sr = SuiteResult(name=name, prompts=[
-                _make_prompt_result(50.0, 75.0, 1.0),
-                _make_prompt_result(60.0, 65.0, 1.5),
-            ])
+            sr = SuiteResult(
+                name=name,
+                prompts=[
+                    _make_prompt_result(50.0, 75.0, 1.0),
+                    _make_prompt_result(60.0, 65.0, 1.5),
+                ],
+            )
             suites.append(sr)
         return ModelResult(model=model, suites=suites)
 
@@ -273,9 +307,12 @@ class TestDisplay:
         _display_comparison(results)
 
     def test_display_single_model_with_errors(self):
-        sr = SuiteResult(name="simple", prompts=[
-            _make_prompt_result(0, 0, 0.1, error="Connection refused"),
-        ])
+        sr = SuiteResult(
+            name="simple",
+            prompts=[
+                _make_prompt_result(0, 0, 0.1, error="Connection refused"),
+            ],
+        )
         mr = ModelResult(model="broken", suites=[sr])
         # Should not raise
         _display_single_model(mr)

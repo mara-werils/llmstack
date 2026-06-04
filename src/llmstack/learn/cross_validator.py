@@ -107,13 +107,15 @@ class CrossValidator:
             else:
                 accuracy, quality = self._heuristic_evaluate(train_data, test_fold)
 
-            fold_results.append(FoldResult(
-                fold_index=i,
-                train_size=len(train_data),
-                test_size=len(test_fold),
-                accuracy=accuracy,
-                avg_quality=quality,
-            ))
+            fold_results.append(
+                FoldResult(
+                    fold_index=i,
+                    train_size=len(train_data),
+                    test_size=len(test_fold),
+                    accuracy=accuracy,
+                    avg_quality=quality,
+                )
+            )
 
         accuracies = [f.accuracy for f in fold_results]
         qualities = [f.avg_quality for f in fold_results]
@@ -123,7 +125,7 @@ class CrossValidator:
         # Standard deviation
         if len(accuracies) > 1:
             variance = sum((a - mean_acc) ** 2 for a in accuracies) / len(accuracies)
-            std_acc = variance ** 0.5
+            std_acc = variance**0.5
         else:
             std_acc = 0.0
 
@@ -149,13 +151,9 @@ class CrossValidator:
 
         # Count positive feedback ratio in train vs test
         train_positive = sum(
-            1 for fb in train
-            if fb.feedback_type.value in ("thumbs_up", "accepted")
+            1 for fb in train if fb.feedback_type.value in ("thumbs_up", "accepted")
         )
-        test_positive = sum(
-            1 for fb in test
-            if fb.feedback_type.value in ("thumbs_up", "accepted")
-        )
+        test_positive = sum(1 for fb in test if fb.feedback_type.value in ("thumbs_up", "accepted"))
 
         train_ratio = train_positive / len(train) if train else 0.0
         test_ratio = test_positive / len(test) if test else 0.0

@@ -39,10 +39,16 @@ def security(
     severity: str | None = None,
 ) -> None:
     """Run an AI-powered security audit on your code."""
-    asyncio.run(_security_async(
-        target=target, model=model, ollama_url=ollama_url,
-        output_format=output_format, output_file=output_file, severity=severity,
-    ))
+    asyncio.run(
+        _security_async(
+            target=target,
+            model=model,
+            ollama_url=ollama_url,
+            output_format=output_format,
+            output_file=output_file,
+            severity=severity,
+        )
+    )
 
 
 async def _security_async(
@@ -79,7 +85,8 @@ async def _security_async(
         files = [target_path]
     else:
         files = [
-            p for p in target_path.rglob("*")
+            p
+            for p in target_path.rglob("*")
             if p.suffix.lower() in code_exts
             and not any(x in str(p) for x in ["__pycache__", ".git", "node_modules", "venv"])
         ][:10]  # Limit for safety
@@ -127,7 +134,8 @@ Output JSON findings, then summary."""
             async with httpx.AsyncClient(timeout=timeout) as client:
                 full_response = ""
                 async with client.stream(
-                    "POST", f"{ollama_url}/api/chat",
+                    "POST",
+                    f"{ollama_url}/api/chat",
                     json={
                         "model": model,
                         "messages": [
@@ -237,15 +245,17 @@ def _display_security_terminal(issues: list, summary_data: dict | None) -> None:
         risk = summary_data.get("risk_score", 0)
         risk_color = "red" if risk >= 7 else "yellow" if risk >= 4 else "green"
         console.print()
-        console.print(Panel(
-            f"[bold]Risk Score:[/] [{risk_color}]{risk}/10[/]\n"
-            f"[dim]Critical: {summary_data.get('critical', 0)} | "
-            f"High: {summary_data.get('high', 0)} | "
-            f"Medium: {summary_data.get('medium', 0)} | "
-            f"Low: {summary_data.get('low', 0)}[/]",
-            title="Security Summary",
-            border_style=risk_color,
-        ))
+        console.print(
+            Panel(
+                f"[bold]Risk Score:[/] [{risk_color}]{risk}/10[/]\n"
+                f"[dim]Critical: {summary_data.get('critical', 0)} | "
+                f"High: {summary_data.get('high', 0)} | "
+                f"Medium: {summary_data.get('medium', 0)} | "
+                f"Low: {summary_data.get('low', 0)}[/]",
+                title="Security Summary",
+                border_style=risk_color,
+            )
+        )
     elif not issues:
         console.print()
         console.print(Panel("[green]No security issues found.[/]", border_style="green"))

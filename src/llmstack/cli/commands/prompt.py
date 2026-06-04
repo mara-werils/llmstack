@@ -80,7 +80,7 @@ def prompt_use(name: str, variables: list[str] | None = None) -> None:
 
     # Parse key=value pairs
     var_dict = {}
-    for v in (variables or []):
+    for v in variables or []:
         if "=" in v:
             key, val = v.split("=", 1)
             var_dict[key.strip()] = val.strip()

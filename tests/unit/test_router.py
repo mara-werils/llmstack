@@ -17,6 +17,7 @@ from llmstack.gateway.router.stats import RouterStats
 # Fixtures
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture
 def classifier():
     return QueryClassifier()
@@ -25,9 +26,19 @@ def classifier():
 @pytest.fixture
 def sample_models():
     return [
-        ModelTier(name="llama3.2:1b", tier="simple", max_context=8192, speed_score=3.0, quality_score=0.6),
-        ModelTier(name="llama3.2", tier="medium", max_context=8192, speed_score=1.5, quality_score=0.85),
-        ModelTier(name="llama3.1:70b", tier="complex", max_context=16384, speed_score=0.3, quality_score=1.0),
+        ModelTier(
+            name="llama3.2:1b", tier="simple", max_context=8192, speed_score=3.0, quality_score=0.6
+        ),
+        ModelTier(
+            name="llama3.2", tier="medium", max_context=8192, speed_score=1.5, quality_score=0.85
+        ),
+        ModelTier(
+            name="llama3.1:70b",
+            tier="complex",
+            max_context=16384,
+            speed_score=0.3,
+            quality_score=1.0,
+        ),
     ]
 
 
@@ -76,6 +87,7 @@ def _conversation(*contents: str) -> list[dict]:
 # Classifier tests
 # ===================================================================
 
+
 class TestClassifierSimple:
     """Simple queries should score < 0.35."""
 
@@ -117,13 +129,17 @@ class TestClassifierMedium:
         assert p.tier == "medium", f"Expected medium, got {p.tier} (score={p.score})"
 
     def test_compare_things(self, classifier):
-        p = classifier.classify(_msgs("Compare and contrast REST and GraphQL APIs for building web services"))
+        p = classifier.classify(
+            _msgs("Compare and contrast REST and GraphQL APIs for building web services")
+        )
         assert p.tier in ("medium", "complex"), f"Expected medium+, got {p.tier} (score={p.score})"
 
     def test_debug_request(self, classifier):
-        p = classifier.classify(_msgs(
-            "Debug this Python function that is supposed to sort a list but returns incorrect results"
-        ))
+        p = classifier.classify(
+            _msgs(
+                "Debug this Python function that is supposed to sort a list but returns incorrect results"
+            )
+        )
         assert p.tier in ("medium", "complex")
         assert p.score >= 0.35
 
@@ -132,19 +148,23 @@ class TestClassifierComplex:
     """Complex queries should score >= 0.7."""
 
     def test_implement_algorithm(self, classifier):
-        p = classifier.classify(_msgs(
-            "Implement a distributed consensus algorithm similar to Raft in Python, "
-            "including leader election, log replication, and fault tolerance handling "
-            "for up to 5 nodes. Design the architecture to be production-ready."
-        ))
+        p = classifier.classify(
+            _msgs(
+                "Implement a distributed consensus algorithm similar to Raft in Python, "
+                "including leader election, log replication, and fault tolerance handling "
+                "for up to 5 nodes. Design the architecture to be production-ready."
+            )
+        )
         assert p.tier == "complex", f"Expected complex, got {p.tier} (score={p.score})"
 
     def test_architect_system(self, classifier):
-        p = classifier.classify(_msgs(
-            "Design a scalable microservice architecture for a real-time trading platform "
-            "that handles high-availability requirements, considering fault tolerance, "
-            "given strict latency constraints and also regulatory compliance."
-        ))
+        p = classifier.classify(
+            _msgs(
+                "Design a scalable microservice architecture for a real-time trading platform "
+                "that handles high-availability requirements, considering fault tolerance, "
+                "given strict latency constraints and also regulatory compliance."
+            )
+        )
         assert p.tier == "complex", f"Expected complex, got {p.tier} (score={p.score})"
 
 
@@ -220,7 +240,11 @@ class TestClassifierLanguageMix:
         assert p.factors["language_mix"] == 0.0
 
     def test_mixed_script(self, classifier):
-        p = classifier.classify(_msgs("Explain the concept of recursion. Also explain: \u0420\u0435\u043A\u0443\u0440\u0441\u0438\u044F"))
+        p = classifier.classify(
+            _msgs(
+                "Explain the concept of recursion. Also explain: \u0420\u0435\u043a\u0443\u0440\u0441\u0438\u044f"
+            )
+        )
         assert p.factors["language_mix"] > 0
 
 
@@ -252,6 +276,7 @@ class TestClassifierTierBoundaries:
 # Router tests
 # ===================================================================
 
+
 class TestRouterCostStrategy:
     """Cost strategy should pick the smallest adequate model."""
 
@@ -261,9 +286,11 @@ class TestRouterCostStrategy:
         assert d.profile.tier == "simple"
 
     def test_complex_query_picks_large(self, cost_router):
-        d = cost_router.route(_msgs(
-            "Implement a production-ready distributed consensus algorithm with fault tolerance"
-        ))
+        d = cost_router.route(
+            _msgs(
+                "Implement a production-ready distributed consensus algorithm with fault tolerance"
+            )
+        )
         assert d.model == "llama3.1:70b"
 
 
@@ -278,9 +305,7 @@ class TestRouterQualityStrategy:
         assert d.model == "llama3.1:70b"  # highest quality_score
 
     def test_complex_picks_best(self, quality_router):
-        d = quality_router.route(_msgs(
-            "Architect a scalable end-to-end distributed system"
-        ))
+        d = quality_router.route(_msgs("Architect a scalable end-to-end distributed system"))
         assert d.model == "llama3.1:70b"
 
 
@@ -344,6 +369,7 @@ class TestRouterValidation:
 # ===================================================================
 # Stats tests
 # ===================================================================
+
 
 class TestRouterStats:
     def test_record_and_summary(self, stats):

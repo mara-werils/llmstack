@@ -91,7 +91,9 @@ class TestDataQualityScorer:
         fb = _fb("Q", "A long enough response.")
         score = scorer.score(fb)
         d = score.to_dict()
-        assert all(k in d for k in ["completeness", "coherence", "relevance", "informativeness", "overall"])
+        assert all(
+            k in d for k in ["completeness", "coherence", "relevance", "informativeness", "overall"]
+        )
 
     def test_custom_config(self):
         config = QualityScorerConfig(min_quality=0.8, min_response_length=50)

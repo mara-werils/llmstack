@@ -28,7 +28,7 @@ class ABTestResult:
     avg_cost_a_usd: float = 0.0
     avg_cost_b_usd: float = 0.0
     winner: str = ""
-    confidence: str = ""   # "low", "medium", "high"
+    confidence: str = ""  # "low", "medium", "high"
 
     def to_dict(self) -> dict:
         return {
@@ -55,7 +55,7 @@ class ABTest:
     name: str
     model_a: str
     model_b: str
-    traffic_split: float = 0.5   # fraction of traffic going to model_b
+    traffic_split: float = 0.5  # fraction of traffic going to model_b
     active: bool = True
     created_at: float = 0.0
 
@@ -153,7 +153,10 @@ class ABTestManager:
 
             # Determine winner
             winner, confidence = _determine_winner(
-                m_a.qualities, m_b.qualities, test.model_a, test.model_b,
+                m_a.qualities,
+                m_b.qualities,
+                test.model_a,
+                test.model_b,
             )
 
             return ABTestResult(
@@ -179,8 +182,10 @@ class ABTestManager:
 
 
 def _determine_winner(
-    vals_a: list[float], vals_b: list[float],
-    name_a: str, name_b: str,
+    vals_a: list[float],
+    vals_b: list[float],
+    name_a: str,
+    name_b: str,
 ) -> tuple[str, str]:
     """Determine the winner and confidence level.
 

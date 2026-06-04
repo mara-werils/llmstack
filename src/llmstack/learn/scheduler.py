@@ -26,10 +26,10 @@ logger = logging.getLogger(__name__)
 class TriggerReason(str, Enum):
     """Why a training run was triggered."""
 
-    THRESHOLD = "threshold"       # Enough feedback accumulated
-    SCHEDULED = "scheduled"       # Periodic schedule
-    REGRESSION = "regression"     # Quality dropped
-    MANUAL = "manual"             # User requested
+    THRESHOLD = "threshold"  # Enough feedback accumulated
+    SCHEDULED = "scheduled"  # Periodic schedule
+    REGRESSION = "regression"  # Quality dropped
+    MANUAL = "manual"  # User requested
 
 
 @dataclass
@@ -93,9 +93,7 @@ class TrainScheduler:
         self._state = SchedulerState()
         self._train_callback: Callable[[GeneratedDataset], Any] | None = None
 
-    def set_train_callback(
-        self, callback: Callable[[GeneratedDataset], Any]
-    ) -> None:
+    def set_train_callback(self, callback: Callable[[GeneratedDataset], Any]) -> None:
         """Set the actual training function to call when triggered.
 
         The callback receives a GeneratedDataset and should return

@@ -87,10 +87,7 @@ class RequestDeduplicator:
         """Get deduplication statistics."""
         with self._lock:
             now = time.time()
-            active = sum(
-                1 for c in self._cache.values()
-                if (now - c.created_at) < self.config.ttl
-            )
+            active = sum(1 for c in self._cache.values() if (now - c.created_at) < self.config.ttl)
             return {
                 "total_cached": len(self._cache),
                 "active_entries": active,

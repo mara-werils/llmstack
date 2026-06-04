@@ -19,6 +19,7 @@ from llmstack.observe.ab_testing import ABTest, ABTestManager, ABTestResult
 # Quality scoring tests
 # ===================================================================
 
+
 class TestQualityScorer:
     @pytest.fixture
     def scorer(self):
@@ -112,8 +113,12 @@ class TestQualityScorer:
 class TestQualityScore:
     def test_to_dict(self):
         score = QualityScore(
-            coherence=0.8, relevance=0.7, refusal=0.0,
-            toxicity=0.0, repetition=0.1, overall=0.75,
+            coherence=0.8,
+            relevance=0.7,
+            refusal=0.0,
+            toxicity=0.0,
+            repetition=0.1,
+            overall=0.75,
         )
         d = score.to_dict()
         assert d["coherence"] == 0.8
@@ -123,6 +128,7 @@ class TestQualityScore:
 # ===================================================================
 # Trace tests
 # ===================================================================
+
 
 class TestTrace:
     def test_auto_id(self):
@@ -139,9 +145,12 @@ class TestTrace:
 
     def test_to_dict(self):
         t = Trace(
-            model="gpt-4o", provider="openai",
-            input_tokens=100, output_tokens=50,
-            latency_ms=250.5, cost_usd=0.001,
+            model="gpt-4o",
+            provider="openai",
+            input_tokens=100,
+            output_tokens=50,
+            latency_ms=250.5,
+            cost_usd=0.001,
             quality={"overall": 0.8, "coherence": 0.9},
         )
         d = t.to_dict()
@@ -159,6 +168,7 @@ class TestTrace:
 # ===================================================================
 # TraceStore tests
 # ===================================================================
+
 
 class TestTraceStore:
     def test_add_and_recent(self):
@@ -219,12 +229,28 @@ class TestTraceStore:
 
     def test_summary(self):
         store = TraceStore()
-        store.add(Trace(model="gpt-4o", provider="openai",
-                        latency_ms=100, cost_usd=0.01, input_tokens=50, output_tokens=20,
-                        quality={"overall": 0.8}))
-        store.add(Trace(model="claude", provider="anthropic",
-                        latency_ms=200, cost_usd=0.02, input_tokens=60, output_tokens=30,
-                        quality={"overall": 0.9}))
+        store.add(
+            Trace(
+                model="gpt-4o",
+                provider="openai",
+                latency_ms=100,
+                cost_usd=0.01,
+                input_tokens=50,
+                output_tokens=20,
+                quality={"overall": 0.8},
+            )
+        )
+        store.add(
+            Trace(
+                model="claude",
+                provider="anthropic",
+                latency_ms=200,
+                cost_usd=0.02,
+                input_tokens=60,
+                output_tokens=30,
+                quality={"overall": 0.9},
+            )
+        )
 
         s = store.summary()
         assert s["total"] == 2
@@ -239,6 +265,7 @@ class TestTraceStore:
 # ===================================================================
 # QualityTracker tests
 # ===================================================================
+
 
 class TestQualityTracker:
     def test_record_scores(self):
@@ -306,8 +333,12 @@ class TestQualityTracker:
 class TestQualityAlert:
     def test_to_dict(self):
         alert = QualityAlert(
-            metric="overall", model="gpt-4o", provider="openai",
-            current_value=0.3, threshold=0.5, severity="critical",
+            metric="overall",
+            model="gpt-4o",
+            provider="openai",
+            current_value=0.3,
+            threshold=0.5,
+            severity="critical",
             message="quality dropped",
         )
         d = alert.to_dict()
@@ -322,6 +353,7 @@ class TestQualityAlert:
 # ===================================================================
 # A/B Testing tests
 # ===================================================================
+
 
 class TestABTest:
     def test_select_model_deterministic(self):
@@ -413,10 +445,15 @@ class TestABTestManager:
 class TestABTestResult:
     def test_to_dict(self):
         r = ABTestResult(
-            test_name="test1", model_a="a", model_b="b",
-            requests_a=50, requests_b=50,
-            avg_quality_a=0.7, avg_quality_b=0.8,
-            winner="b", confidence="medium",
+            test_name="test1",
+            model_a="a",
+            model_b="b",
+            requests_a=50,
+            requests_b=50,
+            avg_quality_a=0.7,
+            avg_quality_b=0.8,
+            winner="b",
+            confidence="medium",
         )
         d = r.to_dict()
         assert d["winner"] == "b"
@@ -427,9 +464,11 @@ class TestABTestResult:
 # Config schema tests
 # ===================================================================
 
+
 class TestObserveConfigSchema:
     def test_defaults(self):
         from llmstack.config.schema import ObserveConfig
+
         config = ObserveConfig()
         assert config.quality_tracking is True
         assert config.alert_threshold == 0.4
@@ -438,6 +477,7 @@ class TestObserveConfigSchema:
 
     def test_custom(self):
         from llmstack.config.schema import ObserveConfig
+
         config = ObserveConfig(
             alert_threshold=0.6,
             drift_threshold=-0.05,
@@ -451,9 +491,16 @@ class TestObserveConfigSchema:
 # State management tests
 # ===================================================================
 
+
 class TestObserveState:
     def test_init_and_get(self):
-        from llmstack.observe._state import init_observe, get_trace_store, get_scorer, get_tracker, get_ab_manager
+        from llmstack.observe._state import (
+            init_observe,
+            get_trace_store,
+            get_scorer,
+            get_tracker,
+            get_ab_manager,
+        )
 
         init_observe()
         assert get_trace_store() is not None

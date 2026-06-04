@@ -32,8 +32,8 @@ class TestPreferenceLearner:
                 feedback_type=FeedbackType.CORRECTION,
                 query="How do I print in Python?",
                 response="To print in Python, you use the print() function. "
-                         "This function takes arguments and outputs them to stdout. "
-                         "It was introduced in Python 3 as a replacement for the print statement.",
+                "This function takes arguments and outputs them to stdout. "
+                "It was introduced in Python 3 as a replacement for the print statement.",
                 correction="Use `print('hello')`",
             )
             learner.learn_from_feedback(fb)
@@ -48,9 +48,9 @@ class TestPreferenceLearner:
                 query="What is async?",
                 response="Async is asynchronous.",
                 correction="Async (asynchronous) programming allows you to write concurrent code "
-                           "that doesn't block. In Python, you use `async def` to define coroutines "
-                           "and `await` to pause execution until a result is available. This is useful "
-                           "for I/O-bound operations like network requests and file operations.",
+                "that doesn't block. In Python, you use `async def` to define coroutines "
+                "and `await` to pause execution until a result is available. This is useful "
+                "for I/O-bound operations like network requests and file operations.",
             )
             learner.learn_from_feedback(fb)
 
@@ -76,7 +76,7 @@ class TestPreferenceLearner:
                 feedback_type=FeedbackType.CORRECTION,
                 query="Is this approach correct?",
                 response="I think this might perhaps be a reasonable approach, "
-                         "although it seems like there could be alternatives.",
+                "although it seems like there could be alternatives.",
                 correction="Yes, this approach is correct for your use case.",
             )
             learner.learn_from_feedback(fb)
@@ -91,7 +91,7 @@ class TestPreferenceLearner:
                 feedback_type=FeedbackType.CORRECTION,
                 query="question",
                 response="I think perhaps maybe the answer might be this long explanation "
-                         "that goes on and on with unnecessary detail and hedging.",
+                "that goes on and on with unnecessary detail and hedging.",
                 correction="The answer is X.",
             )
             learner.learn_from_feedback(fb)

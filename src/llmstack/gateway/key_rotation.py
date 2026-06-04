@@ -140,10 +140,7 @@ class KeyRotationManager:
 
         key_hash = self.hash_key(api_key)
         before = len(self._keys[client_id])
-        self._keys[client_id] = [
-            ki for ki in self._keys[client_id]
-            if ki.key_hash != key_hash
-        ]
+        self._keys[client_id] = [ki for ki in self._keys[client_id] if ki.key_hash != key_hash]
         return len(self._keys[client_id]) < before
 
     def get_client_keys(self, client_id: str) -> list[dict[str, Any]]:
@@ -157,9 +154,7 @@ class KeyRotationManager:
         removed = 0
         for client_id in list(self._keys.keys()):
             before = len(self._keys[client_id])
-            self._keys[client_id] = [
-                ki for ki in self._keys[client_id] if ki.is_active
-            ]
+            self._keys[client_id] = [ki for ki in self._keys[client_id] if ki.is_active]
             removed += before - len(self._keys[client_id])
             if not self._keys[client_id]:
                 del self._keys[client_id]

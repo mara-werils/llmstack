@@ -18,7 +18,9 @@ class TestCacheKeyGeneration:
 
     def test_different_model_different_key(self):
         key1 = ResponseCache._build_cache_key("llama3", [{"role": "user", "content": "hello"}], 0.0)
-        key2 = ResponseCache._build_cache_key("mistral", [{"role": "user", "content": "hello"}], 0.0)
+        key2 = ResponseCache._build_cache_key(
+            "mistral", [{"role": "user", "content": "hello"}], 0.0
+        )
         assert key1 != key2
 
     def test_different_message_different_key(self):
@@ -47,7 +49,9 @@ class TestCacheKeyGeneration:
     def test_extra_fields_in_messages_ignored(self):
         """Only role and content matter for cache key."""
         key1 = ResponseCache._build_cache_key("llama3", [{"role": "user", "content": "hi"}], 0.0)
-        key2 = ResponseCache._build_cache_key("llama3", [{"role": "user", "content": "hi", "name": "bob"}], 0.0)
+        key2 = ResponseCache._build_cache_key(
+            "llama3", [{"role": "user", "content": "hi", "name": "bob"}], 0.0
+        )
         assert key1 == key2
 
 

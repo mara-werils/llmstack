@@ -75,9 +75,7 @@ class LocalEmbeddings:
         texts = [c.content for c in chunks]
         self._embeddings = await self.embed(texts)
 
-    async def search(
-        self, query: str, top_k: int = 5
-    ) -> list[tuple[TextChunk, float]]:
+    async def search(self, query: str, top_k: int = 5) -> list[tuple[TextChunk, float]]:
         """Find most relevant chunks by cosine similarity.
 
         Returns a list of (chunk, similarity_score) tuples sorted by
@@ -103,10 +101,7 @@ class LocalEmbeddings:
         k = min(top_k, len(self._chunks))
         top_indices = np.argsort(similarities)[::-1][:k]
 
-        results = [
-            (self._chunks[i], float(similarities[i]))
-            for i in top_indices
-        ]
+        results = [(self._chunks[i], float(similarities[i])) for i in top_indices]
         return results
 
     async def close(self) -> None:

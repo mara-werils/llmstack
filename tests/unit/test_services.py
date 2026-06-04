@@ -1,6 +1,13 @@
 """Tests for service container specs and registry."""
 
-from llmstack.config.schema import ModelSpec, EmbeddingSpec, VectorDBConfig, CacheConfig, GatewayConfig, ObserveConfig
+from llmstack.config.schema import (
+    ModelSpec,
+    EmbeddingSpec,
+    VectorDBConfig,
+    CacheConfig,
+    GatewayConfig,
+    ObserveConfig,
+)
 from llmstack.core.hardware import HardwareProfile
 from llmstack.services.inference.ollama import OllamaService
 from llmstack.services.inference.vllm import VllmService
@@ -14,19 +21,30 @@ from llmstack.services.registry import ServiceRegistry
 
 def _cpu_hw() -> HardwareProfile:
     return HardwareProfile(
-        gpu_vendor="none", gpu_name=None, gpu_vram_mb=0,
-        cpu_cores=8, ram_mb=16384, os="linux", docker_runtime="default",
+        gpu_vendor="none",
+        gpu_name=None,
+        gpu_vram_mb=0,
+        cpu_cores=8,
+        ram_mb=16384,
+        os="linux",
+        docker_runtime="default",
     )
 
 
 def _nvidia_hw() -> HardwareProfile:
     return HardwareProfile(
-        gpu_vendor="nvidia", gpu_name="RTX 4090", gpu_vram_mb=24576,
-        cpu_cores=16, ram_mb=65536, os="linux", docker_runtime="nvidia",
+        gpu_vendor="nvidia",
+        gpu_name="RTX 4090",
+        gpu_vram_mb=24576,
+        cpu_cores=16,
+        ram_mb=65536,
+        os="linux",
+        docker_runtime="nvidia",
     )
 
 
 # ── Ollama ──────────────────────────────────────────────────────
+
 
 def test_ollama_container_spec():
     svc = OllamaService(ModelSpec(name="llama3.2"), _cpu_hw())
@@ -48,6 +66,7 @@ def test_ollama_health_url():
 
 # ── vLLM ────────────────────────────────────────────────────────
 
+
 def test_vllm_container_spec():
     svc = VllmService(ModelSpec(name="meta-llama/Llama-3-8B"), _nvidia_hw())
     spec = svc.container_spec()
@@ -63,6 +82,7 @@ def test_vllm_openai_url():
 
 
 # ── TEI ─────────────────────────────────────────────────────────
+
 
 def test_tei_container_spec_cpu():
     svc = TEIService(EmbeddingSpec(name="bge-m3"), _cpu_hw())
@@ -80,6 +100,7 @@ def test_tei_container_spec_gpu():
 
 # ── Qdrant ──────────────────────────────────────────────────────
 
+
 def test_qdrant_spec():
     svc = QdrantService(VectorDBConfig(port=6333))
     spec = svc.container_spec()
@@ -94,6 +115,7 @@ def test_qdrant_health():
 
 # ── Redis ───────────────────────────────────────────────────────
 
+
 def test_redis_spec():
     svc = RedisService(CacheConfig(max_memory="512mb"))
     spec = svc.container_spec()
@@ -102,6 +124,7 @@ def test_redis_spec():
 
 
 # ── Gateway ─────────────────────────────────────────────────────
+
 
 def test_gateway_spec():
     svc = GatewayService(
@@ -118,7 +141,8 @@ def test_gateway_spec():
 def test_gateway_build_info():
     svc = GatewayService(
         config=GatewayConfig(port=8000),
-        inference_url="", embeddings_url="",
+        inference_url="",
+        embeddings_url="",
     )
     info = svc.build_info()
     assert info is not None
@@ -130,12 +154,14 @@ def test_gateway_build_info():
 def test_gateway_health():
     svc = GatewayService(
         config=GatewayConfig(port=9000),
-        inference_url="", embeddings_url="",
+        inference_url="",
+        embeddings_url="",
     )
     assert "9000" in svc.health_url()
 
 
 # ── Observability ───────────────────────────────────────────────
+
 
 def test_prometheus_spec():
     svc = PrometheusService(ObserveConfig())
@@ -156,7 +182,9 @@ def test_grafana_spec():
     # Should have bind mounts for provisioning
     volumes = spec["volumes"]
     bind_paths = [v for v in volumes if not v.startswith("llmstack_")]
-    assert len(bind_paths) >= 3, "Grafana should have bind mounts for datasources, dashboards, provider"
+    assert len(bind_paths) >= 3, (
+        "Grafana should have bind mounts for datasources, dashboards, provider"
+    )
 
 
 def test_prometheus_config_yaml():
@@ -174,6 +202,7 @@ def test_grafana_dashboard_json():
 
 
 # ── Registry ────────────────────────────────────────────────────
+
 
 def test_registry_discovers_builtins():
     reg = ServiceRegistry()

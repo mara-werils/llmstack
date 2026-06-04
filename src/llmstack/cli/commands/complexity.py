@@ -24,6 +24,7 @@ def complexity(
 
     if target_path.is_file():
         from llmstack.analyze.complexity import analyze_python_file
+
         metrics = analyze_python_file(target_path)
         if not metrics:
             console.print("[error]Could not analyze file.[/]")
@@ -141,31 +142,46 @@ def complexity(
     avg_mi = sum(fm.maintainability_index for fm in file_results) / max(1, len(file_results))
     complex_count = sum(1 for f in all_functions if f.cyclomatic >= threshold)
 
-    overall_grade = "A" if avg_mi >= 80 else "B" if avg_mi >= 60 else "C" if avg_mi >= 40 else "D" if avg_mi >= 20 else "F"
+    overall_grade = (
+        "A"
+        if avg_mi >= 80
+        else "B"
+        if avg_mi >= 60
+        else "C"
+        if avg_mi >= 40
+        else "D"
+        if avg_mi >= 20
+        else "F"
+    )
     grade_color = grade_colors.get(overall_grade, "white")
 
     console.print()
-    console.print(Panel(
-        f"[bold]Overall Grade:[/] [{grade_color}]{overall_grade}[/]\n"
-        f"[bold]Files:[/] {len(file_results)}  |  [bold]Classes:[/] {total_classes}  |  [bold]Functions:[/] {total_functions}\n"
-        f"[bold]Lines of Code:[/] {total_loc:,}\n"
-        f"[bold]Avg Maintainability:[/] {avg_mi:.1f}/100\n"
-        f"[bold]Complex functions (CC≥{threshold}):[/] {complex_count}",
-        title="Complexity Summary",
-        border_style=grade_color,
-    ))
+    console.print(
+        Panel(
+            f"[bold]Overall Grade:[/] [{grade_color}]{overall_grade}[/]\n"
+            f"[bold]Files:[/] {len(file_results)}  |  [bold]Classes:[/] {total_classes}  |  [bold]Functions:[/] {total_functions}\n"
+            f"[bold]Lines of Code:[/] {total_loc:,}\n"
+            f"[bold]Avg Maintainability:[/] {avg_mi:.1f}/100\n"
+            f"[bold]Complex functions (CC≥{threshold}):[/] {complex_count}",
+            title="Complexity Summary",
+            border_style=grade_color,
+        )
+    )
 
     if output:
         data = {
-            "files": [{
-                "file": fm.file,
-                "grade": fm.grade,
-                "code_lines": fm.code_lines,
-                "functions": fm.functions,
-                "avg_complexity": fm.avg_complexity,
-                "max_complexity": fm.max_complexity,
-                "maintainability_index": fm.maintainability_index,
-            } for fm in file_results],
+            "files": [
+                {
+                    "file": fm.file,
+                    "grade": fm.grade,
+                    "code_lines": fm.code_lines,
+                    "functions": fm.functions,
+                    "avg_complexity": fm.avg_complexity,
+                    "max_complexity": fm.max_complexity,
+                    "maintainability_index": fm.maintainability_index,
+                }
+                for fm in file_results
+            ],
             "summary": {
                 "grade": overall_grade,
                 "total_files": len(file_results),

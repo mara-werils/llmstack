@@ -40,21 +40,25 @@ async def router_classify(request: Request):
     messages = body.get("messages", [])
     profile = rtr.classify_only(messages)
 
-    return JSONResponse(content={
-        "score": profile.score,
-        "tier": profile.tier,
-        "factors": profile.factors,
-        "suggested_model": profile.suggested_model,
-    })
+    return JSONResponse(
+        content={
+            "score": profile.score,
+            "tier": profile.tier,
+            "factors": profile.factors,
+            "suggested_model": profile.suggested_model,
+        }
+    )
 
 
 # ---------------------------------------------------------------------------
 # Helpers — import the module-level singletons lazily
 # ---------------------------------------------------------------------------
 
+
 def _get_stats():
     try:
         from llmstack.gateway.router._state import get_stats
+
         return get_stats()
     except Exception:
         return None
@@ -63,6 +67,7 @@ def _get_stats():
 def _get_router():
     try:
         from llmstack.gateway.router._state import get_router
+
         return get_router()
     except Exception:
         return None

@@ -21,31 +21,37 @@ def store_with_feedback(store):
     """Store with various feedback types."""
     # Corrections
     for i in range(10):
-        store.add_feedback(Feedback(
-            feedback_type=FeedbackType.CORRECTION,
-            query=f"How do I do task {i}?",
-            response=f"You can do it like this: bad_answer_{i}",
-            correction=f"The correct way is: good_answer_{i} with more detail",
-            model="llama3.2",
-        ))
+        store.add_feedback(
+            Feedback(
+                feedback_type=FeedbackType.CORRECTION,
+                query=f"How do I do task {i}?",
+                response=f"You can do it like this: bad_answer_{i}",
+                correction=f"The correct way is: good_answer_{i} with more detail",
+                model="llama3.2",
+            )
+        )
 
     # Thumbs up
     for i in range(5):
-        store.add_feedback(Feedback(
-            feedback_type=FeedbackType.THUMBS_UP,
-            query=f"Explain concept {i}",
-            response=f"This is a great explanation of concept {i} with details",
-            model="llama3.2",
-        ))
+        store.add_feedback(
+            Feedback(
+                feedback_type=FeedbackType.THUMBS_UP,
+                query=f"Explain concept {i}",
+                response=f"This is a great explanation of concept {i} with details",
+                model="llama3.2",
+            )
+        )
 
     # Thumbs down
     for i in range(3):
-        store.add_feedback(Feedback(
-            feedback_type=FeedbackType.THUMBS_DOWN,
-            query=f"Bad question {i}",
-            response=f"Bad response {i}",
-            model="llama3.2",
-        ))
+        store.add_feedback(
+            Feedback(
+                feedback_type=FeedbackType.THUMBS_DOWN,
+                query=f"Bad question {i}",
+                response=f"Bad response {i}",
+                model="llama3.2",
+            )
+        )
 
     return store
 
@@ -97,12 +103,14 @@ class TestDatasetGenerator:
 
     def test_quality_filter(self, store):
         # Add feedback with too-short content
-        store.add_feedback(Feedback(
-            feedback_type=FeedbackType.CORRECTION,
-            query="hi",  # too short
-            response="ok",
-            correction="yes",  # too short
-        ))
+        store.add_feedback(
+            Feedback(
+                feedback_type=FeedbackType.CORRECTION,
+                query="hi",  # too short
+                response="ok",
+                correction="yes",  # too short
+            )
+        )
         gen = DatasetGenerator(store=store, min_query_length=5, min_response_length=20)
         dataset = gen.generate(strategy=DatasetStrategy.SFT)
         assert dataset.total_examples == 0
@@ -110,12 +118,14 @@ class TestDatasetGenerator:
     def test_deduplication(self, store):
         # Add duplicate feedback
         for _ in range(3):
-            store.add_feedback(Feedback(
-                feedback_type=FeedbackType.CORRECTION,
-                query="What is the meaning of life?",
-                response="42 but wrong context here",
-                correction="The meaning of life varies by philosophy and person",
-            ))
+            store.add_feedback(
+                Feedback(
+                    feedback_type=FeedbackType.CORRECTION,
+                    query="What is the meaning of life?",
+                    response="42 but wrong context here",
+                    correction="The meaning of life varies by philosophy and person",
+                )
+            )
 
         gen = DatasetGenerator(store=store, dedup=True)
         dataset = gen.generate(strategy=DatasetStrategy.SFT)

@@ -23,9 +23,13 @@ class RetryConfig:
     exponential_base: float = 2.0
     jitter: bool = True
     retry_on_status: set[int] = field(default_factory=lambda: {429, 500, 502, 503, 504})
-    retry_on_exceptions: tuple = field(default_factory=lambda: (
-        ConnectionError, TimeoutError, asyncio.TimeoutError,
-    ))
+    retry_on_exceptions: tuple = field(
+        default_factory=lambda: (
+            ConnectionError,
+            TimeoutError,
+            asyncio.TimeoutError,
+        )
+    )
 
 
 @dataclass
@@ -104,10 +108,11 @@ class RetryResult:
 
 def _compute_delay(attempt: int, config: RetryConfig) -> float:
     """Compute delay with exponential backoff and optional jitter."""
-    delay = config.initial_delay_ms * (config.exponential_base ** attempt)
+    delay = config.initial_delay_ms * (config.exponential_base**attempt)
     delay = min(delay, config.max_delay_ms)
     if config.jitter:
         import random
+
         delay *= random.uniform(0.5, 1.5)
     return delay
 
@@ -179,7 +184,9 @@ async def retry_with_fallback(
             result.attempts.append(attempt_record)
             logger.warning(
                 "Retry attempt %d failed: %s (provider=%s)",
-                attempt + 1, exc, current_provider,
+                attempt + 1,
+                exc,
+                current_provider,
             )
         except Exception as exc:
             # Non-retryable exception

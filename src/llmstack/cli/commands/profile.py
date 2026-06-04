@@ -31,7 +31,7 @@ def profile(
     total_time = 0.0
 
     for i, prompt in enumerate(_TEST_PROMPTS[:runs]):
-        console.print(f"  [muted]Run {i+1}/{runs}: {prompt[:50]}...[/]")
+        console.print(f"  [muted]Run {i + 1}/{runs}: {prompt[:50]}...[/]")
 
         t0 = time.monotonic()
         try:
@@ -43,7 +43,9 @@ def profile(
             elapsed = time.monotonic() - t0
 
             if resp.status_code != 200:
-                results.append({"prompt": prompt[:40], "time": elapsed, "tokens": 0, "tps": 0, "error": True})
+                results.append(
+                    {"prompt": prompt[:40], "time": elapsed, "tokens": 0, "tps": 0, "error": True}
+                )
                 continue
 
             data = resp.json()
@@ -52,7 +54,15 @@ def profile(
             total_tokens += eval_count
             total_time += elapsed
 
-            results.append({"prompt": prompt[:40], "time": elapsed, "tokens": eval_count, "tps": tps, "error": False})
+            results.append(
+                {
+                    "prompt": prompt[:40],
+                    "time": elapsed,
+                    "tokens": eval_count,
+                    "tps": tps,
+                    "error": False,
+                }
+            )
 
         except Exception:
             results.append({"prompt": prompt[:40], "time": 0, "tokens": 0, "tps": 0, "error": True})
@@ -81,5 +91,7 @@ def profile(
     # Summary
     if total_time > 0:
         avg_tps = total_tokens / total_time
-        console.print(f"\n  [accent]Average:[/] [speed]{avg_tps:.1f} tok/s[/] | {total_tokens} total tokens in {total_time:.1f}s")
+        console.print(
+            f"\n  [accent]Average:[/] [speed]{avg_tps:.1f} tok/s[/] | {total_tokens} total tokens in {total_time:.1f}s"
+        )
     console.print()

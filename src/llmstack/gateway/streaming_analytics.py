@@ -20,7 +20,7 @@ class StreamMetrics:
     request_id: str = ""
     model: str = ""
     provider: str = ""
-    ttft_ms: float = 0.0             # Time to first token
+    ttft_ms: float = 0.0  # Time to first token
     total_duration_ms: float = 0.0
     token_count: int = 0
     chunk_count: int = 0
@@ -128,10 +128,7 @@ class StreamingTracker:
     def get_summary(self, model: str | None = None) -> dict:
         """Get streaming performance summary."""
         with self._lock:
-            records = [
-                r for r in self._records
-                if model is None or r.model == model
-            ]
+            records = [r for r in self._records if model is None or r.model == model]
 
         if not records:
             return {"total_streams": 0, "active_streams": len(self._active_streams)}
@@ -161,7 +158,10 @@ class StreamingTracker:
             "active_streams": len(self._active_streams),
             "avg_ttft_ms": round(statistics.mean(ttfts), 1) if ttfts else 0,
             "p95_ttft_ms": round(
-                sorted(ttfts)[int(len(ttfts) * 0.95)] if len(ttfts) >= 2 else (ttfts[0] if ttfts else 0), 1
+                sorted(ttfts)[int(len(ttfts) * 0.95)]
+                if len(ttfts) >= 2
+                else (ttfts[0] if ttfts else 0),
+                1,
             ),
             "avg_tokens_per_second": round(statistics.mean(tps_values), 1) if tps_values else 0,
             "by_model": model_stats,

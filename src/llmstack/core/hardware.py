@@ -70,9 +70,7 @@ def _check_nvidia_docker() -> bool:
             timeout=10,
         )
         # If nvidia runtime exists, docker info will mention it
-        out = subprocess.check_output(
-            ["docker", "info"], text=True, timeout=10
-        )
+        out = subprocess.check_output(["docker", "info"], text=True, timeout=10)
         return "nvidia" in out.lower()
     except (subprocess.SubprocessError, FileNotFoundError):
         return False

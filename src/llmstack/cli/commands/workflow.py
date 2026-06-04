@@ -62,11 +62,13 @@ def workflow_show(name: str) -> None:
         tree.add(f"[cyan]{i}.[/] {step['command']} {args_str}")
 
     console.print()
-    console.print(Panel(
-        f"{wf.get('description', '')}\n\n",
-        title=f"Workflow: {name}",
-        border_style="cyan",
-    ))
+    console.print(
+        Panel(
+            f"{wf.get('description', '')}\n\n",
+            title=f"Workflow: {name}",
+            border_style="cyan",
+        )
+    )
     console.print(tree)
 
 
@@ -83,14 +85,16 @@ def workflow_run(name: str) -> None:
         return
 
     console.print()
-    console.print(Panel(
-        f"[bold]{wf['name']}[/]\n{wf.get('description', '')}\n\n"
-        f"Steps: {len(wf['steps'])}",
-        title=f"Running Workflow: {name}",
-        border_style="cyan",
-    ))
+    console.print(
+        Panel(
+            f"[bold]{wf['name']}[/]\n{wf.get('description', '')}\n\nSteps: {len(wf['steps'])}",
+            title=f"Running Workflow: {name}",
+            border_style="cyan",
+        )
+    )
 
     import time
+
     start = time.time()
     completed = 0
     failed = 0
@@ -114,13 +118,15 @@ def workflow_run(name: str) -> None:
     status_color = "green" if failed == 0 else "yellow"
 
     console.print()
-    console.print(Panel(
-        f"[bold]Completed:[/] {completed}/{len(wf['steps'])}\n"
-        f"[bold]Failed:[/] {failed}\n"
-        f"[bold]Duration:[/] {duration:.1f}s",
-        title="Workflow Complete",
-        border_style=status_color,
-    ))
+    console.print(
+        Panel(
+            f"[bold]Completed:[/] {completed}/{len(wf['steps'])}\n"
+            f"[bold]Failed:[/] {failed}\n"
+            f"[bold]Duration:[/] {duration:.1f}s",
+            title="Workflow Complete",
+            border_style=status_color,
+        )
+    )
 
 
 def _run_step(step: dict) -> None:
@@ -130,7 +136,9 @@ def _run_step(step: dict) -> None:
 
     # Map commands to their implementation functions
     command_map = {
-        "complexity": lambda: _import_and_run("llmstack.cli.commands.complexity", "complexity", args),
+        "complexity": lambda: _import_and_run(
+            "llmstack.cli.commands.complexity", "complexity", args
+        ),
         "dead-code": lambda: _import_and_run("llmstack.cli.commands.dead_code", "dead_code", args),
         "security": lambda: _import_and_run("llmstack.cli.commands.security", "security", args),
         "review": lambda: _import_and_run("llmstack.cli.commands.review", "review", args),
@@ -154,6 +162,7 @@ def _run_step(step: dict) -> None:
 def _import_and_run(module_path: str, func_name: str, args: dict) -> None:
     """Dynamically import and run a command function."""
     import importlib
+
     module = importlib.import_module(module_path)
     func = getattr(module, func_name)
     func(**args)

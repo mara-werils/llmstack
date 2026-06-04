@@ -87,22 +87,47 @@ def tokens(
     context_window = MODEL_CONTEXTS.get(model, 8192)
 
     ignore_dirs = {"__pycache__", ".git", "node_modules", "venv", ".venv", "dist", "build", ".tox"}
-    code_exts = {".py", ".js", ".ts", ".go", ".rs", ".java", ".cpp", ".c", ".rb", ".php",
-                 ".swift", ".kt", ".scala", ".md", ".txt", ".yaml", ".yml", ".json", ".toml",
-                 ".html", ".css", ".sql", ".sh", ".bash"}
+    code_exts = {
+        ".py",
+        ".js",
+        ".ts",
+        ".go",
+        ".rs",
+        ".java",
+        ".cpp",
+        ".c",
+        ".rb",
+        ".php",
+        ".swift",
+        ".kt",
+        ".scala",
+        ".md",
+        ".txt",
+        ".yaml",
+        ".yml",
+        ".json",
+        ".toml",
+        ".html",
+        ".css",
+        ".sql",
+        ".sh",
+        ".bash",
+    }
 
     if target_path.is_file():
         files = [target_path]
     elif recursive:
         files = [
-            p for p in sorted(target_path.rglob("*"))
+            p
+            for p in sorted(target_path.rglob("*"))
             if p.is_file()
             and p.suffix.lower() in code_exts
             and not any(part in ignore_dirs for part in p.parts)
         ]
     else:
         files = [
-            p for p in sorted(target_path.iterdir())
+            p
+            for p in sorted(target_path.iterdir())
             if p.is_file() and p.suffix.lower() in code_exts
         ]
 
@@ -117,7 +142,9 @@ def tokens(
     total_words = sum(r["words"] for r in results)
 
     console.print()
-    console.print(f"[bold]llmstack tokens[/]  model=[cyan]{model}[/]  context=[dim]{context_window:,}[/]")
+    console.print(
+        f"[bold]llmstack tokens[/]  model=[cyan]{model}[/]  context=[dim]{context_window:,}[/]"
+    )
     console.print()
 
     if show_files and len(results) > 1:
@@ -140,7 +167,11 @@ def tokens(
             bar_color = "green" if pct < 25 else "yellow" if pct < 75 else "red"
             bar = f"[{bar_color}]{'█' * bar_len}{'░' * (20 - bar_len)}[/]"
 
-            rel_path = str(Path(r["file"]).relative_to(target_path)) if not target_path.is_file() else r["file"]
+            rel_path = (
+                str(Path(r["file"]).relative_to(target_path))
+                if not target_path.is_file()
+                else r["file"]
+            )
             table.add_row(
                 rel_path[:40],
                 f"{r['tokens']:,}",
@@ -160,20 +191,22 @@ def tokens(
     remaining = max(0, context_window - total_tokens)
 
     console.print()
-    console.print(Panel(
-        f"[bold]Total tokens:[/] {total_tokens:,}\n"
-        f"[bold]Total chars:[/]  {total_chars:,}\n"
-        f"[bold]Total lines:[/]  {total_lines:,}\n"
-        f"[bold]Total words:[/]  {total_words:,}\n"
-        f"[bold]Files:[/]        {len(results)}\n\n"
-        f"[bold]Model:[/]        {model}\n"
-        f"[bold]Context:[/]      {context_window:,} tokens\n"
-        f"[bold]Used:[/]         [{fit_color}]{fit_pct:.1f}%[/]\n"
-        f"[bold]Remaining:[/]    {remaining:,} tokens\n"
-        f"[bold]Fits in context:[/] [{fits_color}]{fits}[/]",
-        title="Token Summary",
-        border_style=fit_color,
-    ))
+    console.print(
+        Panel(
+            f"[bold]Total tokens:[/] {total_tokens:,}\n"
+            f"[bold]Total chars:[/]  {total_chars:,}\n"
+            f"[bold]Total lines:[/]  {total_lines:,}\n"
+            f"[bold]Total words:[/]  {total_words:,}\n"
+            f"[bold]Files:[/]        {len(results)}\n\n"
+            f"[bold]Model:[/]        {model}\n"
+            f"[bold]Context:[/]      {context_window:,} tokens\n"
+            f"[bold]Used:[/]         [{fit_color}]{fit_pct:.1f}%[/]\n"
+            f"[bold]Remaining:[/]    {remaining:,} tokens\n"
+            f"[bold]Fits in context:[/] [{fits_color}]{fits}[/]",
+            title="Token Summary",
+            border_style=fit_color,
+        )
+    )
 
     # Recommendations
     if total_tokens > context_window:

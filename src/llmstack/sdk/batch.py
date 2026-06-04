@@ -10,6 +10,7 @@ from dataclasses import dataclass
 @dataclass
 class BatchItem:
     """A single item in a batch."""
+
     id: str | int
     prompt: str
     system_prompt: str = ""
@@ -21,6 +22,7 @@ class BatchItem:
 @dataclass
 class BatchResult:
     """Result of a single batch item."""
+
     id: str | int
     prompt: str
     response: str
@@ -33,6 +35,7 @@ class BatchResult:
 @dataclass
 class BatchSummary:
     """Summary of a batch run."""
+
     total: int
     completed: int
     failed: int
@@ -90,37 +93,50 @@ class BatchProcessor:
                             "temperature": item.temperature,
                         }
                         if item.system_prompt:
-                            payload["messages"].append({"role": "system", "content": item.system_prompt})
+                            payload["messages"].append(
+                                {"role": "system", "content": item.system_prompt}
+                            )
                         payload["messages"].append({"role": "user", "content": item.prompt})
 
                         resp = await client.post(
                             f"{self.base_url}/v1/chat/completions",
-                            json=payload, headers=headers,
+                            json=payload,
+                            headers=headers,
                         )
 
                         if resp.status_code == 200:
                             data = resp.json()
-                            content = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+                            content = (
+                                data.get("choices", [{}])[0].get("message", {}).get("content", "")
+                            )
                             tokens = data.get("usage", {}).get("total_tokens", 0)
                             result = BatchResult(
-                                id=item.id, prompt=item.prompt,
-                                response=content, tokens_used=tokens,
+                                id=item.id,
+                                prompt=item.prompt,
+                                response=content,
+                                tokens_used=tokens,
                                 duration=time.time() - item_start,
                                 success=True,
                             )
                         else:
                             result = BatchResult(
-                                id=item.id, prompt=item.prompt,
-                                response="", tokens_used=0,
+                                id=item.id,
+                                prompt=item.prompt,
+                                response="",
+                                tokens_used=0,
                                 duration=time.time() - item_start,
-                                success=False, error=f"HTTP {resp.status_code}",
+                                success=False,
+                                error=f"HTTP {resp.status_code}",
                             )
                 except Exception as e:
                     result = BatchResult(
-                        id=item.id, prompt=item.prompt,
-                        response="", tokens_used=0,
+                        id=item.id,
+                        prompt=item.prompt,
+                        response="",
+                        tokens_used=0,
                         duration=time.time() - item_start,
-                        success=False, error=str(e),
+                        success=False,
+                        error=str(e),
                     )
 
                 completed += 1

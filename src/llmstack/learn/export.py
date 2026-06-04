@@ -104,7 +104,8 @@ class LearningExporter:
 
         logger.info(
             "Exported HF dataset: %d train, %d test",
-            len(train_examples), len(test_examples),
+            len(train_examples),
+            len(test_examples),
         )
         return output_dir
 
@@ -117,9 +118,7 @@ class LearningExporter:
 
         if self.preference_learner:
             data["preferences"] = self.preference_learner.get_profile()
-            data["system_prompt_additions"] = (
-                self.preference_learner.get_system_prompt_additions()
-            )
+            data["system_prompt_additions"] = self.preference_learner.get_system_prompt_additions()
 
         if self.pattern_learner:
             data["code_patterns"] = self.pattern_learner.get_profile()
@@ -149,16 +148,19 @@ class LearningExporter:
             # Export patterns
             if self.pattern_learner:
                 patterns_path = tmp_dir / "code_patterns.json"
-                patterns_path.write_text(
-                    json.dumps(self.pattern_learner.get_profile(), indent=2)
-                )
+                patterns_path.write_text(json.dumps(self.pattern_learner.get_profile(), indent=2))
 
             # Export stats
             stats_path = tmp_dir / "stats.json"
-            stats_path.write_text(json.dumps({
-                "exported_at": time.time(),
-                "stats": self.store.get_stats(),
-            }, indent=2))
+            stats_path.write_text(
+                json.dumps(
+                    {
+                        "exported_at": time.time(),
+                        "stats": self.store.get_stats(),
+                    },
+                    indent=2,
+                )
+            )
 
             # Copy database file
             db_path = Path(self.store.db_path)

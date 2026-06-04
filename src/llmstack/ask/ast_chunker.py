@@ -22,12 +22,12 @@ class CodeSymbol:
     """A code symbol (function, class, method) with its source."""
 
     name: str
-    kind: str          # "function", "class", "method", "module_header"
+    kind: str  # "function", "class", "method", "module_header"
     start_line: int
     end_line: int
     content: str
     decorators: list[str] | None = None
-    parent: str | None = None     # parent class for methods
+    parent: str | None = None  # parent class for methods
 
 
 def chunk_python(source: str, file_path: str) -> list[TextChunk]:
@@ -51,54 +51,62 @@ def chunk_python(source: str, file_path: str) -> list[TextChunk]:
             header_end = max(header_end, node.end_lineno or node.lineno)
 
     if header_end > 0:
-        symbols.append(CodeSymbol(
-            name="<module_header>",
-            kind="module_header",
-            start_line=1,
-            end_line=header_end,
-            content="\n".join(lines[:header_end]),
-        ))
+        symbols.append(
+            CodeSymbol(
+                name="<module_header>",
+                kind="module_header",
+                start_line=1,
+                end_line=header_end,
+                content="\n".join(lines[:header_end]),
+            )
+        )
 
     # Collect top-level functions and classes
     for node in ast.iter_child_nodes(tree):
         if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
             end = node.end_lineno or node.lineno
-            symbols.append(CodeSymbol(
-                name=node.name,
-                kind="function",
-                start_line=node.lineno,
-                end_line=end,
-                content="\n".join(lines[node.lineno - 1 : end]),
-                decorators=[
-                    "\n".join(lines[d.lineno - 1 : (d.end_lineno or d.lineno)])
-                    for d in node.decorator_list
-                ],
-            ))
+            symbols.append(
+                CodeSymbol(
+                    name=node.name,
+                    kind="function",
+                    start_line=node.lineno,
+                    end_line=end,
+                    content="\n".join(lines[node.lineno - 1 : end]),
+                    decorators=[
+                        "\n".join(lines[d.lineno - 1 : (d.end_lineno or d.lineno)])
+                        for d in node.decorator_list
+                    ],
+                )
+            )
 
         elif isinstance(node, ast.ClassDef):
             end = node.end_lineno or node.lineno
             # Add the full class as one chunk
-            symbols.append(CodeSymbol(
-                name=node.name,
-                kind="class",
-                start_line=node.lineno,
-                end_line=end,
-                content="\n".join(lines[node.lineno - 1 : end]),
-            ))
+            symbols.append(
+                CodeSymbol(
+                    name=node.name,
+                    kind="class",
+                    start_line=node.lineno,
+                    end_line=end,
+                    content="\n".join(lines[node.lineno - 1 : end]),
+                )
+            )
 
             # Also add individual methods for large classes
             if end - node.lineno > 50:
                 for child in ast.iter_child_nodes(node):
                     if isinstance(child, ast.FunctionDef | ast.AsyncFunctionDef):
                         child_end = child.end_lineno or child.lineno
-                        symbols.append(CodeSymbol(
-                            name=f"{node.name}.{child.name}",
-                            kind="method",
-                            start_line=child.lineno,
-                            end_line=child_end,
-                            content="\n".join(lines[child.lineno - 1 : child_end]),
-                            parent=node.name,
-                        ))
+                        symbols.append(
+                            CodeSymbol(
+                                name=f"{node.name}.{child.name}",
+                                kind="method",
+                                start_line=child.lineno,
+                                end_line=child_end,
+                                content="\n".join(lines[child.lineno - 1 : child_end]),
+                                parent=node.name,
+                            )
+                        )
 
     if not symbols:
         return _fallback_chunk(source, file_path)
@@ -123,12 +131,14 @@ def chunk_python(source: str, file_path: str) -> list[TextChunk]:
 
         seen_ranges.add(key)
         header = f"# {sym.kind}: {sym.name}\n" if sym.kind != "module_header" else ""
-        chunks.append(TextChunk(
-            content=header + sym.content,
-            source=file_path,
-            start_line=sym.start_line,
-            end_line=sym.end_line,
-        ))
+        chunks.append(
+            TextChunk(
+                content=header + sym.content,
+                source=file_path,
+                start_line=sym.start_line,
+                end_line=sym.end_line,
+            )
+        )
 
     # Capture any lines not covered by symbols (module-level code between functions)
     all_covered = set()
@@ -145,22 +155,26 @@ def chunk_python(source: str, file_path: str) -> list[TextChunk]:
             uncovered_lines.append(line)
         else:
             if uncovered_lines and len(uncovered_lines) >= 3:
-                chunks.append(TextChunk(
-                    content="\n".join(uncovered_lines),
-                    source=file_path,
-                    start_line=uncovered_start,
-                    end_line=i - 1,
-                ))
+                chunks.append(
+                    TextChunk(
+                        content="\n".join(uncovered_lines),
+                        source=file_path,
+                        start_line=uncovered_start,
+                        end_line=i - 1,
+                    )
+                )
             uncovered_lines = []
             uncovered_start = None
 
     if uncovered_lines and len(uncovered_lines) >= 3:
-        chunks.append(TextChunk(
-            content="\n".join(uncovered_lines),
-            source=file_path,
-            start_line=uncovered_start,
-            end_line=len(lines),
-        ))
+        chunks.append(
+            TextChunk(
+                content="\n".join(uncovered_lines),
+                source=file_path,
+                start_line=uncovered_start,
+                end_line=len(lines),
+            )
+        )
 
     chunks.sort(key=lambda c: c.start_line)
     return chunks
@@ -180,7 +194,9 @@ _LANG_PATTERNS: dict[str, re.Pattern] = {
         re.MULTILINE,
     ),
     "go": re.compile(r"^(?:func\s+(?:\(\w+\s+\*?\w+\)\s+)?\w+|type\s+\w+\s+struct)", re.MULTILINE),
-    "rs": re.compile(r"^(?:pub\s+)?(?:fn\s+\w+|struct\s+\w+|impl\s+|enum\s+\w+|trait\s+\w+)", re.MULTILINE),
+    "rs": re.compile(
+        r"^(?:pub\s+)?(?:fn\s+\w+|struct\s+\w+|impl\s+|enum\s+\w+|trait\s+\w+)", re.MULTILINE
+    ),
     "java": re.compile(
         r"^\s*(?:public|private|protected|static|\s)*(?:class\s+\w+|interface\s+\w+|\w+\s+\w+\s*\()",
         re.MULTILINE,
@@ -190,12 +206,18 @@ _LANG_PATTERNS: dict[str, re.Pattern] = {
 }
 
 _EXT_TO_LANG: dict[str, str] = {
-    ".js": "js", ".jsx": "js", ".mjs": "js",
-    ".ts": "ts", ".tsx": "ts",
+    ".js": "js",
+    ".jsx": "js",
+    ".mjs": "js",
+    ".ts": "ts",
+    ".tsx": "ts",
     ".go": "go",
     ".rs": "rs",
     ".java": "java",
-    ".c": "c", ".cpp": "c", ".h": "c", ".hpp": "c",
+    ".c": "c",
+    ".cpp": "c",
+    ".h": "c",
+    ".hpp": "c",
     ".rb": "rb",
 }
 
@@ -225,7 +247,7 @@ def _chunk_by_pattern(source: str, file_path: str, pattern: re.Pattern) -> list[
     # Find line numbers for each match
     boundaries: list[int] = []
     for m in matches:
-        line_num = source[:m.start()].count("\n") + 1
+        line_num = source[: m.start()].count("\n") + 1
         boundaries.append(line_num)
 
     chunks: list[TextChunk] = []
@@ -234,24 +256,28 @@ def _chunk_by_pattern(source: str, file_path: str, pattern: re.Pattern) -> list[
     if boundaries[0] > 1:
         header_lines = lines[: boundaries[0] - 1]
         if any(ln.strip() for ln in header_lines):
-            chunks.append(TextChunk(
-                content="\n".join(header_lines),
-                source=file_path,
-                start_line=1,
-                end_line=boundaries[0] - 1,
-            ))
+            chunks.append(
+                TextChunk(
+                    content="\n".join(header_lines),
+                    source=file_path,
+                    start_line=1,
+                    end_line=boundaries[0] - 1,
+                )
+            )
 
     # Chunks between boundaries
     for i, start in enumerate(boundaries):
         end = boundaries[i + 1] - 1 if i + 1 < len(boundaries) else len(lines)
         chunk_lines = lines[start - 1 : end]
         if any(ln.strip() for ln in chunk_lines):
-            chunks.append(TextChunk(
-                content="\n".join(chunk_lines),
-                source=file_path,
-                start_line=start,
-                end_line=end,
-            ))
+            chunks.append(
+                TextChunk(
+                    content="\n".join(chunk_lines),
+                    source=file_path,
+                    start_line=start,
+                    end_line=end,
+                )
+            )
 
     return chunks if chunks else _fallback_chunk(source, file_path)
 
@@ -266,10 +292,12 @@ def _fallback_chunk(source: str, file_path: str, max_lines: int = 80) -> list[Te
     for i in range(0, len(lines), max_lines):
         block = lines[i : i + max_lines]
         if any(ln.strip() for ln in block):
-            chunks.append(TextChunk(
-                content="\n".join(block),
-                source=file_path,
-                start_line=i + 1,
-                end_line=min(i + max_lines, len(lines)),
-            ))
+            chunks.append(
+                TextChunk(
+                    content="\n".join(block),
+                    source=file_path,
+                    start_line=i + 1,
+                    end_line=min(i + max_lines, len(lines)),
+                )
+            )
     return chunks

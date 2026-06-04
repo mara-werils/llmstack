@@ -6,7 +6,6 @@ import asyncio
 import sys
 
 
-
 def mcp_serve(
     model: str | None = None,
     ollama_url: str = "http://localhost:11434",
@@ -15,6 +14,7 @@ def mcp_serve(
     """Start the MCP server on stdin/stdout."""
     # Log to stderr so stdout stays clean for JSON-RPC
     import logging
+
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s %(name)s %(levelname)s %(message)s",
@@ -24,11 +24,13 @@ def mcp_serve(
     # Print startup info to stderr
     print(f"llmstack MCP server starting (model={model or 'llama3.2'})", file=sys.stderr)
 
-    asyncio.run(_mcp_async(
-        model=model,
-        ollama_url=ollama_url,
-        working_dir=working_dir,
-    ))
+    asyncio.run(
+        _mcp_async(
+            model=model,
+            ollama_url=ollama_url,
+            working_dir=working_dir,
+        )
+    )
 
 
 async def _mcp_async(

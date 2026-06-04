@@ -30,7 +30,8 @@ def tmp_txt(tmp_path: Path) -> Path:
 def tmp_py(tmp_path: Path) -> Path:
     """Create a simple Python file."""
     f = tmp_path / "sample.py"
-    f.write_text(textwrap.dedent("""\
+    f.write_text(
+        textwrap.dedent("""\
         import os
 
         def greet(name):
@@ -42,7 +43,8 @@ def tmp_py(tmp_path: Path) -> Path:
 
             def say_hello(self):
                 return f"Hello, {self.name}"
-    """))
+    """)
+    )
     return f
 
 
@@ -74,11 +76,27 @@ def tmp_md(tmp_path: Path) -> Path:
 def sample_chunks() -> list[TextChunk]:
     """Create sample chunks for testing."""
     return [
-        TextChunk(content="Python is a programming language.", source="test.py", start_line=1, end_line=5),
-        TextChunk(content="JavaScript runs in the browser.", source="test.js", start_line=1, end_line=3),
-        TextChunk(content="Rust is a systems programming language.", source="test.rs", start_line=1, end_line=4),
-        TextChunk(content="HTML is a markup language.", source="test.html", start_line=1, end_line=2),
-        TextChunk(content="Docker containers isolate applications.", source="test.md", start_line=1, end_line=3),
+        TextChunk(
+            content="Python is a programming language.", source="test.py", start_line=1, end_line=5
+        ),
+        TextChunk(
+            content="JavaScript runs in the browser.", source="test.js", start_line=1, end_line=3
+        ),
+        TextChunk(
+            content="Rust is a systems programming language.",
+            source="test.rs",
+            start_line=1,
+            end_line=4,
+        ),
+        TextChunk(
+            content="HTML is a markup language.", source="test.html", start_line=1, end_line=2
+        ),
+        TextChunk(
+            content="Docker containers isolate applications.",
+            source="test.md",
+            start_line=1,
+            end_line=3,
+        ),
     ]
 
 
@@ -241,7 +259,12 @@ class TestPromptBuilding:
 
     def test_build_sources(self) -> None:
         chunks = [
-            (TextChunk(content="hello world content here", source="a.py", start_line=1, end_line=5), 0.8912),
+            (
+                TextChunk(
+                    content="hello world content here", source="a.py", start_line=1, end_line=5
+                ),
+                0.8912,
+            ),
         ]
         sources = _build_sources(chunks)
         assert len(sources) == 1
@@ -291,6 +314,7 @@ class TestStdinDetection:
     def test_isatty_detection(self) -> None:
         """Verify sys.stdin.isatty can be checked without error."""
         import sys
+
         # This just verifies the mechanism works — in a test runner,
         # stdin may or may not be a tty
         result = sys.stdin.isatty()

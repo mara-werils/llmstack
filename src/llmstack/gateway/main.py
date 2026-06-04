@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import os
+import time
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -28,6 +30,7 @@ from llmstack.gateway.routes.cost import router as cost_router
 from llmstack.gateway.routes.webhooks import router as webhooks_router
 from llmstack.gateway.routes.batch import router as batch_router
 from llmstack.gateway.routes.leaderboard import router as leaderboard_router
+from llmstack.gateway.routes.widget import router as widget_router
 from llmstack.gateway.middleware.auth import AuthMiddleware
 from llmstack.gateway.middleware.metrics import MetricsMiddleware
 from llmstack.gateway.middleware.rate_limit import RateLimitMiddleware
@@ -106,7 +109,8 @@ def _init_router() -> None:
     init_router(router, stats)
     logger.info(
         "Smart Model Router initialised: %d models, strategy=%s",
-        len(tiers), strategy,
+        len(tiers),
+        strategy,
     )
 
 
@@ -143,7 +147,9 @@ def _init_providers() -> None:
     from llmstack.gateway.providers.anthropic_provider import AnthropicProvider
     from llmstack.gateway.providers.google_provider import GoogleProvider
     from llmstack.gateway.providers.openai_compat import (
-        GroqProvider, TogetherProvider, MistralProvider,
+        GroqProvider,
+        TogetherProvider,
+        MistralProvider,
     )
 
     _PROVIDER_CLASSES = {
@@ -218,11 +224,22 @@ def _init_observe() -> None:
 async def lifespan(app: FastAPI):
     """Startup: connect cache, init router, providers, observe. Shutdown: close connections."""
     from llmstack.gateway.cache import get_cache
+
     cache = await get_cache()
     _init_router()
     _init_providers()
     _init_observe()
     yield
+    # Graceful shutdown: wait for in-flight requests to drain
+    from llmstack.gateway.middleware.metrics import get_active_requests
+
+    deadline = time.monotonic() + 30  # 30 s drain timeout
+    while get_active_requests() > 0 and time.monotonic() < deadline:
+        await asyncio.sleep(0.5)
+    # Close persistent connection pool
+    from llmstack.gateway.proxy import close_pool
+
+    await close_pool()
     await cache.close()
 
 
@@ -322,6 +339,11 @@ def create_app() -> FastAPI:
 
     # CORS
     cors_origins = os.getenv("LLMSTACK_CORS_ORIGINS", "*").split(",")
+    if cors_origins == ["*"] and os.getenv("LLMSTACK_ENV", "") == "production":
+        logger.warning(
+            "CORS is set to allow all origins ('*') in production mode. "
+            "Set LLMSTACK_CORS_ORIGINS to restrict allowed origins."
+        )
     app.add_middleware(
         CORSMiddleware,
         allow_origins=cors_origins,
@@ -370,9 +392,11 @@ def create_app() -> FastAPI:
     app.include_router(batch_router, prefix="/v1")
     app.include_router(leaderboard_router, prefix="/v1")
     app.include_router(health_router)
+    app.include_router(widget_router)
 
     # Serve Web UI
     if _UI_DIR.is_dir():
+
         @app.get("/", include_in_schema=False)
         async def serve_ui():
             return FileResponse(_UI_DIR / "index.html", media_type="text/html")

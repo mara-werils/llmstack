@@ -12,6 +12,7 @@ from pathlib import Path
 @dataclass
 class Snippet:
     """A saved code snippet."""
+
     id: str
     title: str
     code: str
@@ -61,6 +62,7 @@ class SnippetManager:
 
     def _generate_id(self) -> str:
         import hashlib
+
         return hashlib.sha256(str(time.time()).encode()).hexdigest()[:12]
 
     def save(
@@ -89,12 +91,23 @@ class SnippetManager:
         with sqlite3.connect(self.db_path) as conn:
             conn.execute(
                 "INSERT INTO snippets VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                (snippet.id, snippet.title, snippet.code, snippet.language,
-                 json.dumps(snippet.tags), snippet.description, snippet.source_file,
-                 snippet.created_at, snippet.updated_at, snippet.usage_count),
+                (
+                    snippet.id,
+                    snippet.title,
+                    snippet.code,
+                    snippet.language,
+                    json.dumps(snippet.tags),
+                    snippet.description,
+                    snippet.source_file,
+                    snippet.created_at,
+                    snippet.updated_at,
+                    snippet.usage_count,
+                ),
             )
             # Index for search
-            search_content = f"{snippet.title} {snippet.description} {' '.join(snippet.tags)} {snippet.code}"
+            search_content = (
+                f"{snippet.title} {snippet.description} {' '.join(snippet.tags)} {snippet.code}"
+            )
             conn.execute(
                 "INSERT OR REPLACE INTO snippet_fts VALUES (?, ?)",
                 (snippet.id, search_content.lower()),
@@ -103,7 +116,9 @@ class SnippetManager:
 
         return snippet
 
-    def search(self, query: str, language: str | None = None, tag: str | None = None, limit: int = 20) -> list[Snippet]:
+    def search(
+        self, query: str, language: str | None = None, tag: str | None = None, limit: int = 20
+    ) -> list[Snippet]:
         """Search snippets by query, language, or tag."""
         with sqlite3.connect(self.db_path) as conn:
             conn.row_factory = sqlite3.Row

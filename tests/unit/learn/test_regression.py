@@ -122,6 +122,7 @@ class TestRegressionDetector:
 
         # High variance data — should not trigger alert due to low confidence
         import random
+
         random.seed(42)
         for _ in range(10):
             # Mix of high and low values — high variance

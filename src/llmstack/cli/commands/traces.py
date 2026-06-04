@@ -20,6 +20,7 @@ def traces(
     if not url:
         try:
             from llmstack.config.loader import load_config
+
             config = load_config()
             url = f"http://localhost:{config.gateway.port}"
         except (FileNotFoundError, SystemExit):
@@ -71,7 +72,7 @@ def traces(
         tokens = f"{inp}+{out}"
 
         latency_ms = t.get("latency_ms", 0)
-        latency_str = f"{latency_ms:.0f}ms" if latency_ms < 1000 else f"{latency_ms/1000:.1f}s"
+        latency_str = f"{latency_ms:.0f}ms" if latency_ms < 1000 else f"{latency_ms / 1000:.1f}s"
 
         cost_usd = t.get("cost_usd", 0.0)
         cost_str = f"${cost_usd:.4f}" if cost_usd > 0 else "-"
@@ -86,9 +87,14 @@ def traces(
         tier_style = {"simple": "green", "medium": "yellow", "complex": "magenta"}.get(tier, "")
 
         table.add_row(
-            ts, model, provider,
+            ts,
+            model,
+            provider,
             f"[{tier_style}]{tier}[/]" if tier_style else tier,
-            tokens, latency_str, cost_str, q_str,
+            tokens,
+            latency_str,
+            cost_str,
+            q_str,
             f"[{cache_style}]{cached}[/]",
         )
 

@@ -25,7 +25,7 @@ class DPOConfig:
 
     base_model: str = "unsloth/llama-3.2-1b-instruct-bnb-4bit"
     output_dir: str = str(Path.home() / ".llmstack" / "training" / "dpo")
-    beta: float = 0.1               # DPO temperature parameter
+    beta: float = 0.1  # DPO temperature parameter
     learning_rate: float = 5e-6
     epochs: int = 1
     batch_size: int = 2
@@ -74,6 +74,7 @@ def _check_dpo_dependencies() -> tuple[bool, str]:
         import trl  # noqa: F401
         import transformers  # noqa: F401
         import peft  # noqa: F401
+
         return True, "trl + peft"
     except ImportError:
         return False, "missing"
@@ -91,9 +92,7 @@ class DPOTrainer:
         self.config = config or DPOConfig()
         self._progress_callback: Callable[[int, int, float], None] | None = None
 
-    def set_progress_callback(
-        self, callback: Callable[[int, int, float], None]
-    ) -> None:
+    def set_progress_callback(self, callback: Callable[[int, int, float], None]) -> None:
         """Set progress callback: callback(step, total_steps, loss)."""
         self._progress_callback = callback
 
@@ -152,6 +151,7 @@ class DPOTrainer:
         bnb_config = None
         if cfg.use_4bit:
             import torch
+
             bnb_config = BitsAndBytesConfig(
                 load_in_4bit=True,
                 bnb_4bit_compute_dtype=torch.bfloat16,
@@ -167,7 +167,8 @@ class DPOTrainer:
             trust_remote_code=True,
         )
         tokenizer = AutoTokenizer.from_pretrained(
-            cfg.base_model, trust_remote_code=True,
+            cfg.base_model,
+            trust_remote_code=True,
         )
         if tokenizer.pad_token is None:
             tokenizer.pad_token = tokenizer.eos_token
@@ -183,14 +184,16 @@ class DPOTrainer:
         )
 
         # Prepare dataset
-        dataset = Dataset.from_list([
-            {
-                "prompt": ex.prompt,
-                "chosen": ex.chosen,
-                "rejected": ex.rejected,
-            }
-            for ex in examples
-        ])
+        dataset = Dataset.from_list(
+            [
+                {
+                    "prompt": ex.prompt,
+                    "chosen": ex.chosen,
+                    "rejected": ex.rejected,
+                }
+                for ex in examples
+            ]
+        )
 
         # DPO training config
         training_args = TRLDPOConfig(
@@ -254,9 +257,14 @@ def prepare_dpo_dataset(examples: list[DPOExample], output_path: Path) -> Path:
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with open(output_path, "w") as f:
         for ex in examples:
-            f.write(json.dumps({
-                "prompt": ex.prompt,
-                "chosen": ex.chosen,
-                "rejected": ex.rejected,
-            }) + "\n")
+            f.write(
+                json.dumps(
+                    {
+                        "prompt": ex.prompt,
+                        "chosen": ex.chosen,
+                        "rejected": ex.rejected,
+                    }
+                )
+                + "\n"
+            )
     return output_path

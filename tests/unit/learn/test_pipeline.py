@@ -116,9 +116,7 @@ class TestLearningPipeline:
                 f"def calc(lst): return bad_answer_{i}",
                 model="llama3.2",
             )
-            collector.correct(
-                f"def calc(lst): return good_answer_{i} # with proper implementation"
-            )
+            collector.correct(f"def calc(lst): return good_answer_{i} # with proper implementation")
 
         # Verify dataset can be generated
         dataset = pipeline.dataset_gen.generate()

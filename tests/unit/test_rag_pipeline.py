@@ -12,7 +12,11 @@ class TestContextBuilding:
 
     def test_single_result(self):
         results = [
-            SearchResult(text="Python is a programming language.", score=0.92, metadata={"source": "docs.txt"}),
+            SearchResult(
+                text="Python is a programming language.",
+                score=0.92,
+                metadata={"source": "docs.txt"},
+            ),
         ]
         context = RAGPipeline._build_context(results)
         assert "docs.txt" in context

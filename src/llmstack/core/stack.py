@@ -65,13 +65,15 @@ class Stack:
         qdrant_url = f"http://llmstack-qdrant:{self.config.services.vectors.port}"
         redis_url = f"redis://llmstack-redis:{self.config.services.cache.port}"
 
-        services.append(GatewayService(
-            config=self.config.gateway,
-            inference_url=inference_url,
-            embeddings_url=embeddings_url,
-            qdrant_url=qdrant_url,
-            redis_url=redis_url,
-        ))
+        services.append(
+            GatewayService(
+                config=self.config.gateway,
+                inference_url=inference_url,
+                embeddings_url=embeddings_url,
+                qdrant_url=qdrant_url,
+                redis_url=redis_url,
+            )
+        )
 
         # 6. Observability (optional)
         if self.config.observe.metrics:
@@ -158,12 +160,14 @@ class Stack:
                 if first and isinstance(first, list) and first:
                     port = first[0].get("HostPort")
 
-            result.append(ServiceStatus(
-                name=info["name"],
-                state=state,
-                port=int(port) if port else None,
-                container_id=info["container_id"],
-            ))
+            result.append(
+                ServiceStatus(
+                    name=info["name"],
+                    state=state,
+                    port=int(port) if port else None,
+                    container_id=info["container_id"],
+                )
+            )
         return result
 
     def _get_inference_url(self) -> str:
@@ -213,6 +217,6 @@ class Stack:
             console.print(
                 f"  curl {base}/v1/chat/completions \\\n"
                 f"    -H 'Content-Type: application/json' \\\n"
-                f"    -d '{{\"model\":\"{model}\",\"messages\":[{{\"role\":\"user\",\"content\":\"Hello!\"}}]}}'"
+                f'    -d \'{{"model":"{model}","messages":[{{"role":"user","content":"Hello!"}}]}}\''
             )
         console.print()

@@ -28,10 +28,10 @@ logger = logging.getLogger(__name__)
 class DatasetStrategy(str, Enum):
     """Strategy for generating training data from feedback."""
 
-    SFT = "sft"           # Supervised fine-tuning on corrections
-    DPO = "dpo"           # Direct preference optimization pairs
+    SFT = "sft"  # Supervised fine-tuning on corrections
+    DPO = "dpo"  # Direct preference optimization pairs
     POSITIVE = "positive"  # Only high-quality approved responses
-    MIXED = "mixed"        # Combine all strategies
+    MIXED = "mixed"  # Combine all strategies
 
 
 @dataclass
@@ -92,16 +92,21 @@ class GeneratedDataset:
 
         # Save metadata
         meta_path = output_dir / f"dataset_{self.id}_meta.json"
-        meta_path.write_text(json.dumps({
-            "id": self.id,
-            "timestamp": self.timestamp,
-            "strategy": self.strategy.value,
-            "sft_count": len(self.sft_examples),
-            "dpo_count": len(self.dpo_examples),
-            "total": self.total_examples,
-            "feedback_count": len(self.feedback_ids),
-            "stats": self.stats,
-        }, indent=2))
+        meta_path.write_text(
+            json.dumps(
+                {
+                    "id": self.id,
+                    "timestamp": self.timestamp,
+                    "strategy": self.strategy.value,
+                    "sft_count": len(self.sft_examples),
+                    "dpo_count": len(self.dpo_examples),
+                    "total": self.total_examples,
+                    "feedback_count": len(self.feedback_ids),
+                    "stats": self.stats,
+                },
+                indent=2,
+            )
+        )
 
         return dataset_path
 
@@ -176,9 +181,7 @@ class DatasetGenerator:
 
         return dataset
 
-    def _generate_sft(
-        self, feedback: list[Feedback], max_examples: int
-    ) -> list[TrainingExample]:
+    def _generate_sft(self, feedback: list[Feedback], max_examples: int) -> list[TrainingExample]:
         """Generate SFT examples from corrections and edits."""
         examples: list[TrainingExample] = []
 
@@ -191,39 +194,43 @@ class DatasetGenerator:
 
             # Corrections: use the user's correction as the target
             if fb.feedback_type == FeedbackType.CORRECTION and fb.correction:
-                examples.append(TrainingExample(
-                    messages=[
-                        {"role": "user", "content": fb.query},
-                        {"role": "assistant", "content": fb.correction},
-                    ],
-                    metadata={"source": "correction", "feedback_id": fb.id},
-                ))
+                examples.append(
+                    TrainingExample(
+                        messages=[
+                            {"role": "user", "content": fb.query},
+                            {"role": "assistant", "content": fb.correction},
+                        ],
+                        metadata={"source": "correction", "feedback_id": fb.id},
+                    )
+                )
 
             # Edits: apply the diff to get the corrected response
             elif fb.feedback_type == FeedbackType.EDIT and fb.correction:
-                examples.append(TrainingExample(
-                    messages=[
-                        {"role": "user", "content": fb.query},
-                        {"role": "assistant", "content": fb.correction},
-                    ],
-                    metadata={"source": "edit", "feedback_id": fb.id},
-                ))
+                examples.append(
+                    TrainingExample(
+                        messages=[
+                            {"role": "user", "content": fb.query},
+                            {"role": "assistant", "content": fb.correction},
+                        ],
+                        metadata={"source": "edit", "feedback_id": fb.id},
+                    )
+                )
 
             # Thumbs up: the original response is good training data
             elif fb.feedback_type == FeedbackType.THUMBS_UP:
-                examples.append(TrainingExample(
-                    messages=[
-                        {"role": "user", "content": fb.query},
-                        {"role": "assistant", "content": fb.response},
-                    ],
-                    metadata={"source": "approved", "feedback_id": fb.id},
-                ))
+                examples.append(
+                    TrainingExample(
+                        messages=[
+                            {"role": "user", "content": fb.query},
+                            {"role": "assistant", "content": fb.response},
+                        ],
+                        metadata={"source": "approved", "feedback_id": fb.id},
+                    )
+                )
 
         return examples
 
-    def _generate_dpo(
-        self, feedback: list[Feedback], max_examples: int
-    ) -> list[DPOExample]:
+    def _generate_dpo(self, feedback: list[Feedback], max_examples: int) -> list[DPOExample]:
         """Generate DPO preference pairs."""
         examples: list[DPOExample] = []
 
@@ -236,31 +243,37 @@ class DatasetGenerator:
 
             # Corrections give us a clear preference pair
             if fb.feedback_type == FeedbackType.CORRECTION and fb.correction:
-                examples.append(DPOExample(
-                    prompt=fb.query,
-                    chosen=fb.correction,
-                    rejected=fb.response,
-                    metadata={"source": "correction", "feedback_id": fb.id},
-                ))
+                examples.append(
+                    DPOExample(
+                        prompt=fb.query,
+                        chosen=fb.correction,
+                        rejected=fb.response,
+                        metadata={"source": "correction", "feedback_id": fb.id},
+                    )
+                )
 
             # Explicit preferences (A/B testing)
             elif fb.feedback_type == FeedbackType.PREFERENCE:
                 if fb.correction and fb.preferred_over:
-                    examples.append(DPOExample(
-                        prompt=fb.query,
-                        chosen=fb.correction,
-                        rejected=fb.preferred_over,
-                        metadata={"source": "preference", "feedback_id": fb.id},
-                    ))
+                    examples.append(
+                        DPOExample(
+                            prompt=fb.query,
+                            chosen=fb.correction,
+                            rejected=fb.preferred_over,
+                            metadata={"source": "preference", "feedback_id": fb.id},
+                        )
+                    )
 
             # Edits imply the edited version is preferred
             elif fb.feedback_type == FeedbackType.EDIT and fb.correction:
-                examples.append(DPOExample(
-                    prompt=fb.query,
-                    chosen=fb.correction,
-                    rejected=fb.response,
-                    metadata={"source": "edit", "feedback_id": fb.id},
-                ))
+                examples.append(
+                    DPOExample(
+                        prompt=fb.query,
+                        chosen=fb.correction,
+                        rejected=fb.response,
+                        metadata={"source": "edit", "feedback_id": fb.id},
+                    )
+                )
 
         return examples
 
@@ -278,13 +291,15 @@ class DatasetGenerator:
                 continue
 
             if fb.is_positive:
-                examples.append(TrainingExample(
-                    messages=[
-                        {"role": "user", "content": fb.query},
-                        {"role": "assistant", "content": fb.response},
-                    ],
-                    metadata={"source": "positive", "feedback_id": fb.id},
-                ))
+                examples.append(
+                    TrainingExample(
+                        messages=[
+                            {"role": "user", "content": fb.query},
+                            {"role": "assistant", "content": fb.response},
+                        ],
+                        metadata={"source": "positive", "feedback_id": fb.id},
+                    )
+                )
 
         return examples
 

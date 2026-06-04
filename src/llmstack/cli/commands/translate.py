@@ -23,12 +23,26 @@ If there are language-specific constructs that don't have a direct equivalent,
 use the closest idiomatic alternative and add a brief comment explaining the difference."""
 
 LANGUAGE_EXTENSIONS = {
-    "python": ".py", "javascript": ".js", "typescript": ".ts",
-    "go": ".go", "rust": ".rs", "java": ".java", "cpp": ".cpp",
-    "c": ".c", "ruby": ".rb", "php": ".php", "swift": ".swift",
-    "kotlin": ".kt", "scala": ".scala", "dart": ".dart",
-    "csharp": ".cs", "lua": ".lua", "elixir": ".ex",
-    "haskell": ".hs", "zig": ".zig", "nim": ".nim",
+    "python": ".py",
+    "javascript": ".js",
+    "typescript": ".ts",
+    "go": ".go",
+    "rust": ".rs",
+    "java": ".java",
+    "cpp": ".cpp",
+    "c": ".c",
+    "ruby": ".rb",
+    "php": ".php",
+    "swift": ".swift",
+    "kotlin": ".kt",
+    "scala": ".scala",
+    "dart": ".dart",
+    "csharp": ".cs",
+    "lua": ".lua",
+    "elixir": ".ex",
+    "haskell": ".hs",
+    "zig": ".zig",
+    "nim": ".nim",
 }
 
 EXTENSION_TO_LANG = {v: k for k, v in LANGUAGE_EXTENSIONS.items()}
@@ -43,10 +57,16 @@ def translate(
     write: bool = False,
 ) -> None:
     """Translate source code to another programming language."""
-    asyncio.run(_translate_async(
-        file=file, to_lang=to_lang, model=model,
-        ollama_url=ollama_url, output=output, write=write,
-    ))
+    asyncio.run(
+        _translate_async(
+            file=file,
+            to_lang=to_lang,
+            model=model,
+            ollama_url=ollama_url,
+            output=output,
+            write=write,
+        )
+    )
 
 
 def _detect_language(file_path: Path) -> str:
@@ -74,9 +94,15 @@ async def _translate_async(
 
     # Normalize language name
     lang_aliases = {
-        "py": "python", "js": "javascript", "ts": "typescript",
-        "rb": "ruby", "rs": "rust", "cs": "csharp", "c++": "cpp",
-        "c#": "csharp", "kt": "kotlin",
+        "py": "python",
+        "js": "javascript",
+        "ts": "typescript",
+        "rb": "ruby",
+        "rs": "rust",
+        "cs": "csharp",
+        "c++": "cpp",
+        "c#": "csharp",
+        "kt": "kotlin",
     }
     to_lang = lang_aliases.get(to_lang, to_lang)
 
@@ -93,10 +119,13 @@ async def _translate_async(
                 console.print("[error]Ollama is not responding.[/]")
                 raise typer.Exit(1)
     except httpx.ConnectError:
-        console.print(Panel(
-            "[error]Cannot connect to Ollama.[/]\n\nMake sure Ollama is running:\n  [bold cyan]ollama serve[/]",
-            title="Connection Error", border_style="red",
-        ))
+        console.print(
+            Panel(
+                "[error]Cannot connect to Ollama.[/]\n\nMake sure Ollama is running:\n  [bold cyan]ollama serve[/]",
+                title="Connection Error",
+                border_style="red",
+            )
+        )
         raise typer.Exit(1)
 
     file_path = Path(file)
@@ -108,7 +137,9 @@ async def _translate_async(
     from_lang = _detect_language(file_path)
 
     console.print()
-    console.print(f"[bold]llmstack translate[/]  [cyan]{from_lang}[/] → [green]{to_lang}[/]  model=[dim]{model}[/]")
+    console.print(
+        f"[bold]llmstack translate[/]  [cyan]{from_lang}[/] → [green]{to_lang}[/]  model=[dim]{model}[/]"
+    )
     console.print(f"  [dim]Source: {file_path} ({len(source_code)} chars)[/]")
     console.print()
 
@@ -138,7 +169,8 @@ Output only the translated {to_lang} code, no explanations."""
         timeout = httpx.Timeout(300, connect=10, read=300, write=30)
         async with httpx.AsyncClient(timeout=timeout) as client:
             async with client.stream(
-                "POST", f"{ollama_url}/api/chat",
+                "POST",
+                f"{ollama_url}/api/chat",
                 json={
                     "model": model,
                     "messages": [
@@ -178,24 +210,35 @@ Output only the translated {to_lang} code, no explanations."""
         translated = "\n".join(cleaned).strip()
         if not translated:
             # fallback: just strip first and last ``` lines
-            translated = "\n".join(
-                ln for ln in lines if not ln.strip().startswith("```")
-            ).strip()
+            translated = "\n".join(ln for ln in lines if not ln.strip().startswith("```")).strip()
 
     # Display result
     syntax_map = {
-        "python": "python", "javascript": "javascript", "typescript": "typescript",
-        "go": "go", "rust": "rust", "java": "java", "cpp": "cpp", "c": "c",
-        "ruby": "ruby", "php": "php", "swift": "swift", "kotlin": "kotlin",
-        "csharp": "csharp", "lua": "lua", "dart": "dart",
+        "python": "python",
+        "javascript": "javascript",
+        "typescript": "typescript",
+        "go": "go",
+        "rust": "rust",
+        "java": "java",
+        "cpp": "cpp",
+        "c": "c",
+        "ruby": "ruby",
+        "php": "php",
+        "swift": "swift",
+        "kotlin": "kotlin",
+        "csharp": "csharp",
+        "lua": "lua",
+        "dart": "dart",
     }
     console.print()
-    console.print(Syntax(
-        translated,
-        syntax_map.get(to_lang, to_lang),
-        theme="monokai",
-        line_numbers=True,
-    ))
+    console.print(
+        Syntax(
+            translated,
+            syntax_map.get(to_lang, to_lang),
+            theme="monokai",
+            line_numbers=True,
+        )
+    )
 
     # Write output
     if write or output:

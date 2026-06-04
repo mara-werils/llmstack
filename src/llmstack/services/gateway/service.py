@@ -32,6 +32,7 @@ class GatewayService(ServiceBase):
     def build_info(self) -> dict[str, str] | None:
         """Return build context for the gateway Docker image."""
         import llmstack
+
         pkg_dir = Path(llmstack.__file__).resolve().parent
         dockerfile = str(pkg_dir / "gateway" / "Dockerfile")
         return {

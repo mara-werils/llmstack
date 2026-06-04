@@ -56,15 +56,13 @@ def quickstart(
             resp = httpx.get(f"{ollama_url}/api/tags", timeout=5)
             available = [m.get("name", "") for m in resp.json().get("models", [])]
             # Check both exact and prefix match
-            has_model = any(
-                name == model or name.startswith(f"{model}:")
-                for name in available
-            )
+            has_model = any(name == model or name.startswith(f"{model}:") for name in available)
             if has_model:
                 success(f"Model '{model}' is available")
             else:
                 warn(f"Model '{model}' not found locally, pulling...")
                 from llmstack.cli.commands.pull import pull
+
                 pull(model=model, ollama_url=ollama_url)
         except Exception as exc:
             failure(f"Model check failed: {exc}")
@@ -77,6 +75,7 @@ def quickstart(
         success("llmstack.yaml already exists")
     else:
         from llmstack.cli.commands.init import init
+
         init(preset="chat")
         success("Created llmstack.yaml with 'chat' preset")
 

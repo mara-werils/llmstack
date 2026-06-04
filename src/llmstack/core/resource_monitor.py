@@ -76,14 +76,14 @@ class ResourceMonitor:
             memory_total_mb=int(mem.total / (1024 * 1024)),
             memory_used_mb=int(mem.used / (1024 * 1024)),
             memory_percent=mem.percent,
-            disk_total_gb=disk.total / (1024 ** 3),
-            disk_used_gb=disk.used / (1024 ** 3),
+            disk_total_gb=disk.total / (1024**3),
+            disk_used_gb=disk.used / (1024**3),
             disk_percent=disk.percent,
         )
 
         self._history.append(snap)
         if len(self._history) > self._max_history:
-            self._history = self._history[-self._max_history:]
+            self._history = self._history[-self._max_history :]
 
         return snap
 
@@ -134,8 +134,6 @@ class ResourceMonitor:
             "samples": len(recent),
             "period_minutes": minutes,
             "cpu_avg": round(sum(s.cpu_percent for s in recent) / len(recent), 1),
-            "memory_avg_pct": round(
-                sum(s.memory_percent for s in recent) / len(recent), 1
-            ),
+            "memory_avg_pct": round(sum(s.memory_percent for s in recent) / len(recent), 1),
             "disk_latest_pct": round(recent[-1].disk_percent, 1),
         }

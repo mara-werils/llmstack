@@ -121,46 +121,64 @@ class MCPServer:
         # Add agent tools
         for tool in self.tools.all_tools():
             schema = tool.schema()["function"]
-            tools.append({
-                "name": schema["name"],
-                "description": schema["description"],
-                "inputSchema": schema["parameters"],
-            })
+            tools.append(
+                {
+                    "name": schema["name"],
+                    "description": schema["description"],
+                    "inputSchema": schema["parameters"],
+                }
+            )
 
         # Add LLM-specific tools
-        tools.append({
-            "name": "llmstack_chat",
-            "description": "Send a message to the local LLM and get a response. "
-                          "Use this for reasoning, code generation, or any LLM task.",
-            "inputSchema": {
-                "type": "object",
-                "properties": {
-                    "message": {"type": "string", "description": "The message to send to the LLM"},
-                    "system": {"type": "string", "description": "Optional system prompt"},
-                    "model": {"type": "string", "description": f"Model name (default: {self.model})"},
-                },
-                "required": ["message"],
-            },
-        })
-
-        tools.append({
-            "name": "llmstack_ask",
-            "description": "Ask a question about local files using RAG. "
-                          "Parses files, finds relevant context, and generates an answer with citations.",
-            "inputSchema": {
-                "type": "object",
-                "properties": {
-                    "question": {"type": "string", "description": "Question to ask about the files"},
-                    "paths": {
-                        "type": "array",
-                        "items": {"type": "string"},
-                        "description": "File or directory paths to search",
+        tools.append(
+            {
+                "name": "llmstack_chat",
+                "description": "Send a message to the local LLM and get a response. "
+                "Use this for reasoning, code generation, or any LLM task.",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "message": {
+                            "type": "string",
+                            "description": "The message to send to the LLM",
+                        },
+                        "system": {"type": "string", "description": "Optional system prompt"},
+                        "model": {
+                            "type": "string",
+                            "description": f"Model name (default: {self.model})",
+                        },
                     },
-                    "model": {"type": "string", "description": f"Model name (default: {self.model})"},
+                    "required": ["message"],
                 },
-                "required": ["question", "paths"],
-            },
-        })
+            }
+        )
+
+        tools.append(
+            {
+                "name": "llmstack_ask",
+                "description": "Ask a question about local files using RAG. "
+                "Parses files, finds relevant context, and generates an answer with citations.",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "question": {
+                            "type": "string",
+                            "description": "Question to ask about the files",
+                        },
+                        "paths": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                            "description": "File or directory paths to search",
+                        },
+                        "model": {
+                            "type": "string",
+                            "description": f"Model name (default: {self.model})",
+                        },
+                    },
+                    "required": ["question", "paths"],
+                },
+            }
+        )
 
         return {"tools": tools}
 
@@ -229,7 +247,8 @@ class MCPServer:
 
         try:
             engine = AskEngine(
-                ollama_url=self.ollama_url, model=model,
+                ollama_url=self.ollama_url,
+                model=model,
                 embed_model="nomic-embed-text",
             )
             await engine.load(paths, show_progress=False)
@@ -263,9 +282,11 @@ class MCPServer:
 # Stdio I/O helpers
 # ---------------------------------------------------------------------------
 
+
 async def _read_line() -> str | None:
     """Read a single line from stdin (async-compatible via thread)."""
     import asyncio
+
     loop = asyncio.get_event_loop()
     try:
         line = await loop.run_in_executor(None, sys.stdin.readline)

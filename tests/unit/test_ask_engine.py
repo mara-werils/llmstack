@@ -64,7 +64,9 @@ class TestBuildContext:
         ctx = _build_context([])
         assert ctx == ""
 
-    def test_context_contains_separators(self, scored_chunks: list[tuple[TextChunk, float]]) -> None:
+    def test_context_contains_separators(
+        self, scored_chunks: list[tuple[TextChunk, float]]
+    ) -> None:
         ctx = _build_context(scored_chunks)
         assert ctx.count("---") >= 4  # at least 2 per chunk (before/after)
 
@@ -221,7 +223,9 @@ class TestAskStreaming:
         mock_resp = _make_stream_mock(lines)
 
         with (
-            patch.object(engine.embeddings, "search", new_callable=AsyncMock, return_value=search_result),
+            patch.object(
+                engine.embeddings, "search", new_callable=AsyncMock, return_value=search_result
+            ),
             patch.object(engine._client, "stream", return_value=mock_resp),
         ):
             tokens = []
@@ -243,7 +247,9 @@ class TestAskStreaming:
         mock_resp = _make_stream_mock(lines)
 
         with (
-            patch.object(engine.embeddings, "search", new_callable=AsyncMock, return_value=search_result),
+            patch.object(
+                engine.embeddings, "search", new_callable=AsyncMock, return_value=search_result
+            ),
             patch.object(engine._client, "stream", return_value=mock_resp),
         ):
             tokens = []
@@ -264,7 +270,9 @@ class TestAskStreaming:
         mock_resp = _make_stream_mock(lines)
 
         with (
-            patch.object(engine.embeddings, "search", new_callable=AsyncMock, return_value=search_result),
+            patch.object(
+                engine.embeddings, "search", new_callable=AsyncMock, return_value=search_result
+            ),
             patch.object(engine._client, "stream", return_value=mock_resp),
         ):
             tokens = []
@@ -306,7 +314,9 @@ class TestAskFull:
         mock_resp.json.return_value = {"message": {"content": "The answer is foo."}}
 
         with (
-            patch.object(engine.embeddings, "search", new_callable=AsyncMock, return_value=search_result),
+            patch.object(
+                engine.embeddings, "search", new_callable=AsyncMock, return_value=search_result
+            ),
             patch.object(engine._client, "post", new_callable=AsyncMock, return_value=mock_resp),
         ):
             result = await engine.ask_full("What is foo?")

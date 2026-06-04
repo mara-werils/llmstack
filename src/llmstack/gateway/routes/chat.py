@@ -8,8 +8,11 @@ import time
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, StreamingResponse
 
+from pydantic import ValidationError
+
 from llmstack.gateway.circuit_breaker import CircuitBreakerError
 from llmstack.gateway.proxy import proxy_chat_completion
+from llmstack.gateway.schemas import ChatCompletionRequest
 
 logger = logging.getLogger(__name__)
 
@@ -72,6 +75,7 @@ def _resolve_provider_for_model(model_id: str) -> str | None:
     """Check if a model belongs to a registered provider."""
     try:
         from llmstack.gateway.providers.registry import get_registry
+
         registry = get_registry()
         if registry is None:
             return None
@@ -86,8 +90,13 @@ def _resolve_provider_for_model(model_id: str) -> str | None:
 
 
 def _record_trace(
-    payload: dict, result: dict, model: str, provider: str | None,
-    tier: str | None, latency_ms: float, cost_usd: float,
+    payload: dict,
+    result: dict,
+    model: str,
+    provider: str | None,
+    tier: str | None,
+    latency_ms: float,
+    cost_usd: float,
     cached: bool = False,
 ) -> None:
     """Record a trace with quality scoring for observability."""
@@ -157,8 +166,11 @@ def _record_trace(
 
 
 def _record_stats(
-    model: str | None, tier: str | None, latency_ms: float,
-    provider: str | None = None, cost_usd: float = 0.0,
+    model: str | None,
+    tier: str | None,
+    latency_ms: float,
+    provider: str | None = None,
+    cost_usd: float = 0.0,
 ) -> None:
     """Record routing stats if the router is active."""
     if model is None:
@@ -175,7 +187,9 @@ def _record_stats(
         # Build a minimal decision for recording
         profile = QueryProfile(score=0.0, tier=tier or "simple", factors={})
         decision = RoutingDecision(
-            model=model, profile=profile, provider=provider or "local",
+            model=model,
+            profile=profile,
+            provider=provider or "local",
         )
         stats.record(decision, latency_ms, cost_usd=cost_usd)
     except Exception:
@@ -184,7 +198,20 @@ def _record_stats(
 
 @router.post("/chat/completions")
 async def chat_completions(request: Request):
-    payload = await request.json()
+    try:
+        raw = await request.json()
+        validated = ChatCompletionRequest.model_validate(raw)
+        payload = validated.model_dump(exclude_none=True)
+    except ValidationError as exc:
+        return JSONResponse(
+            status_code=422,
+            content={
+                "error": {
+                    "message": str(exc),
+                    "type": "validation_error",
+                }
+            },
+        )
     stream = payload.get("stream", False)
 
     # Smart routing (now returns provider too)
@@ -209,7 +236,9 @@ async def chat_completions(request: Request):
             )
         else:
             result = await proxy_chat_completion(
-                payload, stream=False, provider_name=provider,
+                payload,
+                stream=False,
+                provider_name=provider,
             )
             elapsed_ms = (time.monotonic() - t0) * 1000
 
@@ -223,8 +252,13 @@ async def chat_completions(request: Request):
 
             # Trace and quality scoring
             _record_trace(
-                payload, result, routed_model or payload.get("model", ""),
-                provider, tier, elapsed_ms, cost_usd,
+                payload,
+                result,
+                routed_model or payload.get("model", ""),
+                provider,
+                tier,
+                elapsed_ms,
+                cost_usd,
                 cached=isinstance(result, dict) and result.get("_cached", False),
             )
 

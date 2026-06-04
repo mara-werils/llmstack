@@ -37,7 +37,7 @@ class AgentConfig:
 class AgentEvent:
     """An event in the agent's execution trace."""
 
-    type: str            # "thinking", "tool_call", "tool_result", "message", "error", "done"
+    type: str  # "thinking", "tool_call", "tool_result", "message", "error", "done"
     content: str = ""
     tool_name: str = ""
     tool_args: dict = field(default_factory=dict)
@@ -105,7 +105,9 @@ class AgentLoop:
                 response = await self._call_llm(tool_schemas, is_ollama)
             except Exception as exc:
                 yield AgentEvent(
-                    type="error", content=str(exc), step=self._step,
+                    type="error",
+                    content=str(exc),
+                    step=self._step,
                     elapsed_ms=(time.monotonic() - t0) * 1000,
                 )
                 return
@@ -134,15 +136,19 @@ class AgentLoop:
                         tool_args = raw_args
 
                     yield AgentEvent(
-                        type="tool_call", tool_name=tool_name,
-                        tool_args=tool_args, step=self._step, elapsed_ms=elapsed,
+                        type="tool_call",
+                        tool_name=tool_name,
+                        tool_args=tool_args,
+                        step=self._step,
+                        elapsed_ms=elapsed,
                     )
 
                     # Execute tool
                     tool = self.tools.get(tool_name)
                     if tool is None:
                         result = ToolResult(
-                            output="", success=False,
+                            output="",
+                            success=False,
                             error=f"Unknown tool: {tool_name}",
                         )
                     else:
@@ -159,19 +165,23 @@ class AgentLoop:
                     )
 
                     # Add tool result to messages
-                    self._messages.append({
-                        "role": "tool",
-                        "content": result.to_message(),
-                        "tool_call_id": tc.get("id", tool_name),
-                    })
+                    self._messages.append(
+                        {
+                            "role": "tool",
+                            "content": result.to_message(),
+                            "tool_call_id": tc.get("id", tool_name),
+                        }
+                    )
 
             else:
                 # No tool calls — this is the final answer
                 content = message.get("content", "")
                 if content:
                     yield AgentEvent(
-                        type="message", content=content,
-                        step=self._step, elapsed_ms=elapsed,
+                        type="message",
+                        content=content,
+                        step=self._step,
+                        elapsed_ms=elapsed,
                     )
                 yield AgentEvent(type="done", step=self._step, elapsed_ms=elapsed)
                 return

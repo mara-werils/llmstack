@@ -26,7 +26,7 @@ class Tenant:
     active: bool = True
 
     # Resource limits
-    max_models: int = 0              # 0 = unlimited
+    max_models: int = 0  # 0 = unlimited
     max_requests_per_day: int = 0
     max_tokens_per_day: int = 0
     max_cost_per_day: float = 0.0

@@ -48,7 +48,10 @@ class RouterStats:
             self._largest_model = model_name
 
     def record(
-        self, decision: RoutingDecision, latency_ms: float, cost_usd: float = 0.0,
+        self,
+        decision: RoutingDecision,
+        latency_ms: float,
+        cost_usd: float = 0.0,
     ) -> None:
         """Record a completed routing decision."""
         provider = getattr(decision, "provider", "local")
@@ -66,25 +69,31 @@ class RouterStats:
             if self._largest_model and decision.model != self._largest_model:
                 self._largest_model_avoided += 1
 
-            self._history.append(_RequestRecord(
-                model=decision.model,
-                tier=decision.profile.tier,
-                score=decision.profile.score,
-                latency_ms=latency_ms,
-                timestamp=time.time(),
-                provider=provider,
-                cost_usd=cost_usd,
-            ))
+            self._history.append(
+                _RequestRecord(
+                    model=decision.model,
+                    tier=decision.profile.tier,
+                    score=decision.profile.score,
+                    latency_ms=latency_ms,
+                    timestamp=time.time(),
+                    provider=provider,
+                    cost_usd=cost_usd,
+                )
+            )
 
     def summary(self) -> dict:
         """Return a snapshot of routing statistics."""
         with self._lock:
             total = max(self._total_requests, 1)
 
-            model_dist = {m: {"count": c, "pct": round(c / total * 100, 1)}
-                          for m, c in self._model_counts.items()}
-            tier_dist = {t: {"count": c, "pct": round(c / total * 100, 1)}
-                         for t, c in self._tier_counts.items()}
+            model_dist = {
+                m: {"count": c, "pct": round(c / total * 100, 1)}
+                for m, c in self._model_counts.items()
+            }
+            tier_dist = {
+                t: {"count": c, "pct": round(c / total * 100, 1)}
+                for t, c in self._tier_counts.items()
+            }
 
             avg_latency_by_model = {}
             for m, lats in self._model_latencies.items():
@@ -98,8 +107,10 @@ class RouterStats:
 
             savings_pct = round(self._largest_model_avoided / total * 100, 1) if total else 0.0
 
-            provider_dist = {p: {"count": c, "pct": round(c / total * 100, 1)}
-                             for p, c in self._provider_counts.items()}
+            provider_dist = {
+                p: {"count": c, "pct": round(c / total * 100, 1)}
+                for p, c in self._provider_counts.items()
+            }
 
             recent = [
                 {

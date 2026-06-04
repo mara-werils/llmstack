@@ -80,11 +80,13 @@ class ModelEvaluator:
         eval_set: list[dict[str, str]] = []
         for fb in corrections:
             if fb.query and fb.correction and len(fb.correction) >= 20:
-                eval_set.append({
-                    "query": fb.query,
-                    "reference": fb.correction,
-                    "original": fb.response,
-                })
+                eval_set.append(
+                    {
+                        "query": fb.query,
+                        "reference": fb.correction,
+                        "original": fb.response,
+                    }
+                )
                 if len(eval_set) >= self.config.eval_set_size:
                     break
 
@@ -138,13 +140,15 @@ class ModelEvaluator:
             fmt_score = self._compute_format_accuracy(response, reference)
             format_scores.append(fmt_score)
 
-            per_example.append({
-                "index": i,
-                "exact_match": is_exact,
-                "similarity": round(sim, 4),
-                "length_accuracy": round(len_score, 4),
-                "format_accuracy": round(fmt_score, 4),
-            })
+            per_example.append(
+                {
+                    "index": i,
+                    "exact_match": is_exact,
+                    "similarity": round(sim, 4),
+                    "length_accuracy": round(len_score, 4),
+                    "format_accuracy": round(fmt_score, 4),
+                }
+            )
 
         n = len(eval_set)
         result = EvalResult(

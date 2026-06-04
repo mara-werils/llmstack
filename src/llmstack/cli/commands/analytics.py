@@ -32,8 +32,9 @@ def analytics(days: int = 30, output: str | None = None) -> None:
         f"[bold]Total Tokens:[/]    {tokens:,}\n"
         f"[bold]Avg Duration:[/]    {avg_dur:.2f}s\n"
         f"[bold]Success Rate:[/]    {success:.1f}%\n"
-        f"[bold]Usage Streak:[/]    {streak} days 🔥" if streak > 0 else
-        f"[bold]Total Requests:[/]  {total:,}\n"
+        f"[bold]Usage Streak:[/]    {streak} days 🔥"
+        if streak > 0
+        else f"[bold]Total Requests:[/]  {total:,}\n"
         f"[bold]Total Tokens:[/]    {tokens:,}\n"
         f"[bold]Avg Duration:[/]    {avg_dur:.2f}s\n"
         f"[bold]Success Rate:[/]    {success:.1f}%",
@@ -46,7 +47,9 @@ def analytics(days: int = 30, output: str | None = None) -> None:
     if summary["by_command"]:
         cmd_table = Table(
             title="Usage by Command",
-            show_header=True, header_style="bold cyan", border_style="dim",
+            show_header=True,
+            header_style="bold cyan",
+            border_style="dim",
         )
         cmd_table.add_column("Command", style="bold")
         cmd_table.add_column("Count", justify="right")
@@ -67,7 +70,9 @@ def analytics(days: int = 30, output: str | None = None) -> None:
     if summary["by_model"]:
         model_table = Table(
             title="Usage by Model",
-            show_header=True, header_style="bold cyan", border_style="dim",
+            show_header=True,
+            header_style="bold cyan",
+            border_style="dim",
         )
         model_table.add_column("Model", style="bold")
         model_table.add_column("Count", justify="right")

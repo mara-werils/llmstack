@@ -18,10 +18,10 @@ class TierConfig:
 
     name: str
     requests_per_minute: int = 100
-    requests_per_hour: int = 0        # 0 = unlimited
-    tokens_per_minute: int = 0        # 0 = unlimited
-    burst_size: int = 0               # 0 = no burst allowance
-    concurrent_requests: int = 0      # 0 = unlimited
+    requests_per_hour: int = 0  # 0 = unlimited
+    tokens_per_minute: int = 0  # 0 = unlimited
+    burst_size: int = 0  # 0 = no burst allowance
+    concurrent_requests: int = 0  # 0 = unlimited
 
 
 # Default tier configurations
@@ -137,7 +137,10 @@ class TieredRateLimiter:
             # Check concurrent requests
             if tier.concurrent_requests > 0:
                 if usage.active_requests >= tier.concurrent_requests:
-                    return False, f"Concurrent limit: {usage.active_requests}/{tier.concurrent_requests}"
+                    return (
+                        False,
+                        f"Concurrent limit: {usage.active_requests}/{tier.concurrent_requests}",
+                    )
 
             # Check tokens per minute
             if tier.tokens_per_minute > 0:

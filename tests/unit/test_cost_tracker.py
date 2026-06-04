@@ -3,7 +3,10 @@
 import pytest
 
 from llmstack.gateway.cost_tracker import (
-    CostTracker, Budget, BudgetPeriod, MODEL_PRICING,
+    CostTracker,
+    Budget,
+    BudgetPeriod,
+    MODEL_PRICING,
 )
 
 
@@ -72,8 +75,10 @@ class TestBudgets:
 
     def test_budget_alert_triggered(self, tracker):
         budget = Budget(
-            name="test-budget", limit_usd=0.001,
-            period=BudgetPeriod.TOTAL, alert_at_percent=50.0,
+            name="test-budget",
+            limit_usd=0.001,
+            period=BudgetPeriod.TOTAL,
+            alert_at_percent=50.0,
         )
         tracker.add_budget(budget)
         tracker.record("gpt-4o", "openai", 10000, 5000, cost_usd=0.001)
@@ -85,8 +90,10 @@ class TestBudgets:
 
     def test_model_specific_budget(self, tracker):
         budget = Budget(
-            name="gpt4-budget", limit_usd=1.0,
-            period=BudgetPeriod.TOTAL, model="gpt-4o",
+            name="gpt4-budget",
+            limit_usd=1.0,
+            period=BudgetPeriod.TOTAL,
+            model="gpt-4o",
         )
         tracker.add_budget(budget)
         tracker.record("llama3.2", "local", 1000, 500, cost_usd=0.5)

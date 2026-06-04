@@ -32,10 +32,16 @@ def commit_gen(
     message: str | None = None,
 ) -> None:
     """Generate and optionally apply a commit message."""
-    asyncio.run(_commit_async(
-        model=model, ollama_url=ollama_url, staged=staged,
-        push=push, all_changes=all_changes, message=message,
-    ))
+    asyncio.run(
+        _commit_async(
+            model=model,
+            ollama_url=ollama_url,
+            staged=staged,
+            push=push,
+            all_changes=all_changes,
+            message=message,
+        )
+    )
 
 
 async def _commit_async(
@@ -57,7 +63,11 @@ async def _commit_async(
     def run_git(*args):
         try:
             result = subprocess.run(
-                ["git", *args], capture_output=True, text=True, cwd=cwd, timeout=30,
+                ["git", *args],
+                capture_output=True,
+                text=True,
+                cwd=cwd,
+                timeout=30,
             )
             return result.stdout if result.returncode == 0 else ""
         except Exception:
@@ -71,7 +81,9 @@ async def _commit_async(
     diff = run_git("diff", "--staged")
     if not diff:
         console.print("[warning]No staged changes found.[/]")
-        console.print("[dim]Tip: Stage files with 'git add' first, or use --all to stage everything.[/]")
+        console.print(
+            "[dim]Tip: Stage files with 'git add' first, or use --all to stage everything.[/]"
+        )
         raise typer.Exit(0)
 
     # Check Ollama
@@ -97,14 +109,17 @@ async def _commit_async(
 
 {diff}"""
 
-    with Progress(SpinnerColumn(), TextColumn("[bold blue]Generating commit message..."), console=console) as progress:
+    with Progress(
+        SpinnerColumn(), TextColumn("[bold blue]Generating commit message..."), console=console
+    ) as progress:
         task = progress.add_task("Generating", total=None)
 
         timeout = httpx.Timeout(120, connect=10, read=120, write=30)
         result = ""
         async with httpx.AsyncClient(timeout=timeout) as client:
             async with client.stream(
-                "POST", f"{ollama_url}/api/chat",
+                "POST",
+                f"{ollama_url}/api/chat",
                 json={
                     "model": model,
                     "messages": [
@@ -133,18 +148,24 @@ async def _commit_async(
     commit_msg = result.strip()
 
     console.print()
-    console.print(Panel(
-        f"[bold green]{commit_msg}[/]",
-        title="Suggested Commit Message",
-        border_style="cyan",
-    ))
+    console.print(
+        Panel(
+            f"[bold green]{commit_msg}[/]",
+            title="Suggested Commit Message",
+            border_style="cyan",
+        )
+    )
     console.print()
 
     # Interactive confirmation
     try:
-        action = console.input(
-            "[bold]Apply? [[bold green]y[/]/[bold yellow]e[/]dit/[bold red]n[/]o][/] "
-        ).strip().lower()
+        action = (
+            console.input(
+                "[bold]Apply? [[bold green]y[/]/[bold yellow]e[/]dit/[bold red]n[/]o][/] "
+            )
+            .strip()
+            .lower()
+        )
     except (EOFError, KeyboardInterrupt):
         console.print("\n[dim]Cancelled.[/]")
         return
@@ -160,13 +181,18 @@ async def _commit_async(
     if action in ("y", "e", ""):
         git_result = subprocess.run(
             ["git", "commit", "-m", commit_msg],
-            capture_output=True, text=True, cwd=cwd,
+            capture_output=True,
+            text=True,
+            cwd=cwd,
         )
         if git_result.returncode == 0:
             console.print("[green]Committed.[/]")
             if push:
                 push_result = subprocess.run(
-                    ["git", "push"], capture_output=True, text=True, cwd=cwd,
+                    ["git", "push"],
+                    capture_output=True,
+                    text=True,
+                    cwd=cwd,
                 )
                 if push_result.returncode == 0:
                     console.print("[green]Pushed.[/]")

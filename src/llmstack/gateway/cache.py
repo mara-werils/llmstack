@@ -10,6 +10,7 @@ import hashlib
 import json
 import os
 import time
+from collections import deque
 from dataclasses import dataclass, field
 
 import redis.asyncio as aioredis
@@ -29,7 +30,10 @@ class CacheStats:
     misses: int = 0
     evictions: int = 0
     avg_hit_latency_ms: float = 0.0
-    _hit_latencies: list[float] = field(default_factory=list, repr=False)
+    _hit_latencies: deque[float] = field(
+        default_factory=lambda: deque(maxlen=1000),
+        repr=False,
+    )
 
     def record_hit(self, latency_ms: float) -> None:
         self.hits += 1
@@ -99,10 +103,12 @@ class ResponseCache:
         # Normalize messages to a stable representation
         normalized = []
         for msg in messages:
-            normalized.append({
-                "role": msg.get("role", ""),
-                "content": msg.get("content", ""),
-            })
+            normalized.append(
+                {
+                    "role": msg.get("role", ""),
+                    "content": msg.get("content", ""),
+                }
+            )
 
         payload = json.dumps({"model": model, "messages": normalized}, sort_keys=True)
         digest = hashlib.sha256(payload.encode()).hexdigest()
@@ -137,8 +143,9 @@ class ResponseCache:
             self._stats.record_miss()
             return None
 
-    async def put(self, model: str, messages: list[dict], response: dict,
-                  temperature: float = 1.0) -> None:
+    async def put(
+        self, model: str, messages: list[dict], response: dict, temperature: float = 1.0
+    ) -> None:
         """Store a response in the cache."""
         if not self._connected or not CACHE_ENABLED:
             return

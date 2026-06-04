@@ -150,13 +150,17 @@ class ProviderRegistry:
                     raise
                 logger.warning(
                     "Provider %s failed for model %s, trying fallback: %s",
-                    provider_name, fallback_model, exc,
+                    provider_name,
+                    fallback_model,
+                    exc,
                 )
                 continue
             except Exception as exc:
                 last_error = exc
                 logger.warning(
-                    "Provider %s error: %s, trying fallback", provider_name, exc,
+                    "Provider %s error: %s, trying fallback",
+                    provider_name,
+                    exc,
                 )
                 continue
 
@@ -194,7 +198,8 @@ class ProviderRegistry:
                     raise
                 logger.warning(
                     "Stream: provider %s failed, trying fallback: %s",
-                    provider_name, exc,
+                    provider_name,
+                    exc,
                 )
                 continue
             except Exception as exc:
@@ -209,11 +214,17 @@ class ProviderRegistry:
     def _guess_provider(self, model_id: str) -> Provider | None:
         """Guess provider from model ID prefix (e.g. gpt- -> openai)."""
         prefixes = {
-            "gpt-": "openai", "o1": "openai", "o3": "openai", "o4": "openai",
+            "gpt-": "openai",
+            "o1": "openai",
+            "o3": "openai",
+            "o4": "openai",
             "claude-": "anthropic",
             "gemini-": "google",
-            "mistral-": "mistral", "codestral": "mistral", "pixtral": "mistral",
-            "llama": "groq", "mixtral": "groq",
+            "mistral-": "mistral",
+            "codestral": "mistral",
+            "pixtral": "mistral",
+            "llama": "groq",
+            "mixtral": "groq",
         }
         for prefix, provider_name in prefixes.items():
             if model_id.startswith(prefix) or model_id.startswith(prefix):

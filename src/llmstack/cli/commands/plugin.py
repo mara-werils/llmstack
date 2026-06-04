@@ -67,17 +67,19 @@ def plugin_info(name: str) -> None:
     registry = PluginRegistry()
     for p in registry.discover():
         if p.name == name:
-            console.print(Panel(
-                f"[bold]Name:[/] {p.name}\n"
-                f"[bold]Version:[/] {p.version}\n"
-                f"[bold]Type:[/] {p.plugin_type}\n"
-                f"[bold]Author:[/] {p.author or 'unknown'}\n"
-                f"[bold]Entry Point:[/] {p.entry_point}\n"
-                f"[bold]Enabled:[/] {'yes' if p.enabled else 'no'}\n"
-                f"[bold]Description:[/] {p.description}",
-                title=f"Plugin: {name}",
-                border_style="cyan",
-            ))
+            console.print(
+                Panel(
+                    f"[bold]Name:[/] {p.name}\n"
+                    f"[bold]Version:[/] {p.version}\n"
+                    f"[bold]Type:[/] {p.plugin_type}\n"
+                    f"[bold]Author:[/] {p.author or 'unknown'}\n"
+                    f"[bold]Entry Point:[/] {p.entry_point}\n"
+                    f"[bold]Enabled:[/] {'yes' if p.enabled else 'no'}\n"
+                    f"[bold]Description:[/] {p.description}",
+                    title=f"Plugin: {name}",
+                    border_style="cyan",
+                )
+            )
             return
 
     console.print(f"[error]Plugin not found: {name}[/]")

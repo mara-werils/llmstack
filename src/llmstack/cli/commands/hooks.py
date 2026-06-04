@@ -11,7 +11,7 @@ from llmstack.cli.console import console
 HOOK_TEMPLATES = {
     "pre-commit": {
         "description": "AI review of staged changes before commit",
-        "script": '''#!/usr/bin/env bash
+        "script": """#!/usr/bin/env bash
 # llmstack pre-commit hook — AI review before commit
 set -e
 
@@ -51,11 +51,11 @@ if [ -n "$LARGE_FILES" ]; then
 fi
 
 echo "✅ Pre-commit check passed"
-''',
+""",
     },
     "commit-msg": {
         "description": "Validate commit message format (conventional commits)",
-        "script": '''#!/usr/bin/env bash
+        "script": """#!/usr/bin/env bash
 # llmstack commit-msg hook — validate conventional commits
 MSG_FILE=$1
 MSG=$(cat "$MSG_FILE")
@@ -74,11 +74,11 @@ if ! echo "$MSG" | head -1 | grep -qE "^(feat|fix|docs|style|refactor|test|chore
 fi
 
 echo "✅ Commit message format OK"
-''',
+""",
     },
     "pre-push": {
         "description": "Run tests and security check before push",
-        "script": '''#!/usr/bin/env bash
+        "script": """#!/usr/bin/env bash
 # llmstack pre-push hook — verify before pushing
 set -e
 
@@ -116,11 +116,11 @@ if [ -n "$SECRETS" ]; then
 fi
 
 echo "✅ Pre-push checks passed"
-''',
+""",
     },
     "post-checkout": {
         "description": "Auto-install dependencies after branch switch",
-        "script": '''#!/usr/bin/env bash
+        "script": """#!/usr/bin/env bash
 # llmstack post-checkout hook — auto-setup after branch switch
 OLD_REF=$1
 NEW_REF=$2
@@ -144,7 +144,7 @@ if git diff --name-only "$OLD_REF" "$NEW_REF" | grep -q "package.json"; then
     echo "  📦 Node dependencies changed, installing..."
     npm install 2>/dev/null || yarn install 2>/dev/null || true
 fi
-''',
+""",
     },
 }
 
@@ -195,7 +195,9 @@ def hooks(
 
         hook_path = hooks_dir / hook_name
         if hook_path.exists() and not force:
-            console.print(f"[warning]Hook '{hook_name}' already exists. Use --force to overwrite.[/]")
+            console.print(
+                f"[warning]Hook '{hook_name}' already exists. Use --force to overwrite.[/]"
+            )
             return
 
         hook_path.write_text(HOOK_TEMPLATES[hook_name]["script"])
@@ -224,18 +226,28 @@ def hooks(
 
     elif action == "show" and hook_name:
         if hook_name in HOOK_TEMPLATES:
-            console.print(Syntax(
-                HOOK_TEMPLATES[hook_name]["script"],
-                "bash", theme="monokai", line_numbers=True,
-            ))
+            console.print(
+                Syntax(
+                    HOOK_TEMPLATES[hook_name]["script"],
+                    "bash",
+                    theme="monokai",
+                    line_numbers=True,
+                )
+            )
         else:
             hook_path = hooks_dir / hook_name
             if hook_path.exists():
-                console.print(Syntax(
-                    hook_path.read_text(), "bash",
-                    theme="monokai", line_numbers=True,
-                ))
+                console.print(
+                    Syntax(
+                        hook_path.read_text(),
+                        "bash",
+                        theme="monokai",
+                        line_numbers=True,
+                    )
+                )
             else:
                 console.print(f"[error]Hook not found: {hook_name}[/]")
     else:
-        console.print("[error]Usage: llmstack hooks <list|install|install-all|remove|show> [hook-name][/]")
+        console.print(
+            "[error]Usage: llmstack hooks <list|install|install-all|remove|show> [hook-name][/]"
+        )

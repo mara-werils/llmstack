@@ -24,8 +24,13 @@ _PRICING: dict[str, tuple[float, float]] = {
 }
 
 _DEFAULT_MODELS = [
-    ProviderModel(id=mid, provider="google", context_length=1_000_000,
-                  cost_per_m_input=p[0], cost_per_m_output=p[1])
+    ProviderModel(
+        id=mid,
+        provider="google",
+        context_length=1_000_000,
+        cost_per_m_input=p[0],
+        cost_per_m_output=p[1],
+    )
     for mid, p in _PRICING.items()
 ]
 
@@ -120,11 +125,13 @@ class GoogleProvider(Provider):
             "object": "chat.completion",
             "created": int(time.time()),
             "model": model,
-            "choices": [{
-                "index": 0,
-                "message": {"role": "assistant", "content": text},
-                "finish_reason": "stop",
-            }],
+            "choices": [
+                {
+                    "index": 0,
+                    "message": {"role": "assistant", "content": text},
+                    "finish_reason": "stop",
+                }
+            ],
             "usage": {
                 "prompt_tokens": input_tokens,
                 "completion_tokens": output_tokens,
@@ -192,7 +199,9 @@ class GoogleProvider(Provider):
                                 "object": "chat.completion.chunk",
                                 "created": int(time.time()),
                                 "model": model,
-                                "choices": [{"index": 0, "delta": {"content": text}, "finish_reason": None}],
+                                "choices": [
+                                    {"index": 0, "delta": {"content": text}, "finish_reason": None}
+                                ],
                             }
                             yield f"data: {json.dumps(chunk)}\n\n".encode()
 

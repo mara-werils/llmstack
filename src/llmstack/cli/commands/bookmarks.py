@@ -38,14 +38,29 @@ class BookmarkManager:
             """)
             conn.commit()
 
-    def add(self, title: str, content: str, category: str = "general",
-            tags: list[str] | None = None, source: str = "", notes: str = "") -> str:
+    def add(
+        self,
+        title: str,
+        content: str,
+        category: str = "general",
+        tags: list[str] | None = None,
+        source: str = "",
+        notes: str = "",
+    ) -> str:
         bookmark_id = hashlib.sha256(f"{title}{time.time()}".encode()).hexdigest()[:10]
         with sqlite3.connect(self.db_path) as conn:
             conn.execute(
                 "INSERT INTO bookmarks (id, title, content, category, tags, source, notes, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                (bookmark_id, title, content, category, json.dumps(tags or []),
-                 source, notes, time.time()),
+                (
+                    bookmark_id,
+                    title,
+                    content,
+                    category,
+                    json.dumps(tags or []),
+                    source,
+                    notes,
+                    time.time(),
+                ),
             )
             conn.commit()
         return bookmark_id
@@ -116,17 +131,20 @@ def bookmarks(
             console.print("[error]Provide --title and --content for add[/]")
             return
         tag_list = [t.strip() for t in tags.split(",")] if tags else []
-        bid = mgr.add(title=title, content=content, category=category,
-                       tags=tag_list, notes=notes)
+        bid = mgr.add(title=title, content=content, category=category, tags=tag_list, notes=notes)
         console.print(f"[green]Bookmark saved:[/] [bold]{title}[/]  id=[dim]{bid}[/]")
 
     elif action == "list":
         items = mgr.list_all(category=category if category != "general" else None, limit=limit)
         if not items:
-            console.print("[dim]No bookmarks yet. Save one with: llmstack bookmarks add --title '...' --content '...'[/]")
+            console.print(
+                "[dim]No bookmarks yet. Save one with: llmstack bookmarks add --title '...' --content '...'[/]"
+            )
             return
 
-        table = Table(title="Bookmarks", show_header=True, header_style="bold cyan", border_style="dim")
+        table = Table(
+            title="Bookmarks", show_header=True, header_style="bold cyan", border_style="dim"
+        )
         table.add_column("ID", width=10)
         table.add_column("Title", style="bold")
         table.add_column("Category", width=12)

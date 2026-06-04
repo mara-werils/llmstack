@@ -36,7 +36,9 @@ async def healthz():
     if INFERENCE_URL:
         # Ollama uses / as health, vLLM uses /health
         health_url = INFERENCE_URL.replace("/v1", "")
-        checks["inference"] = await _check_url(health_url) or await _check_url(health_url + "/health")
+        checks["inference"] = await _check_url(health_url) or await _check_url(
+            health_url + "/health"
+        )
 
     if QDRANT_URL:
         checks["qdrant"] = await _check_url(f"{QDRANT_URL}/healthz")
@@ -44,6 +46,7 @@ async def healthz():
     if REDIS_URL:
         try:
             import redis.asyncio as aioredis
+
             r = aioredis.from_url(REDIS_URL, socket_connect_timeout=3)
             await r.ping()
             checks["redis"] = True
@@ -58,12 +61,14 @@ async def healthz():
     extras = {}
     try:
         from llmstack.gateway.circuit_breaker import get_inference_breaker
+
         extras["circuit_breaker"] = get_inference_breaker().metrics()
     except Exception:
         pass
 
     try:
         from llmstack.gateway.cache import _cache
+
         if _cache is not None:
             extras["cache"] = _cache.stats.to_dict()
     except Exception:
@@ -71,6 +76,7 @@ async def healthz():
 
     try:
         from llmstack.gateway.router._state import get_stats
+
         stats = get_stats()
         if stats is not None:
             summary = stats.summary()
@@ -87,6 +93,7 @@ async def healthz():
 
     try:
         from llmstack.gateway.providers.registry import get_registry
+
         registry = get_registry()
         if registry is not None:
             providers_status = {}
@@ -131,7 +138,9 @@ async def readiness():
 
     if INFERENCE_URL:
         health_url = INFERENCE_URL.replace("/v1", "")
-        checks["inference"] = await _check_url(health_url) or await _check_url(health_url + "/health")
+        checks["inference"] = await _check_url(health_url) or await _check_url(
+            health_url + "/health"
+        )
 
     if QDRANT_URL:
         checks["qdrant"] = await _check_url(f"{QDRANT_URL}/healthz")
@@ -139,6 +148,7 @@ async def readiness():
     if REDIS_URL:
         try:
             import redis.asyncio as aioredis
+
             r = aioredis.from_url(REDIS_URL, socket_connect_timeout=3)
             await r.ping()
             checks["redis"] = True
@@ -156,6 +166,7 @@ async def readiness():
 @router.get("/metrics")
 async def metrics():
     from llmstack.gateway.middleware.metrics import get_prometheus_metrics
+
     return PlainTextResponse(
         content=get_prometheus_metrics(),
         media_type="text/plain; version=0.0.4; charset=utf-8",

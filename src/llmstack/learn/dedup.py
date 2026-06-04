@@ -94,7 +94,7 @@ class FeedbackDeduplicator:
         phase2: list[Feedback] = []
         for entry in phase1:
             is_dup = False
-            for existing in phase2[-self.config.max_check_window:]:
+            for existing in phase2[-self.config.max_check_window :]:
                 if self._is_near_duplicate(entry, existing):
                     is_dup = True
                     stats.merged += 1
@@ -113,7 +113,7 @@ class FeedbackDeduplicator:
         if self.config.normalize_case:
             text = text.lower()
         if self.config.normalize_whitespace:
-            text = re.sub(r'\s+', ' ', text).strip()
+            text = re.sub(r"\s+", " ", text).strip()
         return text
 
     def _content_hash(self, entry: Feedback) -> str:

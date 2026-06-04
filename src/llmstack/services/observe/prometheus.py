@@ -39,23 +39,27 @@ PROMETHEUS_CONFIG = {
 # Grafana datasource provisioning
 GRAFANA_DATASOURCE = {
     "apiVersion": 1,
-    "datasources": [{
-        "name": "Prometheus",
-        "type": "prometheus",
-        "access": "proxy",
-        "url": "http://llmstack-prometheus:9090",
-        "isDefault": True,
-    }],
+    "datasources": [
+        {
+            "name": "Prometheus",
+            "type": "prometheus",
+            "access": "proxy",
+            "url": "http://llmstack-prometheus:9090",
+            "isDefault": True,
+        }
+    ],
 }
 
 # Grafana dashboard provisioning config
 GRAFANA_DASHBOARD_PROVIDER = {
     "apiVersion": 1,
-    "providers": [{
-        "name": "LLMStack",
-        "type": "file",
-        "options": {"path": "/opt/grafana/dashboards"},
-    }],
+    "providers": [
+        {
+            "name": "LLMStack",
+            "type": "file",
+            "options": {"path": "/opt/grafana/dashboards"},
+        }
+    ],
 }
 
 # Pre-built Grafana dashboard JSON
@@ -70,15 +74,23 @@ GRAFANA_DASHBOARD = {
                 "title": "Request Rate",
                 "type": "timeseries",
                 "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
-                "targets": [{"expr": "rate(llmstack_requests_total[1m])", "legendFormat": "{{path}}"}],
+                "targets": [
+                    {"expr": "rate(llmstack_requests_total[1m])", "legendFormat": "{{path}}"}
+                ],
             },
             {
                 "title": "Latency (p50 / p99)",
                 "type": "timeseries",
                 "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
                 "targets": [
-                    {"expr": "histogram_quantile(0.5, rate(llmstack_request_duration_seconds_bucket[5m]))", "legendFormat": "p50"},
-                    {"expr": "histogram_quantile(0.99, rate(llmstack_request_duration_seconds_bucket[5m]))", "legendFormat": "p99"},
+                    {
+                        "expr": "histogram_quantile(0.5, rate(llmstack_request_duration_seconds_bucket[5m]))",
+                        "legendFormat": "p50",
+                    },
+                    {
+                        "expr": "histogram_quantile(0.99, rate(llmstack_request_duration_seconds_bucket[5m]))",
+                        "legendFormat": "p99",
+                    },
                 ],
             },
             {
@@ -97,7 +109,9 @@ GRAFANA_DASHBOARD = {
                 "title": "Token Throughput",
                 "type": "timeseries",
                 "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
-                "targets": [{"expr": "rate(llmstack_tokens_total[1m])", "legendFormat": "{{type}}"}],
+                "targets": [
+                    {"expr": "rate(llmstack_tokens_total[1m])", "legendFormat": "{{type}}"}
+                ],
             },
         ],
     },
@@ -121,7 +135,9 @@ class PrometheusService(ServiceBase):
     def _prepare_config(self) -> str:
         """Write prometheus.yml to ~/.llmstack/config/prometheus/ and return the dir path."""
         config_dir = CONFIG_DIR / "prometheus"
-        _write_file(config_dir / "prometheus.yml", yaml.dump(PROMETHEUS_CONFIG, default_flow_style=False))
+        _write_file(
+            config_dir / "prometheus.yml", yaml.dump(PROMETHEUS_CONFIG, default_flow_style=False)
+        )
         return str(config_dir)
 
     def container_spec(self) -> dict[str, Any]:
@@ -197,13 +213,16 @@ class GrafanaService(ServiceBase):
             },
             "volumes": {
                 os.path.join(base, "provisioning", "datasources"): {
-                    "bind": "/etc/grafana/provisioning/datasources", "mode": "ro",
+                    "bind": "/etc/grafana/provisioning/datasources",
+                    "mode": "ro",
                 },
                 os.path.join(base, "provisioning", "dashboards"): {
-                    "bind": "/etc/grafana/provisioning/dashboards", "mode": "ro",
+                    "bind": "/etc/grafana/provisioning/dashboards",
+                    "mode": "ro",
                 },
                 os.path.join(base, "dashboards"): {
-                    "bind": "/opt/grafana/dashboards", "mode": "ro",
+                    "bind": "/opt/grafana/dashboards",
+                    "mode": "ro",
                 },
             },
         }

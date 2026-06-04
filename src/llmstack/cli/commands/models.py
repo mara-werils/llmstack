@@ -33,8 +33,12 @@ def models(
 
                 for m in ollama_models:
                     name = m.get("name", "unknown")
-                    size_gb = m.get("size", 0) / (1024 ** 3)
-                    size_str = f"{size_gb:.1f} GB" if size_gb >= 1 else f"{m.get('size', 0) / (1024**2):.0f} MB"
+                    size_gb = m.get("size", 0) / (1024**3)
+                    size_str = (
+                        f"{size_gb:.1f} GB"
+                        if size_gb >= 1
+                        else f"{m.get('size', 0) / (1024**2):.0f} MB"
+                    )
                     quant = m.get("details", {}).get("quantization_level", "-")
                     modified = m.get("modified_at", "-")
                     if isinstance(modified, str) and "T" in modified:
@@ -51,6 +55,7 @@ def models(
     if not gw_url:
         try:
             from llmstack.config.loader import load_config
+
             config = load_config()
             gw_url = f"http://localhost:{config.gateway.port}"
         except (FileNotFoundError, SystemExit):

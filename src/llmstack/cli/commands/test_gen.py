@@ -34,10 +34,17 @@ def test_gen(
     coverage: bool = False,
 ) -> None:
     """Generate test cases for code."""
-    asyncio.run(_test_gen_async(
-        target=target, output=output, model=model, ollama_url=ollama_url,
-        framework=framework, write=write, coverage=coverage,
-    ))
+    asyncio.run(
+        _test_gen_async(
+            target=target,
+            output=output,
+            model=model,
+            ollama_url=ollama_url,
+            framework=framework,
+            write=write,
+            coverage=coverage,
+        )
+    )
 
 
 async def _test_gen_async(
@@ -74,7 +81,8 @@ async def _test_gen_async(
         files_to_test = [target_path]
     else:
         files_to_test = [
-            p for p in target_path.rglob("*.py")
+            p
+            for p in target_path.rglob("*.py")
             if not any(x in str(p) for x in ["test_", "_test", "__pycache__", ".git", "venv"])
         ][:5]
 
@@ -120,7 +128,8 @@ Output ONLY the test code."""
             result = ""
             async with httpx.AsyncClient(timeout=timeout) as client:
                 async with client.stream(
-                    "POST", f"{ollama_url}/api/chat",
+                    "POST",
+                    f"{ollama_url}/api/chat",
                     json={
                         "model": model,
                         "messages": [

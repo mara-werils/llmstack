@@ -20,7 +20,11 @@ def git_stats(days: int = 30, author: str | None = None) -> None:
     def git(*args):
         try:
             result = subprocess.run(
-                ["git", *args], capture_output=True, text=True, cwd=cwd, timeout=30,
+                ["git", *args],
+                capture_output=True,
+                text=True,
+                cwd=cwd,
+                timeout=30,
             )
             return result.stdout if result.returncode == 0 else ""
         except Exception:
@@ -41,22 +45,28 @@ def git_stats(days: int = 30, author: str | None = None) -> None:
     commits = [line.split("|", 4) for line in log_output.strip().split("\n") if "|" in line]
 
     # Shortstat for recent changes
-    shortstat = git("diff", "--shortstat", f"HEAD~{min(len(commits), 100)}..HEAD") if commits else ""
+    shortstat = (
+        git("diff", "--shortstat", f"HEAD~{min(len(commits), 100)}..HEAD") if commits else ""
+    )
 
     console.print()
-    console.print(f"[bold]llmstack git-stats[/]  branch=[cyan]{branch}[/]  period=[dim]{days} days[/]")
+    console.print(
+        f"[bold]llmstack git-stats[/]  branch=[cyan]{branch}[/]  period=[dim]{days} days[/]"
+    )
     console.print()
 
     # Summary panel
-    console.print(Panel(
-        f"[bold]Branch:[/] {branch}\n"
-        f"[bold]Total commits:[/] {total_commits}\n"
-        f"[bold]First commit:[/] {first_commit}\n"
-        f"[bold]Recent commits ({days}d):[/] {len(commits)}\n"
-        f"[bold]Changes:[/] {shortstat.strip() or 'N/A'}",
-        title="Repository Summary",
-        border_style="cyan",
-    ))
+    console.print(
+        Panel(
+            f"[bold]Branch:[/] {branch}\n"
+            f"[bold]Total commits:[/] {total_commits}\n"
+            f"[bold]First commit:[/] {first_commit}\n"
+            f"[bold]Recent commits ({days}d):[/] {len(commits)}\n"
+            f"[bold]Changes:[/] {shortstat.strip() or 'N/A'}",
+            title="Repository Summary",
+            border_style="cyan",
+        )
+    )
 
     if not commits:
         console.print("[dim]No commits in the selected period.[/]")
@@ -98,6 +108,7 @@ def git_stats(days: int = 30, author: str | None = None) -> None:
             try:
                 date_str = c[3]
                 from datetime import datetime
+
                 dt = datetime.fromisoformat(date_str[:19])
                 day_counts[dt.strftime("%A")] += 1
                 hour_counts[dt.hour] += 1
@@ -157,7 +168,9 @@ def git_stats(days: int = 30, author: str | None = None) -> None:
         for c in commits:
             if len(c) >= 5:
                 msg = c[4]
-                match = re.match(r"^(feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert)", msg)
+                match = re.match(
+                    r"^(feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert)", msg
+                )
                 if match:
                     type_patterns[match.group(1)] += 1
                 else:

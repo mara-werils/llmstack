@@ -133,13 +133,15 @@ class DockerManager:
         result = []
         for container in self._managed_containers():
             container.reload()
-            result.append({
-                "name": container.labels.get(self.LABEL_SERVICE, "unknown"),
-                "container_name": container.name,
-                "container_id": container.short_id,
-                "status": container.status,
-                "ports": container.ports,
-            })
+            result.append(
+                {
+                    "name": container.labels.get(self.LABEL_SERVICE, "unknown"),
+                    "container_name": container.name,
+                    "container_id": container.short_id,
+                    "status": container.status,
+                    "ports": container.ports,
+                }
+            )
         return result
 
     def _managed_containers(self) -> list[Container]:

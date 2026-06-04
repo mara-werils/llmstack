@@ -192,7 +192,9 @@ class TestABTestManager:
         manager.create_test(test)
         assert manager.select_model("inactive") is None
 
-    def test_record_and_get_results(self, manager: ABTestManager, test_with_manager: ABTest) -> None:
+    def test_record_and_get_results(
+        self, manager: ABTestManager, test_with_manager: ABTest
+    ) -> None:
         manager.record("exp1", "gpt-4", quality=0.9, latency_ms=100, cost_usd=0.01)
         manager.record("exp1", "gpt-4", quality=0.8, latency_ms=120, cost_usd=0.01)
         manager.record("exp1", "llama", quality=0.7, latency_ms=80, cost_usd=0.001)
@@ -208,7 +210,9 @@ class TestABTestManager:
         # Should not raise
         manager.record("nope", "a", quality=0.5, latency_ms=50)
 
-    def test_record_nonexistent_model(self, manager: ABTestManager, test_with_manager: ABTest) -> None:
+    def test_record_nonexistent_model(
+        self, manager: ABTestManager, test_with_manager: ABTest
+    ) -> None:
         # Should not raise — model not in test
         manager.record("exp1", "unknown-model", quality=0.5, latency_ms=50)
 

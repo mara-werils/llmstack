@@ -3,7 +3,9 @@
 import pytest
 
 from llmstack.gateway.webhooks import (
-    WebhookManager, WebhookEvent, _compute_signature,
+    WebhookManager,
+    WebhookEvent,
+    _compute_signature,
 )
 
 
@@ -63,7 +65,8 @@ class TestWebhookManager:
         )
         ep.active = False
         deliveries = manager.dispatch(
-            WebhookEvent.REQUEST_COMPLETED, {},
+            WebhookEvent.REQUEST_COMPLETED,
+            {},
         )
         assert len(deliveries) == 0
 

@@ -57,12 +57,14 @@ def _build_sources(results: list[tuple[TextChunk, float]]) -> list[SourceRef]:
     """Build source references from search results."""
     sources: list[SourceRef] = []
     for chunk, score in results:
-        sources.append(SourceRef(
-            file=chunk.source,
-            lines=f"{chunk.start_line}-{chunk.end_line}",
-            relevance=round(score, 4),
-            preview=chunk.content[:100].replace("\n", " "),
-        ))
+        sources.append(
+            SourceRef(
+                file=chunk.source,
+                lines=f"{chunk.start_line}-{chunk.end_line}",
+                relevance=round(score, 4),
+                preview=chunk.content[:100].replace("\n", " "),
+            )
+        )
     return sources
 
 

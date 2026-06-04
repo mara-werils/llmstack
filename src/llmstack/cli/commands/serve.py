@@ -17,7 +17,9 @@ def serve(
     try:
         import uvicorn
     except ImportError:
-        console.print("[error]uvicorn is required. Install with: pip install llmstack-cli[gateway][/]")
+        console.print(
+            "[error]uvicorn is required. Install with: pip install llmstack-cli[gateway][/]"
+        )
         sys.exit(1)
 
     banner("LLMStack Gateway", f"Starting on {host}:{port}")

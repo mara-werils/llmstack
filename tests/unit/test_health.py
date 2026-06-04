@@ -23,6 +23,7 @@ class TestHealthImports:
 
     def test_health_routes_importable(self):
         from llmstack.gateway.routes.health import healthz, liveness, readiness, ping, metrics
+
         assert callable(healthz)
         assert callable(liveness)
         assert callable(readiness)
@@ -31,8 +32,12 @@ class TestHealthImports:
 
     def test_observe_routes_importable(self):
         from llmstack.gateway.routes.observe import (
-            list_traces, traces_summary, quality_summary, observe_stats,
+            list_traces,
+            traces_summary,
+            quality_summary,
+            observe_stats,
         )
+
         assert callable(list_traces)
         assert callable(traces_summary)
         assert callable(quality_summary)

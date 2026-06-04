@@ -39,12 +39,14 @@ def compare(
             elapsed = time.monotonic() - t0
 
             if resp.status_code != 200:
-                results.append({
-                    "model": model_name,
-                    "response": f"[error]HTTP {resp.status_code}[/]",
-                    "time": elapsed,
-                    "tokens": 0,
-                })
+                results.append(
+                    {
+                        "model": model_name,
+                        "response": f"[error]HTTP {resp.status_code}[/]",
+                        "time": elapsed,
+                        "tokens": 0,
+                    }
+                )
                 continue
 
             data = resp.json()
@@ -52,21 +54,25 @@ def compare(
             eval_count = data.get("eval_count", 0)
             tokens_per_sec = eval_count / elapsed if elapsed > 0 else 0
 
-            results.append({
-                "model": model_name,
-                "response": response_text,
-                "time": elapsed,
-                "tokens": eval_count,
-                "tps": tokens_per_sec,
-            })
+            results.append(
+                {
+                    "model": model_name,
+                    "response": response_text,
+                    "time": elapsed,
+                    "tokens": eval_count,
+                    "tps": tokens_per_sec,
+                }
+            )
 
         except (httpx.ConnectError, httpx.TimeoutException) as exc:
-            results.append({
-                "model": model_name,
-                "response": f"[error]{exc}[/]",
-                "time": 0,
-                "tokens": 0,
-            })
+            results.append(
+                {
+                    "model": model_name,
+                    "response": f"[error]{exc}[/]",
+                    "time": 0,
+                    "tokens": 0,
+                }
+            )
 
     # Display side by side
     panels = []

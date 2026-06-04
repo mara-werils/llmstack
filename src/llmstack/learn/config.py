@@ -24,19 +24,13 @@ class LearnConfig:
     feedback: FeedbackConfig = field(default_factory=lambda: FeedbackConfig())
 
     # Training triggers
-    training: TrainingTriggerConfig = field(
-        default_factory=lambda: TrainingTriggerConfig()
-    )
+    training: TrainingTriggerConfig = field(default_factory=lambda: TrainingTriggerConfig())
 
     # Quality monitoring
-    quality: QualityMonitorConfig = field(
-        default_factory=lambda: QualityMonitorConfig()
-    )
+    quality: QualityMonitorConfig = field(default_factory=lambda: QualityMonitorConfig())
 
     # Preferences
-    preferences: PreferencesConfig = field(
-        default_factory=lambda: PreferencesConfig()
-    )
+    preferences: PreferencesConfig = field(default_factory=lambda: PreferencesConfig())
 
     # Storage
     storage: StorageConfig = field(default_factory=lambda: StorageConfig())
@@ -179,9 +173,7 @@ class QualityMonitorConfig:
     severe_threshold: float = 0.15
 
     # Metrics to monitor
-    metrics: list[str] = field(
-        default_factory=lambda: ["overall", "coherence", "relevance"]
-    )
+    metrics: list[str] = field(default_factory=lambda: ["overall", "coherence", "relevance"])
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -268,8 +260,12 @@ class StorageConfig:
     def from_dict(cls, data: dict[str, Any]) -> StorageConfig:
         return cls(
             db_path=data.get("db_path", str(Path.home() / ".llmstack" / "learning.db")),
-            versions_dir=data.get("versions_dir", str(Path.home() / ".llmstack" / "model_versions")),
+            versions_dir=data.get(
+                "versions_dir", str(Path.home() / ".llmstack" / "model_versions")
+            ),
             training_dir=data.get("training_dir", str(Path.home() / ".llmstack" / "training")),
-            preferences_path=data.get("preferences_path", str(Path.home() / ".llmstack" / "preferences.json")),
+            preferences_path=data.get(
+                "preferences_path", str(Path.home() / ".llmstack" / "preferences.json")
+            ),
             prompts_dir=data.get("prompts_dir", str(Path.home() / ".llmstack" / "prompts")),
         )

@@ -78,6 +78,7 @@ nav:
     - Plugins: guide/plugins.md
     - Web UI: guide/web-ui.md
     - Python SDK: guide/sdk.md
+    - Troubleshooting: guide/troubleshooting.md
   - API Reference:
     - OpenAI-Compatible: api/openai-compatible.md
     - RAG: api/rag.md

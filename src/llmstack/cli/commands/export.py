@@ -25,7 +25,10 @@ def _build_compose(config: StackConfig) -> dict:
     services["qdrant"] = {
         "image": "qdrant/qdrant:latest",
         "container_name": "llmstack-qdrant",
-        "ports": [f"{config.services.vectors.port}:6333", f"{config.services.vectors.port + 1}:6334"],
+        "ports": [
+            f"{config.services.vectors.port}:6333",
+            f"{config.services.vectors.port + 1}:6334",
+        ],
         "volumes": ["qdrant_data:/qdrant/storage"],
         "restart": "unless-stopped",
         "networks": [network_name],
@@ -55,7 +58,13 @@ def _build_compose(config: StackConfig) -> dict:
             "command": cmd,
             "volumes": ["vllm_cache:/root/.cache/huggingface"],
             "shm_size": "4g",
-            "deploy": {"resources": {"reservations": {"devices": [{"driver": "nvidia", "count": "all", "capabilities": ["gpu"]}]}}},
+            "deploy": {
+                "resources": {
+                    "reservations": {
+                        "devices": [{"driver": "nvidia", "count": "all", "capabilities": ["gpu"]}]
+                    }
+                }
+            },
             "restart": "unless-stopped",
             "networks": [network_name],
         }
@@ -71,7 +80,13 @@ def _build_compose(config: StackConfig) -> dict:
             "networks": [network_name],
         }
         if hw.gpu_vendor == "nvidia":
-            svc["deploy"] = {"resources": {"reservations": {"devices": [{"driver": "nvidia", "count": "all", "capabilities": ["gpu"]}]}}}
+            svc["deploy"] = {
+                "resources": {
+                    "reservations": {
+                        "devices": [{"driver": "nvidia", "count": "all", "capabilities": ["gpu"]}]
+                    }
+                }
+            }
         services["ollama"] = svc
         volumes["ollama_data"] = None
         inference_url = "http://ollama:11434/v1"
@@ -91,7 +106,13 @@ def _build_compose(config: StackConfig) -> dict:
         }
         if hw.gpu_vendor == "nvidia":
             tei_svc["image"] = "ghcr.io/huggingface/text-embeddings-inference:latest"
-            tei_svc["deploy"] = {"resources": {"reservations": {"devices": [{"driver": "nvidia", "count": "all", "capabilities": ["gpu"]}]}}}
+            tei_svc["deploy"] = {
+                "resources": {
+                    "reservations": {
+                        "devices": [{"driver": "nvidia", "count": "all", "capabilities": ["gpu"]}]
+                    }
+                }
+            }
         services["tei"] = tei_svc
         volumes["tei_cache"] = None
         embeddings_url = "http://tei:80/v1"

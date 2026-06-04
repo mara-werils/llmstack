@@ -61,31 +61,37 @@ def env_check(
         gitignore_content = gitignore.read_text()
         env_in_gitignore = ".env" in gitignore_content
         if not env_in_gitignore:
-            issues.append({
-                "severity": "CRITICAL",
-                "file": ".gitignore",
-                "issue": ".env is NOT in .gitignore — secrets may be committed!",
-                "fix": 'Add ".env" to .gitignore',
-            })
+            issues.append(
+                {
+                    "severity": "CRITICAL",
+                    "file": ".gitignore",
+                    "issue": ".env is NOT in .gitignore — secrets may be committed!",
+                    "fix": 'Add ".env" to .gitignore',
+                }
+            )
         else:
             info.append(".env is properly in .gitignore")
     else:
-        issues.append({
-            "severity": "WARNING",
-            "file": ".gitignore",
-            "issue": "No .gitignore file found",
-            "fix": "Create .gitignore with .env entry",
-        })
+        issues.append(
+            {
+                "severity": "WARNING",
+                "file": ".gitignore",
+                "issue": "No .gitignore file found",
+                "fix": "Create .gitignore with .env entry",
+            }
+        )
 
     # Check for .env.example
     env_example = directory / ".env.example"
     if not env_example.exists() and env_files:
-        issues.append({
-            "severity": "INFO",
-            "file": ".env.example",
-            "issue": "No .env.example file — new developers won't know required vars",
-            "fix": "Create .env.example with placeholder values",
-        })
+        issues.append(
+            {
+                "severity": "INFO",
+                "file": ".env.example",
+                "issue": "No .env.example file — new developers won't know required vars",
+                "fix": "Create .env.example with placeholder values",
+            }
+        )
 
     # Scan env files for secrets
     for env_file in env_files:
@@ -101,12 +107,14 @@ def env_check(
 
         for pattern, desc in SECRET_PATTERNS:
             if re.search(pattern, content):
-                issues.append({
-                    "severity": "CRITICAL",
-                    "file": rel_path,
-                    "issue": desc,
-                    "fix": "Use environment variables or a secrets manager",
-                })
+                issues.append(
+                    {
+                        "severity": "CRITICAL",
+                        "file": rel_path,
+                        "issue": desc,
+                        "fix": "Use environment variables or a secrets manager",
+                    }
+                )
 
         # Check for empty values
         for line in content.split("\n"):
@@ -116,27 +124,35 @@ def env_check(
                 key = key.strip()
                 value = value.strip().strip('"').strip("'")
                 if not value:
-                    issues.append({
-                        "severity": "WARNING",
-                        "file": rel_path,
-                        "issue": f"Empty value for {key}",
-                        "fix": f"Set a value for {key} or remove the line",
-                    })
+                    issues.append(
+                        {
+                            "severity": "WARNING",
+                            "file": rel_path,
+                            "issue": f"Empty value for {key}",
+                            "fix": f"Set a value for {key} or remove the line",
+                        }
+                    )
 
     # Check if .env is tracked by git
     try:
         import subprocess
+
         result = subprocess.run(
             ["git", "ls-files", "--error-unmatch", ".env"],
-            capture_output=True, text=True, cwd=str(directory), timeout=5,
+            capture_output=True,
+            text=True,
+            cwd=str(directory),
+            timeout=5,
         )
         if result.returncode == 0:
-            issues.append({
-                "severity": "CRITICAL",
-                "file": ".env",
-                "issue": ".env is tracked by git — secrets are in version history!",
-                "fix": "git rm --cached .env && add to .gitignore",
-            })
+            issues.append(
+                {
+                    "severity": "CRITICAL",
+                    "file": ".env",
+                    "issue": ".env is tracked by git — secrets are in version history!",
+                    "fix": "git rm --cached .env && add to .gitignore",
+                }
+            )
     except Exception:
         pass
 
@@ -162,12 +178,14 @@ def env_check(
 
             for var in required_vars:
                 if var not in existing_vars and var not in os.environ:
-                    issues.append({
-                        "severity": "WARNING",
-                        "file": ".env",
-                        "issue": f"Missing {detected_framework} variable: {var}",
-                        "fix": f"Add {var}=<value> to .env",
-                    })
+                    issues.append(
+                        {
+                            "severity": "WARNING",
+                            "file": ".env",
+                            "issue": f"Missing {detected_framework} variable: {var}",
+                            "fix": f"Add {var}=<value> to .env",
+                        }
+                    )
 
     # Display results
     sev_colors = {"CRITICAL": "bold red", "WARNING": "yellow", "INFO": "cyan"}
@@ -205,15 +223,17 @@ def env_check(
     status_text = "ISSUES FOUND" if issues else "ALL CLEAR"
 
     console.print()
-    console.print(Panel(
-        f"[bold]Status:[/] [{status_color}]{status_text}[/]\n"
-        f"[bold]Env files:[/] {len(env_files)}\n"
-        f"[bold]Critical:[/] {critical}\n"
-        f"[bold]Warnings:[/] {warnings}\n" +
-        ("\n".join(f"[dim]• {i}[/]" for i in info) if info else ""),
-        title="Environment Check",
-        border_style=status_color,
-    ))
+    console.print(
+        Panel(
+            f"[bold]Status:[/] [{status_color}]{status_text}[/]\n"
+            f"[bold]Env files:[/] {len(env_files)}\n"
+            f"[bold]Critical:[/] {critical}\n"
+            f"[bold]Warnings:[/] {warnings}\n"
+            + ("\n".join(f"[dim]• {i}[/]" for i in info) if info else ""),
+            title="Environment Check",
+            border_style=status_color,
+        )
+    )
 
     # Auto-fix
     if fix and not env_in_gitignore and gitignore:
@@ -243,6 +263,7 @@ def _detect_framework(directory: Path) -> str | None:
     if package_json.exists():
         try:
             import json
+
             data = json.loads(package_json.read_text())
             deps = {**data.get("dependencies", {}), **data.get("devDependencies", {})}
             if "react" in deps:

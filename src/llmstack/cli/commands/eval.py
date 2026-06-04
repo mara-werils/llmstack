@@ -22,10 +22,15 @@ def eval_cmd(
     if gateway_url:
         _eval_gateway(gateway_url)
     elif data:
-        asyncio.run(_eval_dataset(
-            data_path=data, model=model, ollama_url=ollama_url,
-            max_examples=max_examples, output=output,
-        ))
+        asyncio.run(
+            _eval_dataset(
+                data_path=data,
+                model=model,
+                ollama_url=ollama_url,
+                max_examples=max_examples,
+                output=output,
+            )
+        )
     else:
         console.print("[error]Provide --data or --gateway-url[/]")
         sys.exit(1)
@@ -87,15 +92,24 @@ def _eval_gateway(gateway_url: str) -> None:
     alerts = data.get("alerts", [])
     if alerts:
         console.print()
-        console.print(Panel(
-            "\n".join(f"[{'red' if a['severity'] == 'critical' else 'yellow'}]{a['message']}[/]" for a in alerts),
-            title="Active Alerts", border_style="red",
-        ))
+        console.print(
+            Panel(
+                "\n".join(
+                    f"[{'red' if a['severity'] == 'critical' else 'yellow'}]{a['message']}[/]"
+                    for a in alerts
+                ),
+                title="Active Alerts",
+                border_style="red",
+            )
+        )
 
 
 async def _eval_dataset(
-    data_path: str, model: str, ollama_url: str,
-    max_examples: int, output: str | None,
+    data_path: str,
+    model: str,
+    ollama_url: str,
+    max_examples: int,
+    output: str | None,
 ) -> None:
     """Evaluate model quality against a dataset."""
     from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, MofNCompleteColumn
@@ -120,6 +134,7 @@ async def _eval_dataset(
         sys.exit(1)
 
     from llmstack.finetune.data import load_raw_data, _detect_columns, _row_to_chat
+
     rows, fmt = load_raw_data(path)
     if not rows:
         console.print("[error]No data found[/]")
@@ -137,8 +152,11 @@ async def _eval_dataset(
     results = []
 
     with Progress(
-        SpinnerColumn(), TextColumn("[bold blue]Evaluating..."),
-        BarColumn(), MofNCompleteColumn(), console=console,
+        SpinnerColumn(),
+        TextColumn("[bold blue]Evaluating..."),
+        BarColumn(),
+        MofNCompleteColumn(),
+        console=console,
     ) as progress:
         task = progress.add_task("eval", total=len(examples))
 
@@ -165,12 +183,14 @@ async def _eval_dataset(
                 response_text = ""
 
             score = scorer.score(query, response_text)
-            results.append({
-                "query": query[:100],
-                "expected": expected[:100],
-                "response": response_text[:100],
-                "scores": score.to_dict(),
-            })
+            results.append(
+                {
+                    "query": query[:100],
+                    "expected": expected[:100],
+                    "response": response_text[:100],
+                    "scores": score.to_dict(),
+                }
+            )
             progress.advance(task)
 
     # Show results
@@ -184,8 +204,10 @@ async def _eval_dataset(
     for m in metrics:
         vals = [r["scores"][m] for r in results]
         table.add_row(
-            m, f"{sum(vals)/len(vals):.4f}",
-            f"{min(vals):.4f}", f"{max(vals):.4f}",
+            m,
+            f"{sum(vals) / len(vals):.4f}",
+            f"{min(vals):.4f}",
+            f"{max(vals):.4f}",
         )
     console.print(table)
 

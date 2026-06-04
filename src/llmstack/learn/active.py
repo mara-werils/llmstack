@@ -41,10 +41,10 @@ class ActiveLearningConfig:
 class UncertaintySignal:
     """Signals indicating model uncertainty."""
 
-    hedging_score: float = 0.0       # presence of hedging language
-    length_anomaly: float = 0.0      # unusual response length
-    repetition_score: float = 0.0    # repetitive patterns
-    novelty_score: float = 0.0       # query unlike training data
+    hedging_score: float = 0.0  # presence of hedging language
+    length_anomaly: float = 0.0  # unusual response length
+    repetition_score: float = 0.0  # repetitive patterns
+    novelty_score: float = 0.0  # query unlike training data
     overall: float = 0.0
 
 
@@ -114,12 +114,7 @@ class ActiveLearner:
         repetition = self._score_repetition(response)
         novelty = self._score_novelty(query)
 
-        overall = (
-            0.3 * hedging
-            + 0.2 * length_anomaly
-            + 0.2 * repetition
-            + 0.3 * novelty
-        )
+        overall = 0.3 * hedging + 0.2 * length_anomaly + 0.2 * repetition + 0.3 * novelty
 
         return UncertaintySignal(
             hedging_score=hedging,
@@ -143,9 +138,7 @@ class ActiveLearner:
                 "\n[Learn] This seems like a new type of question for me. "
                 "Did I get it right? (y/n/c:correction): "
             )
-        return (
-            "\n[Learn] Quick feedback? (y/n/c:correction/s=skip): "
-        )
+        return "\n[Learn] Quick feedback? (y/n/c:correction/s=skip): "
 
     def _score_hedging(self, response: str) -> float:
         """Score presence of hedging/uncertainty language."""
@@ -185,7 +178,7 @@ class ActiveLearner:
         if len(response) < 100:
             return 0.0
 
-        sentences = re.split(r'[.!?\n]+', response)
+        sentences = re.split(r"[.!?\n]+", response)
         sentences = [s.strip().lower() for s in sentences if len(s.strip()) > 15]
 
         if len(sentences) < 3:

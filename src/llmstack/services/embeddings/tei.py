@@ -35,10 +35,9 @@ class TEIService(ServiceBase):
         # Use GPU image if NVIDIA available
         if self.hw.gpu_vendor == "nvidia":
             import docker
+
             spec["image"] = "ghcr.io/huggingface/text-embeddings-inference:latest"
-            spec["device_requests"] = [
-                docker.types.DeviceRequest(count=-1, capabilities=[["gpu"]])
-            ]
+            spec["device_requests"] = [docker.types.DeviceRequest(count=-1, capabilities=[["gpu"]])]
 
         return spec
 

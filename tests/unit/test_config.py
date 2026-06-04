@@ -123,7 +123,9 @@ class TestEnvOverrides:
 class TestLocalOverride:
     def test_load_with_local_override(self, tmp_path):
         config_file = tmp_path / "llmstack.yaml"
-        config_file.write_text(yaml.dump({"version": "1", "models": {"chat": {"name": "llama3.2"}}}))
+        config_file.write_text(
+            yaml.dump({"version": "1", "models": {"chat": {"name": "llama3.2"}}})
+        )
 
         local_file = tmp_path / "llmstack.local.yaml"
         local_file.write_text(yaml.dump({"models": {"chat": {"name": "mistral"}}}))

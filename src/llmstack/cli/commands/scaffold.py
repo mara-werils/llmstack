@@ -57,10 +57,16 @@ def scaffold(
     dry_run: bool = False,
 ) -> None:
     """Generate project structure from description."""
-    asyncio.run(_scaffold_async(
-        description=description, preset=preset, model=model,
-        ollama_url=ollama_url, output_dir=output_dir, dry_run=dry_run,
-    ))
+    asyncio.run(
+        _scaffold_async(
+            description=description,
+            preset=preset,
+            model=model,
+            ollama_url=ollama_url,
+            output_dir=output_dir,
+            dry_run=dry_run,
+        )
+    )
 
 
 async def _scaffold_async(
@@ -93,7 +99,11 @@ async def _scaffold_async(
     # Use preset if provided
     if preset:
         if preset in PROJECT_PRESETS:
-            description = f"{PROJECT_PRESETS[preset]}. {description}" if description else PROJECT_PRESETS[preset]
+            description = (
+                f"{PROJECT_PRESETS[preset]}. {description}"
+                if description
+                else PROJECT_PRESETS[preset]
+            )
         else:
             console.print(f"[error]Unknown preset: {preset}[/]")
             console.print(f"Available: {', '.join(PROJECT_PRESETS.keys())}")
@@ -138,7 +148,8 @@ Output ONLY valid JSON array, no markdown fences or explanations."""
         timeout = httpx.Timeout(300, connect=10, read=300, write=30)
         async with httpx.AsyncClient(timeout=timeout) as client:
             async with client.stream(
-                "POST", f"{ollama_url}/api/chat",
+                "POST",
+                f"{ollama_url}/api/chat",
                 json={
                     "model": model,
                     "messages": [
@@ -176,7 +187,7 @@ Output ONLY valid JSON array, no markdown fences or explanations."""
     bracket_start = cleaned.find("[")
     bracket_end = cleaned.rfind("]")
     if bracket_start >= 0 and bracket_end > bracket_start:
-        cleaned = cleaned[bracket_start:bracket_end + 1]
+        cleaned = cleaned[bracket_start : bracket_end + 1]
 
     try:
         files = json.loads(cleaned)

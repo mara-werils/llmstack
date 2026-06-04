@@ -14,13 +14,15 @@ RUN apt-get update && \
 COPY pyproject.toml ./
 COPY src/ ./src/
 
-RUN pip install --no-cache-dir --prefix=/install ".[gateway]"
+RUN pip install --no-cache-dir --no-compile --prefix=/install ".[gateway]"
 
 # ---- Final stage ----
 FROM python:3.11-slim
 
 LABEL maintainer="mara-werils"
 LABEL org.opencontainers.image.source="https://github.com/mara-werils/llmstack"
+LABEL org.opencontainers.image.description="LLMStack gateway - smart LLM routing and inference proxy"
+LABEL org.opencontainers.image.version="1.0.0"
 
 RUN groupadd --gid 1000 llmstack && \
     useradd --uid 1000 --gid llmstack --shell /bin/bash --create-home llmstack

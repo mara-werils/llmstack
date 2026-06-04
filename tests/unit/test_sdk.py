@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 
-
 from llmstack.sdk.client import LLMStackError, _parse_sse_line
 from llmstack.sdk.types import ChatResponse
 

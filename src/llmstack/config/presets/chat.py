@@ -1,7 +1,10 @@
 """Chat preset — minimal setup for conversational AI."""
 
 from llmstack.config.schema import (
-    StackConfig, ModelsConfig, ModelSpec, EmbeddingSpec,
+    StackConfig,
+    ModelsConfig,
+    ModelSpec,
+    EmbeddingSpec,
     ObserveConfig,
 )
 

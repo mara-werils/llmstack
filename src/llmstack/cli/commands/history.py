@@ -41,7 +41,8 @@ def history(
     if search:
         search_lower = search.lower()
         conversations = [
-            c for c in conversations
+            c
+            for c in conversations
             if search_lower in c.get("question", "").lower()
             or search_lower in c.get("answer", "").lower()
         ]

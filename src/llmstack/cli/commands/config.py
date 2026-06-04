@@ -14,6 +14,7 @@ def config_validate() -> None:
     """Validate llmstack.yaml and print results."""
     try:
         from llmstack.config.loader import load_config
+
         config = load_config()
         success("llmstack.yaml is valid")
 
@@ -37,6 +38,7 @@ def config_show(output_format: str = "yaml") -> None:
     """Display the current configuration."""
     try:
         from llmstack.config.loader import load_config
+
         config = load_config()
     except FileNotFoundError as exc:
         failure(str(exc))
@@ -61,6 +63,7 @@ def config_path() -> None:
     """Show the path to the active llmstack.yaml."""
     try:
         from llmstack.config.loader import find_config
+
         path = find_config()
         console.print(f"[path]{path}[/]")
     except FileNotFoundError as exc:

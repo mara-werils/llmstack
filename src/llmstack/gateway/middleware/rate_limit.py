@@ -20,6 +20,10 @@ from starlette.responses import JSONResponse
 REDIS_URL = os.getenv("LLMSTACK_REDIS_URL", "")
 RATE_LIMIT = os.getenv("LLMSTACK_RATE_LIMIT", "100/min")
 
+_TRUSTED_PROXIES: set[str] = {
+    p.strip() for p in os.getenv("LLMSTACK_TRUSTED_PROXIES", "").split(",") if p.strip()
+}
+
 _RATE_PREFIX = "llmstack:ratelimit:"
 
 # Lua script for atomic token bucket in Redis
@@ -146,7 +150,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         client = request.client
         ip = client.host if client else "unknown"
         forwarded = request.headers.get("X-Forwarded-For", "")
-        if forwarded:
+        if forwarded and ip in _TRUSTED_PROXIES:
             ip = forwarded.split(",")[0].strip()
         return f"{_RATE_PREFIX}ip:{ip}"
 
