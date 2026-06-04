@@ -92,6 +92,19 @@ packages = ["src/llmstack"]
 target-version = "py311"
 line-length = 100
 
+[tool.coverage.run]
+source = ["llmstack"]
+omit = ["*/tests/*", "*/cli/commands/*"]
+
+[tool.coverage.report]
+fail_under = 60
+show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "if __name__ == .__main__.",
+]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
