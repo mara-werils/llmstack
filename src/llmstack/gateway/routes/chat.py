@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 import time
 
+import httpx
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, StreamingResponse
 
@@ -294,4 +295,15 @@ async def chat_completions(request: Request):
                 }
             },
             headers={"Retry-After": str(round(exc.retry_after))},
+        )
+    except httpx.ConnectError as exc:
+        logger.error("Backend connection failed: %s", exc)
+        return JSONResponse(
+            status_code=502,
+            content={
+                "error": {
+                    "message": "Failed to connect to inference backend",
+                    "type": "bad_gateway",
+                }
+            },
         )
