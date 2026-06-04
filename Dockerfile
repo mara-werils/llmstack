@@ -28,8 +28,7 @@ RUN groupadd --gid 1000 llmstack && \
     useradd --uid 1000 --gid llmstack --shell /bin/bash --create-home llmstack
 
 COPY --from=builder /install /usr/local
-COPY src/llmstack/gateway/ /app/llmstack/gateway/
-COPY src/llmstack/__init__.py /app/llmstack/__init__.py
+COPY src/llmstack/ /app/llmstack/
 
 WORKDIR /app
 
