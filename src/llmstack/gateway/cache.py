@@ -8,12 +8,15 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import os
 import time
 from collections import deque
 from dataclasses import dataclass, field
 
 import redis.asyncio as aioredis
+
+logger = logging.getLogger(__name__)
 
 REDIS_URL = os.getenv("LLMSTACK_REDIS_URL", "")
 CACHE_TTL = int(os.getenv("LLMSTACK_CACHE_TTL", "3600"))  # 1 hour default
@@ -81,7 +84,8 @@ class ResponseCache:
             )
             await self._redis.ping()
             self._connected = True
-        except Exception:
+        except Exception as exc:
+            logger.debug("Redis connection failed: %s", exc)
             self._redis = None
             self._connected = False
 
