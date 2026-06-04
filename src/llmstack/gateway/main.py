@@ -30,6 +30,7 @@ from llmstack.gateway.routes.cost import router as cost_router
 from llmstack.gateway.routes.webhooks import router as webhooks_router
 from llmstack.gateway.routes.batch import router as batch_router
 from llmstack.gateway.routes.leaderboard import router as leaderboard_router
+from llmstack.gateway.routes.widget import router as widget_router
 from llmstack.gateway.middleware.auth import AuthMiddleware
 from llmstack.gateway.middleware.metrics import MetricsMiddleware
 from llmstack.gateway.middleware.rate_limit import RateLimitMiddleware
@@ -387,6 +388,7 @@ def create_app() -> FastAPI:
     app.include_router(batch_router, prefix="/v1")
     app.include_router(leaderboard_router, prefix="/v1")
     app.include_router(health_router)
+    app.include_router(widget_router)
 
     # Serve Web UI
     if _UI_DIR.is_dir():

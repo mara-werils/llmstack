@@ -277,3 +277,103 @@ def doctor() -> None:
     else:
         console.print(f"[bold red]{issues} issue(s) and {warnings} warning(s) found.[/]")
     console.print()
+
+
+def doctor_fix() -> None:
+    """Auto-fix common issues detected by doctor."""
+    import subprocess
+
+    banner("LLMStack Doctor --fix", "Auto-remediation for common issues")
+    console.print()
+    fixed = 0
+
+    # 1. Ollama not running
+    console.print("[accent]Ollama[/]")
+    ollama_url = "http://localhost:11434"
+    if not _check_url(ollama_url):
+        if shutil.which("ollama"):
+            warn("Ollama is not running but binary is available")
+            info("Start Ollama with: ollama serve")
+            info("Or run in background: nohup ollama serve &")
+        else:
+            failure("Ollama is not installed")
+            info("Install from: https://ollama.com/download")
+    else:
+        success("Ollama is already running")
+
+        # No models pulled — pull a small one
+        console.print("\n[accent]Models[/]")
+        try:
+            resp = httpx.get(f"{ollama_url}/api/tags", timeout=5)
+            models = resp.json().get("models", [])
+            if not models:
+                warn("No models pulled. Pulling llama3.2:1b ...")
+                result = subprocess.run(
+                    ["ollama", "pull", "llama3.2:1b"],
+                    capture_output=False,
+                    check=False,
+                )
+                if result.returncode == 0:
+                    success("Pulled llama3.2:1b")
+                    fixed += 1
+                else:
+                    failure("Failed to pull llama3.2:1b")
+            else:
+                model_names = [m["name"] for m in models[:5]]
+                success(f"Models available: {', '.join(model_names)}")
+        except Exception:
+            warn("Could not check models")
+
+    # 2. No llmstack.yaml — create from default preset
+    console.print("\n[accent]Configuration[/]")
+    try:
+        from llmstack.config.loader import load_config
+
+        load_config()
+        success("llmstack.yaml exists and is valid")
+    except FileNotFoundError:
+        warn("No llmstack.yaml found — creating from default preset")
+        try:
+            from llmstack.cli.commands.init import init as _init
+
+            _init(preset="chat", directory=None)
+            success("Created llmstack.yaml with 'chat' preset")
+            fixed += 1
+        except Exception as e:
+            failure(f"Failed to create config: {e}")
+    except SystemExit:
+        warn("llmstack.yaml has validation errors — run 'llmstack init' to recreate")
+
+    # 3. Redis not running
+    console.print("\n[accent]Redis[/]")
+    redis_url = os.getenv("LLMSTACK_REDIS_URL", "redis://localhost:6379")
+    redis_ok = False
+    try:
+        import redis as _redis
+
+        r = _redis.from_url(redis_url, socket_connect_timeout=2)
+        r.ping()
+        redis_ok = True
+    except ImportError:
+        info("redis package not installed (optional)")
+    except Exception:
+        pass
+
+    if redis_ok:
+        success("Redis is reachable")
+    elif shutil.which("docker"):
+        warn("Redis is not reachable — Docker is available")
+        info("Start Redis with: docker run -d -p 6379:6379 redis:7")
+    else:
+        info("Redis is not reachable and Docker is not installed (Redis is optional)")
+
+    # Summary
+    console.print()
+    if fixed:
+        console.print(f"[bold green]Fixed {fixed} issue(s).[/]")
+    else:
+        console.print(
+            "[bold]No auto-fixable issues found."
+            " Run 'llmstack doctor' for full check.[/]"
+        )
+    console.print()

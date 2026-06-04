@@ -249,10 +249,26 @@ def info() -> None:
 
 
 @app.command()
-def doctor() -> None:
+def doctor(
+    fix: bool = typer.Option(False, "--fix", help="Auto-fix common issues"),
+) -> None:
     """Check system requirements and diagnose issues."""
-    from llmstack.cli.commands.doctor import doctor as _doctor
-    _doctor()
+    if fix:
+        from llmstack.cli.commands.doctor import doctor_fix as _doctor_fix
+        _doctor_fix()
+    else:
+        from llmstack.cli.commands.doctor import doctor as _doctor
+        _doctor()
+
+
+@app.command(name="completion")
+def completion_cmd(
+    shell: str = typer.Argument("", help="Shell: bash, zsh, fish (auto-detected if empty)"),
+    install: bool = typer.Option(False, "--install", help="Install completion to shell config"),
+) -> None:
+    """Generate or install shell completions for bash, zsh, or fish."""
+    from llmstack.cli.commands.completion import completion as _completion
+    _completion(shell=shell, install=install)
 
 
 @app.command()
