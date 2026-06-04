@@ -104,6 +104,12 @@ class Client:
             timeout=timeout,
         )
 
+    def __repr__(self) -> str:
+        return (
+            f"Client(base_url={self.base_url!r}, "
+            f"api_key={'***' if self.api_key else None!r})"
+        )
+
     # -- context manager --------------------------------------------------
 
     def __enter__(self) -> Client:
@@ -368,6 +374,12 @@ class AsyncClient:
             base_url=self.base_url,
             headers=_build_headers(api_key),
             timeout=timeout,
+        )
+
+    def __repr__(self) -> str:
+        return (
+            f"AsyncClient(base_url={self.base_url!r}, "
+            f"api_key={'***' if self.api_key else None!r})"
         )
 
     # -- context manager --------------------------------------------------
