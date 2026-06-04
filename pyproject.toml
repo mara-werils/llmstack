@@ -62,7 +62,7 @@ dev = [
     "pre-commit>=4.6.0",
 ]
 # Documentation site (mkdocs)
-docs-build = ["mkdocs-material>=9.0", "mkdocs-minify-plugin"]
+docs-build = ["mkdocs-material>=9.7.6", "mkdocs-minify-plugin"]
 # AI code review, security audit, file watcher
 review = ["httpx>=0.27"]
 security = ["httpx>=0.27"]
