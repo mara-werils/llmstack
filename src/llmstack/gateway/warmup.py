@@ -13,8 +13,21 @@ from dataclasses import dataclass, field
 
 logger = logging.getLogger(__name__)
 
-WARMUP_PROMPT = [{"role": "user", "content": "Hi"}]
-WARMUP_MAX_TOKENS = 1
+@dataclass
+class WarmupConfig:
+    """Configuration for the warmup process."""
+
+    prompt: list[dict[str, str]] = field(
+        default_factory=lambda: [{"role": "user", "content": "Hi"}],
+    )
+    max_tokens: int = 1
+    timeout: float = 30.0
+    concurrency: int = 3
+
+
+# Module-level defaults derived from WarmupConfig for backward compat
+WARMUP_PROMPT = WarmupConfig().prompt
+WARMUP_MAX_TOKENS = WarmupConfig().max_tokens
 
 
 @dataclass
@@ -72,6 +85,7 @@ async def warmup_model(
     handler,
     provider: str = "",
     timeout: float = 30.0,
+    config: WarmupConfig | None = None,
 ) -> WarmupResult:
     """Warm up a single model by sending a probe request.
 
@@ -80,13 +94,15 @@ async def warmup_model(
         handler: async function(payload) -> response
         provider: Provider name (for logging)
         timeout: Max time to wait for warmup
+        config: Optional WarmupConfig with prompt and max_tokens overrides
     """
+    cfg = config or WarmupConfig()
     t0 = time.monotonic()
     try:
         payload = {
             "model": model,
-            "messages": WARMUP_PROMPT,
-            "max_tokens": WARMUP_MAX_TOKENS,
+            "messages": cfg.prompt,
+            "max_tokens": cfg.max_tokens,
             "temperature": 0,
             "stream": False,
         }
@@ -171,3 +187,15 @@ async def warmup_all(
     )
 
     return report
+
+
+class WarmupManager:
+    """High-level manager for model warm-up operations."""
+
+    def __init__(
+        self,
+        models: list[str],
+        config: WarmupConfig | None = None,
+    ) -> None:
+        self.models = list(models)
+        self.config = config or WarmupConfig()
