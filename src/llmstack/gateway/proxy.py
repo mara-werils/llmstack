@@ -6,6 +6,7 @@ and the provider registry for multi-provider routing.
 
 from __future__ import annotations
 
+import logging
 import os
 from typing import AsyncIterator
 
@@ -14,6 +15,8 @@ import httpx
 from llmstack.gateway.cache import get_cache
 from llmstack.gateway.circuit_breaker import get_inference_breaker
 from llmstack.gateway.middleware.metrics import record_tokens
+
+logger = logging.getLogger(__name__)
 
 _raw_inference = os.getenv("LLMSTACK_INFERENCE_URL", "http://llmstack-ollama:11434/v1")
 INFERENCE_URL = (
@@ -77,6 +80,7 @@ async def proxy_chat_completion(
     temperature = payload.get("temperature", 1.0)
 
     # Check circuit breaker first
+    prev_state = breaker.state if hasattr(breaker, "state") else None
     breaker.check()  # raises CircuitBreakerError if open
 
     # Try cache (only for non-streaming, low-temperature requests)
@@ -99,6 +103,13 @@ async def proxy_chat_completion(
         result = resp.json()
 
         breaker.record_success()
+        new_state = breaker.state if hasattr(breaker, "state") else None
+        if prev_state and new_state and prev_state != new_state:
+            logger.info(
+                "Circuit breaker state transition: %s -> %s",
+                prev_state,
+                new_state,
+            )
 
         # Extract and record token usage
         usage = result.get("usage", {})
@@ -116,9 +127,25 @@ async def proxy_chat_completion(
     except httpx.HTTPStatusError as exc:
         if exc.response.status_code >= 500:
             breaker.record_failure()
+            new_state = breaker.state if hasattr(breaker, "state") else None
+            if prev_state and new_state and prev_state != new_state:
+                logger.warning(
+                    "Circuit breaker tripped: %s -> %s (HTTP %d)",
+                    prev_state,
+                    new_state,
+                    exc.response.status_code,
+                )
         raise
-    except (httpx.ConnectError, httpx.ReadTimeout, httpx.ConnectTimeout):
+    except (httpx.ConnectError, httpx.ReadTimeout, httpx.ConnectTimeout) as exc:
         breaker.record_failure()
+        new_state = breaker.state if hasattr(breaker, "state") else None
+        if prev_state and new_state and prev_state != new_state:
+            logger.warning(
+                "Circuit breaker tripped: %s -> %s (%s)",
+                prev_state,
+                new_state,
+                type(exc).__name__,
+            )
         raise
 
 
