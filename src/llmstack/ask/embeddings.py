@@ -18,9 +18,11 @@ class LocalEmbeddings:
         self,
         ollama_url: str = "http://localhost:11434",
         model: str = "nomic-embed-text",
+        batch_size: int = 16,
     ) -> None:
         self.ollama_url = ollama_url.rstrip("/")
         self.model = model
+        self.batch_size = batch_size
         self._embeddings: np.ndarray | None = None
         self._chunks: list[TextChunk] = []
         self._client = httpx.AsyncClient(timeout=httpx.Timeout(300, connect=10))
@@ -53,7 +55,7 @@ class LocalEmbeddings:
         """
         await self._ensure_model()
 
-        batch_size = 16
+        batch_size = self.batch_size
         all_embeddings: list[list[float]] = []
 
         for i in range(0, len(texts), batch_size):
