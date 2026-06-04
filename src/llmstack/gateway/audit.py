@@ -31,6 +31,11 @@ class AuditLogger:
                     cls._instance = inst
         return cls._instance
 
+    @classmethod
+    def get_instance(cls) -> AuditLogger:
+        """Return the singleton instance (creates one if needed)."""
+        return cls()
+
     # ------------------------------------------------------------------
     # Public helpers
     # ------------------------------------------------------------------
@@ -40,6 +45,7 @@ class AuditLogger:
         client_ip: str,
         api_key_hash: str = "",
         details: str = "",
+        reason: str = "",
     ) -> None:
         self._emit(
             event_type="auth_failure",
@@ -47,7 +53,7 @@ class AuditLogger:
             api_key_hash=api_key_hash[:8],
             action="authenticate",
             outcome="denied",
-            details=details,
+            details=details or reason,
         )
 
     def log_rate_limit(
@@ -55,6 +61,7 @@ class AuditLogger:
         client_ip: str,
         api_key_hash: str = "",
         details: str = "",
+        key_identity: str = "",
     ) -> None:
         self._emit(
             event_type="rate_limit",
