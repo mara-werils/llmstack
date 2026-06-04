@@ -52,8 +52,12 @@ class _JsonFormatter(logging.Formatter):
             "msg": record.getMessage(),
         }
         # Merge extra fields
-        for key in ("request_id", "method", "path", "status", "duration_ms",
-                     "client_ip", "tokens_in", "tokens_out", "cache_hit", "model"):
+        for key in (
+            "request_id", "method", "path", "status", "duration_ms",
+            "client_ip", "tokens_in", "tokens_out", "cache_hit", "model",
+            "provider", "cost_usd", "user_agent", "content_length",
+            "correlation_id", "error", "tier",
+        ):
             val = getattr(record, key, None)
             if val is not None:
                 log_dict[key] = val
@@ -108,6 +112,10 @@ class LoggingMiddleware(BaseHTTPMiddleware):
                 "status": response.status_code,
                 "duration_ms": duration_ms,
                 "client_ip": client_ip,
+                "user_agent": request.headers.get("User-Agent", ""),
+                "content_length": request.headers.get(
+                    "Content-Length", ""
+                ),
             },
         )
 

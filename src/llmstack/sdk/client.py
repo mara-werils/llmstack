@@ -7,6 +7,7 @@ from typing import Any, Generator, AsyncGenerator
 
 import httpx
 
+from llmstack.sdk.retry import RetryConfig, async_retry, sync_retry
 from llmstack.sdk.types import (
     ChatResponse,
     ChatStreamDelta,
@@ -18,7 +19,7 @@ from llmstack.sdk.types import (
     RAGStreamDelta,
 )
 
-__all__ = ["Client", "AsyncClient", "LLMStackError"]
+__all__ = ["Client", "AsyncClient", "LLMStackError", "RetryConfig"]
 
 _DEFAULT_BASE_URL = "http://localhost:8000"
 _DEFAULT_TIMEOUT = 120.0
@@ -90,9 +91,11 @@ class Client:
         base_url: str = _DEFAULT_BASE_URL,
         api_key: str | None = None,
         timeout: float = _DEFAULT_TIMEOUT,
+        retry: RetryConfig | None = None,
     ) -> None:
         self.base_url = base_url.rstrip("/")
         self.api_key = api_key
+        self._retry = retry or RetryConfig()
         self._client = httpx.Client(
             base_url=self.base_url,
             headers=_build_headers(api_key),
@@ -110,6 +113,14 @@ class Client:
     def close(self) -> None:
         """Close the underlying HTTP connection pool."""
         self._client.close()
+
+    # -- internal request helpers -----------------------------------------
+
+    def _post(self, url: str, **kwargs: Any) -> httpx.Response:
+        return sync_retry(self._client.post, self._retry, url, **kwargs)
+
+    def _get(self, url: str, **kwargs: Any) -> httpx.Response:
+        return sync_retry(self._client.get, self._retry, url, **kwargs)
 
     # -- chat -------------------------------------------------------------
 
@@ -137,7 +148,7 @@ class Client:
         if stream:
             return self._chat_stream(payload)
 
-        resp = self._client.post("/v1/chat/completions", json=payload)
+        resp = self._post("/v1/chat/completions", json=payload)
         _raise_for_error(resp)
         return ChatResponse.from_dict(resp.json(), headers=dict(resp.headers))
 
@@ -166,7 +177,7 @@ class Client:
             ``EmbeddingsResponse`` containing embedding vectors.
         """
         payload: dict[str, Any] = {"input": input, "model": model}
-        resp = self._client.post("/v1/embeddings", json=payload)
+        resp = self._post("/v1/embeddings", json=payload)
         _raise_for_error(resp)
         return EmbeddingsResponse.from_dict(resp.json())
 
@@ -197,7 +208,7 @@ class Client:
         }
         if metadata:
             payload["metadata"] = metadata
-        resp = self._client.post("/v1/rag/ingest", json=payload)
+        resp = self._post("/v1/rag/ingest", json=payload)
         _raise_for_error(resp)
         return IngestResponse.from_dict(resp.json())
 
@@ -232,7 +243,7 @@ class Client:
         if stream:
             return self._rag_query_stream(payload)
 
-        resp = self._client.post("/v1/rag/query", json=payload)
+        resp = self._post("/v1/rag/query", json=payload)
         _raise_for_error(resp)
         return RAGResponse.from_dict(resp.json())
 
@@ -257,7 +268,7 @@ class Client:
         Returns:
             ``ModelsResponse`` containing the list of models.
         """
-        resp = self._client.get("/v1/models")
+        resp = self._get("/v1/models")
         _raise_for_error(resp)
         return ModelsResponse.from_dict(resp.json())
 
@@ -269,7 +280,7 @@ class Client:
         Returns:
             ``HealthResponse`` with per-service status flags.
         """
-        resp = self._client.get("/healthz")
+        resp = self._get("/healthz")
         _raise_for_error(resp)
         return HealthResponse.from_dict(resp.json())
 
@@ -345,9 +356,11 @@ class AsyncClient:
         base_url: str = _DEFAULT_BASE_URL,
         api_key: str | None = None,
         timeout: float = _DEFAULT_TIMEOUT,
+        retry: RetryConfig | None = None,
     ) -> None:
         self.base_url = base_url.rstrip("/")
         self.api_key = api_key
+        self._retry = retry or RetryConfig()
         self._client = httpx.AsyncClient(
             base_url=self.base_url,
             headers=_build_headers(api_key),
@@ -365,6 +378,18 @@ class AsyncClient:
     async def close(self) -> None:
         """Close the underlying HTTP connection pool."""
         await self._client.aclose()
+
+    # -- internal request helpers -----------------------------------------
+
+    async def _post(self, url: str, **kwargs: Any) -> httpx.Response:
+        return await async_retry(
+            self._client.post, self._retry, url, **kwargs
+        )
+
+    async def _get(self, url: str, **kwargs: Any) -> httpx.Response:
+        return await async_retry(
+            self._client.get, self._retry, url, **kwargs
+        )
 
     # -- chat -------------------------------------------------------------
 
@@ -392,7 +417,7 @@ class AsyncClient:
         if stream:
             return self._chat_stream(payload)
 
-        resp = await self._client.post("/v1/chat/completions", json=payload)
+        resp = await self._post("/v1/chat/completions", json=payload)
         _raise_for_error(resp)
         return ChatResponse.from_dict(resp.json(), headers=dict(resp.headers))
 
@@ -421,7 +446,7 @@ class AsyncClient:
             ``EmbeddingsResponse`` containing embedding vectors.
         """
         payload: dict[str, Any] = {"input": input, "model": model}
-        resp = await self._client.post("/v1/embeddings", json=payload)
+        resp = await self._post("/v1/embeddings", json=payload)
         _raise_for_error(resp)
         return EmbeddingsResponse.from_dict(resp.json())
 
@@ -452,7 +477,7 @@ class AsyncClient:
         }
         if metadata:
             payload["metadata"] = metadata
-        resp = await self._client.post("/v1/rag/ingest", json=payload)
+        resp = await self._post("/v1/rag/ingest", json=payload)
         _raise_for_error(resp)
         return IngestResponse.from_dict(resp.json())
 
@@ -487,7 +512,7 @@ class AsyncClient:
         if stream:
             return self._rag_query_stream(payload)
 
-        resp = await self._client.post("/v1/rag/query", json=payload)
+        resp = await self._post("/v1/rag/query", json=payload)
         _raise_for_error(resp)
         return RAGResponse.from_dict(resp.json())
 
@@ -514,7 +539,7 @@ class AsyncClient:
         Returns:
             ``ModelsResponse`` containing the list of models.
         """
-        resp = await self._client.get("/v1/models")
+        resp = await self._get("/v1/models")
         _raise_for_error(resp)
         return ModelsResponse.from_dict(resp.json())
 
@@ -526,7 +551,7 @@ class AsyncClient:
         Returns:
             ``HealthResponse`` with per-service status flags.
         """
-        resp = await self._client.get("/healthz")
+        resp = await self._get("/healthz")
         _raise_for_error(resp)
         return HealthResponse.from_dict(resp.json())
 
