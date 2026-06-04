@@ -26,10 +26,16 @@ def fix(
     interactive: bool = True,
 ) -> None:
     """Auto-fix code issues with AI."""
-    asyncio.run(_fix_async(
-        description=description, file=file, model=model,
-        ollama_url=ollama_url, dry_run=dry_run, interactive=interactive,
-    ))
+    asyncio.run(
+        _fix_async(
+            description=description,
+            file=file,
+            model=model,
+            ollama_url=ollama_url,
+            dry_run=dry_run,
+            interactive=interactive,
+        )
+    )
 
 
 async def _fix_async(
@@ -56,10 +62,13 @@ async def _fix_async(
                 console.print("[error]Ollama is not responding.[/]")
                 raise typer.Exit(1)
     except httpx.ConnectError:
-        console.print(Panel(
-            "[error]Cannot connect to Ollama.[/]",
-            title="Connection Error", border_style="red",
-        ))
+        console.print(
+            Panel(
+                "[error]Cannot connect to Ollama.[/]",
+                title="Connection Error",
+                border_style="red",
+            )
+        )
         raise typer.Exit(1)
 
     # Read target file
@@ -101,7 +110,8 @@ async def _fix_async(
         patch = ""
         async with httpx.AsyncClient(timeout=timeout) as client:
             async with client.stream(
-                "POST", f"{ollama_url}/api/chat",
+                "POST",
+                f"{ollama_url}/api/chat",
                 json={
                     "model": model,
                     "messages": [
@@ -171,7 +181,9 @@ async def _fix_async(
     try:
         result = subprocess.run(
             ["patch", "-p0", "--input", patch_file],
-            capture_output=True, text=True, cwd=str(Path.cwd()),
+            capture_output=True,
+            text=True,
+            cwd=str(Path.cwd()),
         )
         if result.returncode == 0:
             console.print("[green]Patch applied successfully.[/]")

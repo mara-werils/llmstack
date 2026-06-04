@@ -80,9 +80,7 @@ class ModelBandit:
         config: BanditConfig | None = None,
     ):
         self.config = config or BanditConfig()
-        self.arms: dict[str, ArmStats] = {
-            model: ArmStats(name=model) for model in models
-        }
+        self.arms: dict[str, ArmStats] = {model: ArmStats(name=model) for model in models}
         self._category_arms: dict[str, dict[str, ArmStats]] = {}
 
     def select(self, category: str = "general") -> str:
@@ -161,9 +159,7 @@ class ModelBandit:
     def _get_arms(self, category: str) -> dict[str, ArmStats]:
         """Get or create per-category arms."""
         if category not in self._category_arms:
-            self._category_arms[category] = {
-                name: ArmStats(name=name) for name in self.arms
-            }
+            self._category_arms[category] = {name: ArmStats(name=name) for name in self.arms}
         return self._category_arms[category]
 
     def _thompson_select(self, arms: dict[str, ArmStats]) -> str:
@@ -194,9 +190,7 @@ class ModelBandit:
             if arm.pulls == 0:
                 return name
             mean = arm.mean_reward
-            exploration = self.config.exploration_weight * math.sqrt(
-                math.log(total) / arm.pulls
-            )
+            exploration = self.config.exploration_weight * math.sqrt(math.log(total) / arm.pulls)
             ucb = mean + exploration
             if ucb > best_ucb:
                 best_ucb = ucb

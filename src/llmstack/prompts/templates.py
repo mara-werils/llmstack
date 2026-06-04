@@ -102,6 +102,7 @@ BUILTIN_TEMPLATES: list[dict] = [
 @dataclass
 class PromptTemplate:
     """A prompt template with variables."""
+
     name: str
     description: str
     category: str
@@ -184,8 +185,14 @@ class TemplateManager:
                 )
         return None
 
-    def save(self, name: str, template: str, description: str = "",
-             category: str = "custom", variables: list[str] | None = None) -> PromptTemplate:
+    def save(
+        self,
+        name: str,
+        template: str,
+        description: str = "",
+        category: str = "custom",
+        variables: list[str] | None = None,
+    ) -> PromptTemplate:
         """Save a custom template."""
         # Auto-detect variables from {{var}} patterns
         if variables is None:
@@ -202,8 +209,12 @@ class TemplateManager:
             conn.commit()
 
         return PromptTemplate(
-            name=name, description=description, category=category,
-            template=template, variables=variables, created_at=now,
+            name=name,
+            description=description,
+            category=category,
+            template=template,
+            variables=variables,
+            created_at=now,
         )
 
     def list_all(self, category: str | None = None) -> list[PromptTemplate]:
@@ -214,11 +225,16 @@ class TemplateManager:
         for bt in BUILTIN_TEMPLATES:
             if category and bt["category"] != category:
                 continue
-            templates.append(PromptTemplate(
-                name=bt["name"], description=bt["description"],
-                category=bt["category"], template=bt["template"],
-                variables=bt["variables"], is_builtin=True,
-            ))
+            templates.append(
+                PromptTemplate(
+                    name=bt["name"],
+                    description=bt["description"],
+                    category=bt["category"],
+                    template=bt["template"],
+                    variables=bt["variables"],
+                    is_builtin=True,
+                )
+            )
 
         # Add custom from DB
         with sqlite3.connect(self.db_path) as conn:

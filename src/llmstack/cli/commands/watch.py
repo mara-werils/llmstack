@@ -30,10 +30,15 @@ def watch(
     debounce: float = 2.0,
 ) -> None:
     """Watch files for changes and get real-time AI suggestions."""
-    asyncio.run(_watch_async(
-        directory=directory, model=model, ollama_url=ollama_url,
-        patterns=patterns, debounce=debounce,
-    ))
+    asyncio.run(
+        _watch_async(
+            directory=directory,
+            model=model,
+            ollama_url=ollama_url,
+            patterns=patterns,
+            debounce=debounce,
+        )
+    )
 
 
 async def _watch_async(
@@ -50,13 +55,16 @@ async def _watch_async(
     watch_dir = Path(directory).resolve()
 
     console.print()
-    console.print(Panel(
-        f"[bold]Watching:[/] {watch_dir}\n"
-        f"[bold]Patterns:[/] {patterns}\n"
-        f"[bold]Model:[/] {model}\n\n"
-        f"[dim]Save a file to get AI suggestions. Ctrl+C to stop.[/]",
-        title="llmstack watch", border_style="cyan",
-    ))
+    console.print(
+        Panel(
+            f"[bold]Watching:[/] {watch_dir}\n"
+            f"[bold]Patterns:[/] {patterns}\n"
+            f"[bold]Model:[/] {model}\n\n"
+            f"[dim]Save a file to get AI suggestions. Ctrl+C to stop.[/]",
+            title="llmstack watch",
+            border_style="cyan",
+        )
+    )
     console.print()
 
     pat_list = [p.strip() for p in patterns.split(",")]
@@ -91,17 +99,22 @@ async def _watch_async(
         console.print(f"[dim]{timestamp}[/] [bold cyan]Changed:[/] {fpath.relative_to(watch_dir)}")
 
         import httpx
+
         timeout = httpx.Timeout(60, connect=5, read=60, write=10)
 
         try:
             async with httpx.AsyncClient(timeout=timeout) as client:
                 async with client.stream(
-                    "POST", f"{ollama_url}/api/chat",
+                    "POST",
+                    f"{ollama_url}/api/chat",
                     json={
                         "model": model,
                         "messages": [
                             {"role": "system", "content": WATCH_SYSTEM_PROMPT},
-                            {"role": "user", "content": f"File: {fpath.name}\n\n```\n{content}\n```"},
+                            {
+                                "role": "user",
+                                "content": f"File: {fpath.name}\n\n```\n{content}\n```",
+                            },
                         ],
                         "stream": True,
                     },
@@ -123,11 +136,13 @@ async def _watch_async(
                             continue
 
                 if result.strip():
-                    console.print(Panel(
-                        Markdown(result),
-                        title=f"Suggestions for {fpath.name}",
-                        border_style="green",
-                    ))
+                    console.print(
+                        Panel(
+                            Markdown(result),
+                            title=f"Suggestions for {fpath.name}",
+                            border_style="green",
+                        )
+                    )
         except Exception:
             pass
 

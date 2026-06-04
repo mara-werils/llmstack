@@ -215,9 +215,7 @@ class TemplateStore:
             template.updated_at = time.time()
             return template
 
-    def render(
-        self, name_or_id: str, variables: dict[str, str] | None = None
-    ) -> str | None:
+    def render(self, name_or_id: str, variables: dict[str, str] | None = None) -> str | None:
         """Render a template by name/ID with variable substitution."""
         template = self.get(name_or_id)
         if template is None:

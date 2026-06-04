@@ -85,8 +85,12 @@ class TestFeedbackStore:
 
     def test_filter_by_type(self, store):
         store.add_feedback(Feedback(feedback_type=FeedbackType.THUMBS_UP, query="a", response="b"))
-        store.add_feedback(Feedback(feedback_type=FeedbackType.THUMBS_DOWN, query="c", response="d"))
-        store.add_feedback(Feedback(feedback_type=FeedbackType.CORRECTION, query="e", response="f", correction="g"))
+        store.add_feedback(
+            Feedback(feedback_type=FeedbackType.THUMBS_DOWN, query="c", response="d")
+        )
+        store.add_feedback(
+            Feedback(feedback_type=FeedbackType.CORRECTION, query="e", response="f", correction="g")
+        )
 
         ups = store.get_feedback(feedback_type=FeedbackType.THUMBS_UP)
         assert len(ups) == 1
@@ -97,11 +101,13 @@ class TestFeedbackStore:
 
     def test_unused_feedback_count(self, store):
         for i in range(5):
-            store.add_feedback(Feedback(
-                feedback_type=FeedbackType.THUMBS_UP,
-                query=f"q{i}",
-                response=f"r{i}",
-            ))
+            store.add_feedback(
+                Feedback(
+                    feedback_type=FeedbackType.THUMBS_UP,
+                    query=f"q{i}",
+                    response=f"r{i}",
+                )
+            )
 
         assert store.get_unused_feedback_count() == 5
 
@@ -111,8 +117,12 @@ class TestFeedbackStore:
         assert store.get_unused_feedback_count() == 3
 
     def test_filter_by_model(self, store):
-        store.add_feedback(Feedback(feedback_type=FeedbackType.THUMBS_UP, query="a", response="b", model="llama"))
-        store.add_feedback(Feedback(feedback_type=FeedbackType.THUMBS_UP, query="c", response="d", model="gpt4"))
+        store.add_feedback(
+            Feedback(feedback_type=FeedbackType.THUMBS_UP, query="a", response="b", model="llama")
+        )
+        store.add_feedback(
+            Feedback(feedback_type=FeedbackType.THUMBS_UP, query="c", response="d", model="gpt4")
+        )
 
         results = store.get_feedback(model="llama")
         assert len(results) == 1
@@ -120,8 +130,12 @@ class TestFeedbackStore:
 
     def test_stats(self, store):
         store.add_feedback(Feedback(feedback_type=FeedbackType.THUMBS_UP, query="a", response="b"))
-        store.add_feedback(Feedback(feedback_type=FeedbackType.THUMBS_DOWN, query="c", response="d"))
-        store.add_feedback(Feedback(feedback_type=FeedbackType.CORRECTION, query="e", response="f", correction="g"))
+        store.add_feedback(
+            Feedback(feedback_type=FeedbackType.THUMBS_DOWN, query="c", response="d")
+        )
+        store.add_feedback(
+            Feedback(feedback_type=FeedbackType.CORRECTION, query="e", response="f", correction="g")
+        )
 
         stats = store.get_stats()
         assert stats["total_feedback"] == 3

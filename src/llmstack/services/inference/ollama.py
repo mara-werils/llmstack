@@ -34,9 +34,8 @@ class OllamaService(ServiceBase):
         # GPU passthrough for NVIDIA
         if self.hw.gpu_vendor == "nvidia":
             import docker
-            spec["device_requests"] = [
-                docker.types.DeviceRequest(count=-1, capabilities=[["gpu"]])
-            ]
+
+            spec["device_requests"] = [docker.types.DeviceRequest(count=-1, capabilities=[["gpu"]])]
 
         return spec
 

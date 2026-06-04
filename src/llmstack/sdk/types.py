@@ -10,6 +10,7 @@ from typing import Any
 # Chat
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class ChatMessage:
     """A single message in a chat conversation."""
@@ -111,6 +112,7 @@ class ChatStreamDelta:
 # Embeddings
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class Embedding:
     """A single embedding vector."""
@@ -155,6 +157,7 @@ class EmbeddingsResponse:
 # ---------------------------------------------------------------------------
 # RAG
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class IngestResponse:
@@ -207,6 +210,7 @@ class RAGStreamDelta:
 # Models
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class Model:
     """A single model entry."""
@@ -241,6 +245,7 @@ class ModelsResponse:
 # ---------------------------------------------------------------------------
 # Health
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class HealthResponse:

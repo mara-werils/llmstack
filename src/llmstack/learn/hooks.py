@@ -100,7 +100,6 @@ class LearningHooks:
 
         # Record quality for regression detection
         if self.regression_detector and quality_score > 0:
-
             active = self.regression_detector.version_mgr.get_active()
             if active:
                 self.regression_detector.record_quality(
@@ -178,10 +177,7 @@ class LearningHooks:
 
     def get_feedback_prompt(self) -> str:
         """Get the feedback prompt text to show the user."""
-        return (
-            "\n[Learning] Was this response helpful? "
-            "(y/n/e=edit/s=skip): "
-        )
+        return "\n[Learning] Was this response helpful? (y/n/e=edit/s=skip): "
 
 
 def create_hooks(config: LearnConfig | None = None) -> LearningHooks:
@@ -203,10 +199,14 @@ def create_hooks(config: LearnConfig | None = None) -> LearningHooks:
         versions_dir=Path(cfg.storage.versions_dir),
     )
 
-    regression_detector = RegressionDetector(
-        store=store,
-        version_mgr=version_mgr,
-    ) if cfg.quality.enabled else None
+    regression_detector = (
+        RegressionDetector(
+            store=store,
+            version_mgr=version_mgr,
+        )
+        if cfg.quality.enabled
+        else None
+    )
 
     return LearningHooks(
         store=store,

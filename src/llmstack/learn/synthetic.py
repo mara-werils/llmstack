@@ -264,18 +264,12 @@ class SyntheticAugmenter:
             metadata={**example.metadata, "augmented": True, "strategy": "instruction_variation"},
         )
 
-    def _is_duplicate(
-        self, candidate: TrainingExample, existing: list[TrainingExample]
-    ) -> bool:
+    def _is_duplicate(self, candidate: TrainingExample, existing: list[TrainingExample]) -> bool:
         """Check if candidate is too similar to existing examples."""
-        candidate_hash = hashlib.md5(
-            candidate.messages[0]["content"].lower().encode()
-        ).hexdigest()
+        candidate_hash = hashlib.md5(candidate.messages[0]["content"].lower().encode()).hexdigest()
 
         for ex in existing[-50:]:  # only check recent to avoid O(n^2)
-            ex_hash = hashlib.md5(
-                ex.messages[0]["content"].lower().encode()
-            ).hexdigest()
+            ex_hash = hashlib.md5(ex.messages[0]["content"].lower().encode()).hexdigest()
             if candidate_hash == ex_hash:
                 return True
         return False

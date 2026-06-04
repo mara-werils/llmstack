@@ -3,7 +3,10 @@
 import pytest
 
 from llmstack.gateway.quotas import (
-    QuotaManager, QuotaLimit, QuotaPeriod, QuotaExceededError,
+    QuotaManager,
+    QuotaLimit,
+    QuotaPeriod,
+    QuotaExceededError,
 )
 
 
@@ -17,9 +20,13 @@ class TestQuotaManager:
         manager.check("any-key")  # Should not raise
 
     def test_request_limit_enforced(self, manager):
-        manager.add_limit(QuotaLimit(
-            api_key="key1", max_requests=2, period=QuotaPeriod.TOTAL,
-        ))
+        manager.add_limit(
+            QuotaLimit(
+                api_key="key1",
+                max_requests=2,
+                period=QuotaPeriod.TOTAL,
+            )
+        )
         manager.record_usage("key1", tokens=10)
         manager.record_usage("key1", tokens=10)
 
@@ -27,37 +34,53 @@ class TestQuotaManager:
             manager.check("key1")
 
     def test_token_limit_enforced(self, manager):
-        manager.add_limit(QuotaLimit(
-            api_key="key1", max_tokens=100, period=QuotaPeriod.TOTAL,
-        ))
+        manager.add_limit(
+            QuotaLimit(
+                api_key="key1",
+                max_tokens=100,
+                period=QuotaPeriod.TOTAL,
+            )
+        )
         manager.record_usage("key1", tokens=100)
 
         with pytest.raises(QuotaExceededError, match="Token quota"):
             manager.check("key1")
 
     def test_cost_limit_enforced(self, manager):
-        manager.add_limit(QuotaLimit(
-            api_key="key1", max_cost_usd=1.0, period=QuotaPeriod.TOTAL,
-        ))
+        manager.add_limit(
+            QuotaLimit(
+                api_key="key1",
+                max_cost_usd=1.0,
+                period=QuotaPeriod.TOTAL,
+            )
+        )
         manager.record_usage("key1", cost_usd=1.0)
 
         with pytest.raises(QuotaExceededError, match="Cost quota"):
             manager.check("key1")
 
     def test_wildcard_applies_to_all(self, manager):
-        manager.add_limit(QuotaLimit(
-            api_key="*", max_requests=1, period=QuotaPeriod.TOTAL,
-        ))
+        manager.add_limit(
+            QuotaLimit(
+                api_key="*",
+                max_requests=1,
+                period=QuotaPeriod.TOTAL,
+            )
+        )
         manager.record_usage("any-key", tokens=10)
 
         with pytest.raises(QuotaExceededError):
             manager.check("any-key")
 
     def test_model_specific_limit(self, manager):
-        manager.add_limit(QuotaLimit(
-            api_key="key1", max_requests=1,
-            period=QuotaPeriod.TOTAL, model="gpt-4o",
-        ))
+        manager.add_limit(
+            QuotaLimit(
+                api_key="key1",
+                max_requests=1,
+                period=QuotaPeriod.TOTAL,
+                model="gpt-4o",
+            )
+        )
         manager.record_usage("key1", model="gpt-4o", tokens=10)
 
         with pytest.raises(QuotaExceededError):
@@ -67,9 +90,13 @@ class TestQuotaManager:
         manager.check("key1", model="llama3.2")
 
     def test_different_key_not_affected(self, manager):
-        manager.add_limit(QuotaLimit(
-            api_key="key1", max_requests=1, period=QuotaPeriod.TOTAL,
-        ))
+        manager.add_limit(
+            QuotaLimit(
+                api_key="key1",
+                max_requests=1,
+                period=QuotaPeriod.TOTAL,
+            )
+        )
         manager.record_usage("key1", tokens=10)
 
         # key2 should not be affected
@@ -91,9 +118,13 @@ class TestQuotaManager:
         assert manager.get_limits() == []
 
     def test_get_limits(self, manager):
-        manager.add_limit(QuotaLimit(
-            api_key="key1", max_requests=100, period=QuotaPeriod.DAILY,
-        ))
+        manager.add_limit(
+            QuotaLimit(
+                api_key="key1",
+                max_requests=100,
+                period=QuotaPeriod.DAILY,
+            )
+        )
         limits = manager.get_limits()
         assert len(limits) == 1
         assert limits[0]["api_key"] == "key1"

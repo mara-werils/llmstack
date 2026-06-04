@@ -15,8 +15,8 @@ from enum import Enum
 
 
 class CircuitState(str, Enum):
-    CLOSED = "closed"        # Normal operation — requests flow through
-    OPEN = "open"            # Backend is down — fail fast
+    CLOSED = "closed"  # Normal operation — requests flow through
+    OPEN = "open"  # Backend is down — fail fast
     HALF_OPEN = "half_open"  # Probing — allow one request to test recovery
 
 
@@ -80,9 +80,7 @@ class CircuitBreaker:
     @property
     def current_recovery_timeout(self) -> float:
         """Exponential backoff on recovery timeout."""
-        timeout = self.base_recovery_timeout * (
-            self.backoff_multiplier ** self._consecutive_opens
-        )
+        timeout = self.base_recovery_timeout * (self.backoff_multiplier**self._consecutive_opens)
         return min(timeout, self.max_recovery_timeout)
 
     def check(self) -> None:

@@ -32,10 +32,16 @@ def changelog(
     max_commits: int = 100,
 ) -> None:
     """Generate a changelog from git history."""
-    asyncio.run(_changelog_async(
-        since=since, version=version, model=model,
-        ollama_url=ollama_url, output=output, max_commits=max_commits,
-    ))
+    asyncio.run(
+        _changelog_async(
+            since=since,
+            version=version,
+            model=model,
+            ollama_url=ollama_url,
+            output=output,
+            max_commits=max_commits,
+        )
+    )
 
 
 def _get_git_log(since: str | None, max_commits: int) -> str:
@@ -56,7 +62,9 @@ def _get_tags() -> list[str]:
     try:
         result = subprocess.run(
             ["git", "tag", "--sort=-creatordate", "-l"],
-            capture_output=True, text=True, timeout=10,
+            capture_output=True,
+            text=True,
+            timeout=10,
         )
         return result.stdout.strip().split("\n")[:5] if result.returncode == 0 else []
     except Exception:
@@ -103,10 +111,13 @@ async def _changelog_async(
                 console.print("[error]Ollama is not responding.[/]")
                 raise typer.Exit(1)
     except httpx.ConnectError:
-        console.print(Panel(
-            "[error]Cannot connect to Ollama.[/]",
-            title="Connection Error", border_style="red",
-        ))
+        console.print(
+            Panel(
+                "[error]Cannot connect to Ollama.[/]",
+                title="Connection Error",
+                border_style="red",
+            )
+        )
         raise typer.Exit(1)
 
     git_log = _get_git_log(since, max_commits)
@@ -121,7 +132,9 @@ async def _changelog_async(
 
     commit_count = len(git_log.strip().split("\n"))
     console.print()
-    console.print(f"[bold]llmstack changelog[/]  model=[cyan]{model}[/]  commits=[dim]{commit_count}[/]")
+    console.print(
+        f"[bold]llmstack changelog[/]  model=[cyan]{model}[/]  commits=[dim]{commit_count}[/]"
+    )
     if since:
         console.print(f"  [dim]Since: {since}[/]")
     console.print()
@@ -130,7 +143,7 @@ async def _changelog_async(
 
 Version: {version_str}
 Date: {today}
-Recent tags: {', '.join(tags) if tags else 'none'}
+Recent tags: {", ".join(tags) if tags else "none"}
 
 Git log (hash|subject|author|date):
 {git_log[:10000]}
@@ -152,7 +165,8 @@ Generate a well-formatted Markdown changelog following Keep a Changelog conventi
         timeout = httpx.Timeout(300, connect=10, read=300, write=30)
         async with httpx.AsyncClient(timeout=timeout) as client:
             async with client.stream(
-                "POST", f"{ollama_url}/api/chat",
+                "POST",
+                f"{ollama_url}/api/chat",
                 json={
                     "model": model,
                     "messages": [

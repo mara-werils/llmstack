@@ -1,8 +1,10 @@
 """Tests for structured output validation."""
 
-
 from llmstack.gateway.structured_output import (
-    extract_json, validate_output, validate_type, build_schema_prompt,
+    extract_json,
+    validate_output,
+    validate_type,
+    build_schema_prompt,
 )
 
 
@@ -11,7 +13,7 @@ class TestExtractJson:
         assert extract_json('{"key": "value"}') == '{"key": "value"}'
 
     def test_direct_array(self):
-        assert extract_json('[1, 2, 3]') == '[1, 2, 3]'
+        assert extract_json("[1, 2, 3]") == "[1, 2, 3]"
 
     def test_markdown_code_block(self):
         text = 'Here is the result:\n```json\n{"key": "value"}\n```'
@@ -60,7 +62,11 @@ class TestValidateType:
         assert len(errors) == 1
 
     def test_object_required_missing(self):
-        schema = {"type": "object", "required": ["name"], "properties": {"name": {"type": "string"}}}
+        schema = {
+            "type": "object",
+            "required": ["name"],
+            "properties": {"name": {"type": "string"}},
+        }
         errors = validate_type({}, schema)
         assert any("Missing required" in e for e in errors)
 
@@ -77,7 +83,11 @@ class TestValidateType:
 
 class TestValidateOutput:
     def test_valid_output(self):
-        schema = {"type": "object", "required": ["name"], "properties": {"name": {"type": "string"}}}
+        schema = {
+            "type": "object",
+            "required": ["name"],
+            "properties": {"name": {"type": "string"}},
+        }
         result = validate_output('{"name": "Alice"}', schema)
         assert result.valid is True
         assert result.data == {"name": "Alice"}

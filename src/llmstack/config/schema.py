@@ -19,7 +19,7 @@ from __future__ import annotations
 import re
 from typing import Literal
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, field_validator
 
 
 class ModelSpec(BaseModel):
@@ -113,8 +113,7 @@ class CacheConfig(BaseModel):
     def max_memory_format(cls, v: str) -> str:
         if not re.match(r"^\d+\s*(mb|gb|kb)$", v.lower().strip()):
             raise ValueError(
-                f"max_memory must be like '256mb' or '1gb', got '{v}'. "
-                "Supported units: kb, mb, gb."
+                f"max_memory must be like '256mb' or '1gb', got '{v}'. Supported units: kb, mb, gb."
             )
         return v
 
@@ -182,9 +181,7 @@ class GatewayConfig(BaseModel):
     @classmethod
     def port_in_range(cls, v: int) -> int:
         if not (1 <= v <= 65535):
-            raise ValueError(
-                f"port must be between 1 and 65535, got {v}."
-            )
+            raise ValueError(f"port must be between 1 and 65535, got {v}.")
         return v
 
     @field_validator("rate_limit")
@@ -201,9 +198,7 @@ class GatewayConfig(BaseModel):
     @classmethod
     def timeout_positive(cls, v: int) -> int:
         if v <= 0:
-            raise ValueError(
-                f"request_timeout must be a positive integer (seconds), got {v}."
-            )
+            raise ValueError(f"request_timeout must be a positive integer (seconds), got {v}.")
         return v
 
 
@@ -221,10 +216,10 @@ class ObserveConfig(BaseModel):
     metrics: bool = True
     dashboard_port: int = 8080
     retention: str = "7d"
-    quality_tracking: bool = True        # enable AI quality scoring
-    alert_threshold: float = 0.4         # fire alert below this quality score
-    drift_threshold: float = -0.1        # fire alert on quality drift
-    trace_store_size: int = 5000         # max traces in memory
+    quality_tracking: bool = True  # enable AI quality scoring
+    alert_threshold: float = 0.4  # fire alert below this quality score
+    drift_threshold: float = -0.1  # fire alert on quality drift
+    trace_store_size: int = 5000  # max traces in memory
 
     @field_validator("alert_threshold")
     @classmethod
@@ -240,18 +235,14 @@ class ObserveConfig(BaseModel):
     @classmethod
     def trace_store_positive(cls, v: int) -> int:
         if v <= 0:
-            raise ValueError(
-                f"trace_store_size must be a positive integer, got {v}."
-            )
+            raise ValueError(f"trace_store_size must be a positive integer, got {v}.")
         return v
 
     @field_validator("retention")
     @classmethod
     def retention_format(cls, v: str) -> str:
         if not re.match(r"^\d+[dhm]$", v.strip()):
-            raise ValueError(
-                f"retention must be like '7d', '24h', or '30m', got '{v}'."
-            )
+            raise ValueError(f"retention must be like '7d', '24h', or '30m', got '{v}'.")
         return v
 
 
@@ -265,14 +256,15 @@ class DockerConfig(BaseModel):
 # Provider configuration (Universal Gateway)
 # ---------------------------------------------------------------------------
 
+
 class ProviderModelConfig(BaseModel):
     """A model exposed through a provider, with optional tier and cost overrides."""
 
-    name: str                            # model ID, e.g. "gpt-4o"
+    name: str  # model ID, e.g. "gpt-4o"
     tier: Literal["simple", "medium", "complex"] = "medium"
     context_length: int = 128_000
-    cost_per_m_input: float = 0.0        # $ per 1M input tokens
-    cost_per_m_output: float = 0.0       # $ per 1M output tokens
+    cost_per_m_input: float = 0.0  # $ per 1M input tokens
+    cost_per_m_output: float = 0.0  # $ per 1M output tokens
     speed_score: float = 1.0
     quality_score: float = 1.0
 
@@ -280,10 +272,10 @@ class ProviderModelConfig(BaseModel):
 class ProviderConfig(BaseModel):
     """Configuration for a single LLM provider."""
 
-    name: str                            # "openai", "anthropic", "google", etc.
-    api_key: str = ""                    # can also come from env var
-    api_key_env: str = ""                # env var name, e.g. "OPENAI_API_KEY"
-    base_url: str = ""                   # override default API base URL
+    name: str  # "openai", "anthropic", "google", etc.
+    api_key: str = ""  # can also come from env var
+    api_key_env: str = ""  # env var name, e.g. "OPENAI_API_KEY"
+    base_url: str = ""  # override default API base URL
     enabled: bool = True
     models: list[ProviderModelConfig] = Field(default_factory=list)
     fallback: list[str] = Field(default_factory=list)  # fallback provider names
@@ -301,26 +293,34 @@ class ProvidersConfig(BaseModel):
 # Agent configuration
 # ---------------------------------------------------------------------------
 
+
 class AgentToolConfig(BaseModel):
     """Configuration for an individual agent tool."""
 
-    name: str                            # tool name, e.g. "shell", "read_file"
+    name: str  # tool name, e.g. "shell", "read_file"
     enabled: bool = True
-    timeout: int = 60                    # per-tool timeout in seconds
+    timeout: int = 60  # per-tool timeout in seconds
 
 
 class AgentProfileConfig(BaseModel):
     """Configuration for a named agent profile."""
 
-    name: str = "default"                # profile name
-    model: str = "llama3.2"              # LLM model for the agent
-    max_steps: int = 25                  # max tool-use iterations
+    name: str = "default"  # profile name
+    model: str = "llama3.2"  # LLM model for the agent
+    max_steps: int = 25  # max tool-use iterations
     max_tokens: int = 4096
     temperature: float = 0.1
-    system_prompt: str = ""              # custom system prompt
-    tools: list[str] = Field(default_factory=lambda: [
-        "read_file", "write_file", "list_directory", "grep", "shell", "http_get",
-    ])
+    system_prompt: str = ""  # custom system prompt
+    tools: list[str] = Field(
+        default_factory=lambda: [
+            "read_file",
+            "write_file",
+            "list_directory",
+            "grep",
+            "shell",
+            "http_get",
+        ]
+    )
 
 
 class AgentsConfig(BaseModel):
@@ -334,15 +334,24 @@ class MCPConfig(BaseModel):
 
     enabled: bool = False
     model: str = "llama3.2"
-    tools: list[str] = Field(default_factory=lambda: [
-        "read_file", "write_file", "list_directory", "grep", "shell",
-        "http_get", "llmstack_chat", "llmstack_ask",
-    ])
+    tools: list[str] = Field(
+        default_factory=lambda: [
+            "read_file",
+            "write_file",
+            "list_directory",
+            "grep",
+            "shell",
+            "http_get",
+            "llmstack_chat",
+            "llmstack_ask",
+        ]
+    )
 
 
 # ---------------------------------------------------------------------------
 # Fine-tuning configuration
 # ---------------------------------------------------------------------------
+
 
 class FinetuneConfig(BaseModel):
     """Fine-tuning pipeline configuration."""
@@ -352,12 +361,12 @@ class FinetuneConfig(BaseModel):
     output_dir: str = "./finetune-output"
     lora_r: int = 16
     lora_alpha: int = 32
-    epochs: int = 0                      # 0 = auto
-    batch_size: int = 0                  # 0 = auto
-    learning_rate: float = 0.0           # 0.0 = auto
+    epochs: int = 0  # 0 = auto
+    batch_size: int = 0  # 0 = auto
+    learning_rate: float = 0.0  # 0.0 = auto
     max_seq_length: int = 2048
     eval_split: float = 0.1
-    quantization: str = "q4_k_m"         # for GGUF export
+    quantization: str = "q4_k_m"  # for GGUF export
 
 
 class StackConfig(BaseModel):

@@ -20,14 +20,14 @@ logger = logging.getLogger(__name__)
 class DatasetConfig:
     """Configuration for dataset preparation."""
 
-    input_column: str = ""      # auto-detected if empty
-    output_column: str = ""     # auto-detected if empty
-    system_prompt: str = ""     # optional system prompt for all examples
-    max_samples: int = 0        # 0 = no limit
-    eval_split: float = 0.1     # fraction for evaluation
+    input_column: str = ""  # auto-detected if empty
+    output_column: str = ""  # auto-detected if empty
+    system_prompt: str = ""  # optional system prompt for all examples
+    max_samples: int = 0  # 0 = no limit
+    eval_split: float = 0.1  # fraction for evaluation
     seed: int = 42
-    min_length: int = 5         # skip examples shorter than this (chars)
-    max_length: int = 0         # 0 = no limit
+    min_length: int = 5  # skip examples shorter than this (chars)
+    max_length: int = 0  # 0 = no limit
 
 
 @dataclass
@@ -96,12 +96,25 @@ def _detect_columns(sample: dict) -> tuple[str, str]:
 
     # Common patterns
     input_candidates = [
-        "input", "instruction", "prompt", "question", "query",
-        "text", "human", "user", "source",
+        "input",
+        "instruction",
+        "prompt",
+        "question",
+        "query",
+        "text",
+        "human",
+        "user",
+        "source",
     ]
     output_candidates = [
-        "output", "response", "answer", "completion", "reply",
-        "assistant", "target", "label",
+        "output",
+        "response",
+        "answer",
+        "completion",
+        "reply",
+        "assistant",
+        "target",
+        "label",
     ]
 
     input_col = ""
@@ -129,7 +142,10 @@ def _detect_columns(sample: dict) -> tuple[str, str]:
 
 
 def _row_to_chat(
-    row: dict, input_col: str, output_col: str, system_prompt: str,
+    row: dict,
+    input_col: str,
+    output_col: str,
+    system_prompt: str,
 ) -> ChatExample | None:
     """Convert a data row to a ChatExample."""
 
@@ -228,6 +244,7 @@ def _load_text(path: Path) -> list[dict]:
 def _load_parquet(path: Path) -> list[dict]:
     try:
         import pyarrow.parquet as pq
+
         table = pq.read_table(path)
         return table.to_pylist()
     except ImportError:
@@ -335,7 +352,12 @@ def prepare_dataset(
         output_dir.mkdir(parents=True, exist_ok=True)
         _write_jsonl(output_dir / "train.jsonl", train_examples)
         _write_jsonl(output_dir / "eval.jsonl", eval_examples)
-        logger.info("Wrote %d train + %d eval examples to %s", len(train_examples), len(eval_examples), output_dir)
+        logger.info(
+            "Wrote %d train + %d eval examples to %s",
+            len(train_examples),
+            len(eval_examples),
+            output_dir,
+        )
 
     return train_examples, eval_examples, stats
 

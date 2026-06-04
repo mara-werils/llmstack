@@ -29,11 +29,13 @@ def test_info_no_crash(capsys):
 
 def test_spinner_context_manager():
     from llmstack.cli.console import spinner
+
     with spinner("working...") as p:
         assert p is not None
 
 
 def test_timer_context_manager(capsys):
     from llmstack.cli.console import timer
+
     with timer("test"):
         pass

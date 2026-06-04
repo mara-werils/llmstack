@@ -49,8 +49,11 @@ async def register_webhook(req: RegisterWebhookRequest):
                 detail=f"Invalid event: {e}. Valid: {[v.value for v in WebhookEvent]}",
             )
     endpoint = mgr.register(
-        url=req.url, events=events, secret=req.secret,
-        description=req.description, headers=req.headers,
+        url=req.url,
+        events=events,
+        secret=req.secret,
+        description=req.description,
+        headers=req.headers,
     )
     return endpoint.to_dict()
 

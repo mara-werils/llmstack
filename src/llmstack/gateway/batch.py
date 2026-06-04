@@ -124,9 +124,7 @@ class BatchJob:
         latencies = [r.latency_ms for r in self.results if r.latency_ms > 0]
         d["succeeded"] = succeeded
         d["failed"] = failed
-        d["avg_latency_ms"] = round(
-            sum(latencies) / len(latencies), 1
-        ) if latencies else 0.0
+        d["avg_latency_ms"] = round(sum(latencies) / len(latencies), 1) if latencies else 0.0
         return d
 
 
@@ -148,25 +146,23 @@ class BatchProcessor:
     ) -> BatchJob:
         """Create a new batch job from request payloads."""
         if len(requests) > self.MAX_BATCH_SIZE:
-            raise ValueError(
-                f"Batch size {len(requests)} exceeds max {self.MAX_BATCH_SIZE}"
-            )
+            raise ValueError(f"Batch size {len(requests)} exceeds max {self.MAX_BATCH_SIZE}")
 
         batch_requests = []
         for req in requests:
-            batch_requests.append(BatchRequest(
-                messages=req.get("messages", []),
-                model=req.get("model", ""),
-                temperature=req.get("temperature", 0.7),
-                max_tokens=req.get("max_tokens"),
-                metadata=req.get("metadata", {}),
-            ))
+            batch_requests.append(
+                BatchRequest(
+                    messages=req.get("messages", []),
+                    model=req.get("model", ""),
+                    temperature=req.get("temperature", 0.7),
+                    max_tokens=req.get("max_tokens"),
+                    metadata=req.get("metadata", {}),
+                )
+            )
 
         job = BatchJob(
             requests=batch_requests,
-            results=[
-                BatchResult(request_id=br.id) for br in batch_requests
-            ],
+            results=[BatchResult(request_id=br.id) for br in batch_requests],
             concurrency=min(concurrency, 20),
             metadata=metadata or {},
         )
@@ -256,9 +252,7 @@ class BatchProcessor:
                         latency_ms=elapsed,
                     )
 
-        tasks = [
-            _process_one(i, req) for i, req in enumerate(job.requests)
-        ]
+        tasks = [_process_one(i, req) for i, req in enumerate(job.requests)]
         await asyncio.gather(*tasks, return_exceptions=True)
 
         job.completed_at = time.time()

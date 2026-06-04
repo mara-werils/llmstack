@@ -1,7 +1,11 @@
 """Agent preset — large model + long context for agentic workflows."""
 
 from llmstack.config.schema import (
-    StackConfig, ModelsConfig, ModelSpec, EmbeddingSpec, GatewayConfig,
+    StackConfig,
+    ModelsConfig,
+    ModelSpec,
+    EmbeddingSpec,
+    GatewayConfig,
 )
 
 AGENT_PRESET = StackConfig(

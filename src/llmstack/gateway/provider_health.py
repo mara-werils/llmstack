@@ -143,15 +143,14 @@ class ProviderHealthChecker:
         return {
             "healthy_count": healthy,
             "total_providers": total,
-            "providers": {
-                name: rec.to_dict() for name, rec in self._records.items()
-            },
+            "providers": {name: rec.to_dict() for name, rec in self._records.items()},
         }
 
     def get_healthy_providers(self) -> list[str]:
         """Get list of healthy provider names."""
         return [
-            name for name, rec in self._records.items()
+            name
+            for name, rec in self._records.items()
             if rec.status in (HealthStatus.HEALTHY, HealthStatus.DEGRADED)
         ]
 

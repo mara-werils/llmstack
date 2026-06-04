@@ -38,6 +38,7 @@ class LLMStackError(Exception):
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _build_headers(api_key: str | None) -> dict[str, str]:
     headers: dict[str, str] = {"Content-Type": "application/json"}
     if api_key:
@@ -60,7 +61,7 @@ def _parse_sse_line(line: str) -> dict[str, Any] | None:
     if not line or line.startswith(":"):
         return None
     if line.startswith("data:"):
-        payload = line[len("data:"):].strip()
+        payload = line[len("data:") :].strip()
         if payload == "[DONE]":
             return None
         try:
@@ -73,6 +74,7 @@ def _parse_sse_line(line: str) -> dict[str, Any] | None:
 # ===================================================================
 # Synchronous Client
 # ===================================================================
+
 
 class Client:
     """Synchronous Python client for the LLMStack gateway.
@@ -335,6 +337,7 @@ class Client:
 # Asynchronous Client
 # ===================================================================
 
+
 class AsyncClient:
     """Asynchronous Python client for the LLMStack gateway.
 
@@ -382,14 +385,10 @@ class AsyncClient:
     # -- internal request helpers -----------------------------------------
 
     async def _post(self, url: str, **kwargs: Any) -> httpx.Response:
-        return await async_retry(
-            self._client.post, self._retry, url, **kwargs
-        )
+        return await async_retry(self._client.post, self._retry, url, **kwargs)
 
     async def _get(self, url: str, **kwargs: Any) -> httpx.Response:
-        return await async_retry(
-            self._client.get, self._retry, url, **kwargs
-        )
+        return await async_retry(self._client.get, self._retry, url, **kwargs)
 
     # -- chat -------------------------------------------------------------
 

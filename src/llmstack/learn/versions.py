@@ -83,15 +83,20 @@ class ModelVersionManager:
         # Save version metadata
         meta = metadata or {}
         meta_path = version_dir / "version.json"
-        meta_path.write_text(json.dumps({
-            "version": version,
-            "base_model": base_model,
-            "adapter_path": stored_path,
-            "train_run_id": train_run_id,
-            "quality_score": quality_score,
-            "timestamp": time.time(),
-            "metadata": meta,
-        }, indent=2))
+        meta_path.write_text(
+            json.dumps(
+                {
+                    "version": version,
+                    "base_model": base_model,
+                    "adapter_path": stored_path,
+                    "train_run_id": train_run_id,
+                    "quality_score": quality_score,
+                    "timestamp": time.time(),
+                    "metadata": meta,
+                },
+                indent=2,
+            )
+        )
 
         # Register in store
         self.store.add_model_version(

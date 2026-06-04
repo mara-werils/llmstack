@@ -147,8 +147,14 @@ class ConversationStore:
                 """INSERT INTO conversations
                    (id, title, model, created_at, updated_at, tags)
                    VALUES (?, ?, ?, ?, ?, ?)""",
-                (conv.id, conv.title, conv.model, conv.created_at,
-                 conv.updated_at, json.dumps(conv.tags)),
+                (
+                    conv.id,
+                    conv.title,
+                    conv.model,
+                    conv.created_at,
+                    conv.updated_at,
+                    json.dumps(conv.tags),
+                ),
             )
         return conv
 
@@ -164,8 +170,11 @@ class ConversationStore:
     ) -> Message:
         """Add a message to a conversation."""
         msg = Message(
-            role=role, content=content, model=model,
-            tokens=tokens, latency_ms=latency_ms,
+            role=role,
+            content=content,
+            model=model,
+            tokens=tokens,
+            latency_ms=latency_ms,
             metadata=metadata or {},
         )
         with self._lock, self._connect() as conn:
@@ -173,9 +182,16 @@ class ConversationStore:
                 """INSERT INTO messages
                    (conversation_id, role, content, model, timestamp, tokens, latency_ms, metadata)
                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
-                (conversation_id, msg.role, msg.content, msg.model,
-                 msg.timestamp, msg.tokens, msg.latency_ms,
-                 json.dumps(msg.metadata)),
+                (
+                    conversation_id,
+                    msg.role,
+                    msg.content,
+                    msg.model,
+                    msg.timestamp,
+                    msg.tokens,
+                    msg.latency_ms,
+                    json.dumps(msg.metadata),
+                ),
             )
             conn.execute(
                 """UPDATE conversations SET
@@ -199,7 +215,10 @@ class ConversationStore:
             return self._row_to_conversation(row)
 
     def get_messages(
-        self, conversation_id: str, limit: int = 100, offset: int = 0,
+        self,
+        conversation_id: str,
+        limit: int = 100,
+        offset: int = 0,
     ) -> list[Message]:
         """Get messages for a conversation."""
         with self._connect() as conn:
@@ -254,12 +273,8 @@ class ConversationStore:
     def get_stats(self) -> dict:
         """Get conversation statistics."""
         with self._connect() as conn:
-            conv_count = conn.execute(
-                "SELECT COUNT(*) FROM conversations"
-            ).fetchone()[0]
-            msg_count = conn.execute(
-                "SELECT COUNT(*) FROM messages"
-            ).fetchone()[0]
+            conv_count = conn.execute("SELECT COUNT(*) FROM conversations").fetchone()[0]
+            msg_count = conn.execute("SELECT COUNT(*) FROM messages").fetchone()[0]
             total_tokens = conn.execute(
                 "SELECT COALESCE(SUM(total_tokens), 0) FROM conversations"
             ).fetchone()[0]

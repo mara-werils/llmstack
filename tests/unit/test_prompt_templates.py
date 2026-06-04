@@ -32,9 +32,7 @@ class TestTemplateStore:
         self.store = TemplateStore()
 
     def test_create_template(self):
-        t = self.store.create(
-            name="test", content="Hello {{name}}!", description="A test"
-        )
+        t = self.store.create(name="test", content="Hello {{name}}!", description="A test")
         assert t.name == "test"
         assert t.current_version == 1
         assert len(t.versions) == 1

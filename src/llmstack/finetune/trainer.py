@@ -24,7 +24,7 @@ class TrainConfig:
     """Full training configuration."""
 
     base_model: str = "unsloth/llama-3.2-1b-instruct-bnb-4bit"
-    method: str = "qlora"               # "qlora", "lora", "full"
+    method: str = "qlora"  # "qlora", "lora", "full"
     output_dir: str = "./finetune-output"
     hyperparams: TrainHyperparams = field(default_factory=TrainHyperparams)
     resume_from: str | None = None
@@ -68,6 +68,7 @@ def _check_dependencies() -> tuple[bool, bool, str]:
 
     try:
         import unsloth  # noqa: F401
+
         has_unsloth = True
     except ImportError:
         pass
@@ -76,6 +77,7 @@ def _check_dependencies() -> tuple[bool, bool, str]:
         import peft  # noqa: F401
         import trl  # noqa: F401
         import transformers  # noqa: F401
+
         has_peft = True
     except ImportError:
         pass
@@ -158,7 +160,8 @@ class Trainer:
         return result
 
     def _train_unsloth(
-        self, train_data: list[ChatExample],
+        self,
+        train_data: list[ChatExample],
         eval_data: list[ChatExample] | None,
         output_dir: Path,
     ) -> TrainResult:
@@ -183,9 +186,15 @@ class Trainer:
             r=hp.lora_r,
             lora_alpha=hp.lora_alpha,
             lora_dropout=hp.lora_dropout,
-            target_modules=hp.target_modules or [
-                "q_proj", "k_proj", "v_proj", "o_proj",
-                "gate_proj", "up_proj", "down_proj",
+            target_modules=hp.target_modules
+            or [
+                "q_proj",
+                "k_proj",
+                "v_proj",
+                "o_proj",
+                "gate_proj",
+                "up_proj",
+                "down_proj",
             ],
             use_gradient_checkpointing="unsloth",
         )
@@ -204,11 +213,13 @@ class Trainer:
             class ProgressCallback(TrainerCallback):
                 def on_log(self, args, state, control, logs=None, **kwargs):
                     if logs and "loss" in logs:
-                        outer._loss_history.append({
-                            "step": state.global_step,
-                            "loss": logs["loss"],
-                            "epoch": logs.get("epoch", 0),
-                        })
+                        outer._loss_history.append(
+                            {
+                                "step": state.global_step,
+                                "loss": logs["loss"],
+                                "epoch": logs.get("epoch", 0),
+                            }
+                        )
                         if outer._progress_callback:
                             outer._progress_callback(
                                 state.global_step,
@@ -273,7 +284,8 @@ class Trainer:
         )
 
     def _train_peft(
-        self, train_data: list[ChatExample],
+        self,
+        train_data: list[ChatExample],
         eval_data: list[ChatExample] | None,
         output_dir: Path,
     ) -> TrainResult:
@@ -281,7 +293,9 @@ class Trainer:
         from peft import LoraConfig, get_peft_model, TaskType
         from trl import SFTTrainer
         from transformers import (
-            AutoModelForCausalLM, AutoTokenizer, TrainingArguments,
+            AutoModelForCausalLM,
+            AutoTokenizer,
+            TrainingArguments,
             BitsAndBytesConfig,
         )
 
@@ -291,6 +305,7 @@ class Trainer:
         bnb_config = None
         if hp.use_4bit:
             import torch
+
             bnb_config = BitsAndBytesConfig(
                 load_in_4bit=True,
                 bnb_4bit_compute_dtype=getattr(torch, hp.bnb_4bit_compute_dtype),
@@ -306,7 +321,8 @@ class Trainer:
             trust_remote_code=True,
         )
         tokenizer = AutoTokenizer.from_pretrained(
-            self.config.base_model, trust_remote_code=True,
+            self.config.base_model,
+            trust_remote_code=True,
         )
         if tokenizer.pad_token is None:
             tokenizer.pad_token = tokenizer.eos_token
@@ -316,9 +332,15 @@ class Trainer:
             r=hp.lora_r,
             lora_alpha=hp.lora_alpha,
             lora_dropout=hp.lora_dropout,
-            target_modules=hp.target_modules or [
-                "q_proj", "k_proj", "v_proj", "o_proj",
-                "gate_proj", "up_proj", "down_proj",
+            target_modules=hp.target_modules
+            or [
+                "q_proj",
+                "k_proj",
+                "v_proj",
+                "o_proj",
+                "gate_proj",
+                "up_proj",
+                "down_proj",
             ],
             task_type=TaskType.CAUSAL_LM,
             bias="none",
@@ -339,10 +361,12 @@ class Trainer:
             class ProgressCallback(TrainerCallback):
                 def on_log(self, args, state, control, logs=None, **kwargs):
                     if logs and "loss" in logs:
-                        outer._loss_history.append({
-                            "step": state.global_step,
-                            "loss": logs["loss"],
-                        })
+                        outer._loss_history.append(
+                            {
+                                "step": state.global_step,
+                                "loss": logs["loss"],
+                            }
+                        )
                         if outer._progress_callback:
                             outer._progress_callback(
                                 state.global_step,
@@ -411,7 +435,9 @@ class Trainer:
             messages = example["messages"]
             if hasattr(tokenizer, "apply_chat_template"):
                 text = tokenizer.apply_chat_template(
-                    messages, tokenize=False, add_generation_prompt=False,
+                    messages,
+                    tokenize=False,
+                    add_generation_prompt=False,
                 )
             else:
                 text = "\n".join(f"{m['role']}: {m['content']}" for m in messages)

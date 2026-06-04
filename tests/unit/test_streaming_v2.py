@@ -34,6 +34,7 @@ async def test_stream_processor_ndjson():
     # Should have NDJSON lines
     assert all("\n" in c for c in chunks)
     import json
+
     first = json.loads(chunks[0])
     assert first["token"] == "Hello"
 

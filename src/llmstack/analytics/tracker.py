@@ -11,6 +11,7 @@ from pathlib import Path
 @dataclass
 class UsageEvent:
     """A single usage event."""
+
     command: str
     model: str
     tokens_in: int
@@ -58,8 +59,15 @@ class AnalyticsTracker:
         with sqlite3.connect(self.db_path) as conn:
             conn.execute(
                 "INSERT INTO events (command, model, tokens_in, tokens_out, duration, success, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                (event.command, event.model, event.tokens_in, event.tokens_out,
-                 event.duration, int(event.success), event.timestamp),
+                (
+                    event.command,
+                    event.model,
+                    event.tokens_in,
+                    event.tokens_out,
+                    event.duration,
+                    int(event.success),
+                    event.timestamp,
+                ),
             )
             conn.commit()
 
@@ -145,6 +153,7 @@ class AnalyticsTracker:
             return 0
 
         from datetime import date, timedelta
+
         today = date.today()
         streak = 0
 

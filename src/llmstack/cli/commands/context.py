@@ -28,7 +28,9 @@ def context(
         return
 
     console.print()
-    console.print(f"[bold]llmstack context[/]  strategy=[cyan]{strategy}[/]  budget=[dim]{max_tokens} tokens[/]")
+    console.print(
+        f"[bold]llmstack context[/]  strategy=[cyan]{strategy}[/]  budget=[dim]{max_tokens} tokens[/]"
+    )
     console.print(f"  [dim]Query: {query}[/]")
     console.print()
 
@@ -72,6 +74,7 @@ def context(
     elif copy:
         try:
             import subprocess
+
             process = subprocess.Popen(["pbcopy"], stdin=subprocess.PIPE)
             process.communicate(combined.encode())
             console.print("[green]Context copied to clipboard![/]")

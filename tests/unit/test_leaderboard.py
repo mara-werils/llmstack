@@ -10,14 +10,22 @@ def lb():
     board = Leaderboard()
     # Populate with test data
     for _ in range(10):
-        board.record("gpt-4o", "openai", latency_ms=500, tokens=100,
-                      cost_usd=0.01, quality_score=0.9)
+        board.record(
+            "gpt-4o", "openai", latency_ms=500, tokens=100, cost_usd=0.01, quality_score=0.9
+        )
     for _ in range(10):
-        board.record("llama3.2", "local", latency_ms=200, tokens=80,
-                      cost_usd=0.0, quality_score=0.7)
+        board.record(
+            "llama3.2", "local", latency_ms=200, tokens=80, cost_usd=0.0, quality_score=0.7
+        )
     for _ in range(10):
-        board.record("claude-sonnet", "anthropic", latency_ms=400, tokens=120,
-                      cost_usd=0.005, quality_score=0.95)
+        board.record(
+            "claude-sonnet",
+            "anthropic",
+            latency_ms=400,
+            tokens=120,
+            cost_usd=0.005,
+            quality_score=0.95,
+        )
     return board
 
 

@@ -21,9 +21,7 @@ REDIS_URL = os.getenv("LLMSTACK_REDIS_URL", "")
 RATE_LIMIT = os.getenv("LLMSTACK_RATE_LIMIT", "100/min")
 
 _TRUSTED_PROXIES: set[str] = {
-    p.strip()
-    for p in os.getenv("LLMSTACK_TRUSTED_PROXIES", "").split(",")
-    if p.strip()
+    p.strip() for p in os.getenv("LLMSTACK_TRUSTED_PROXIES", "").split(",") if p.strip()
 }
 
 _RATE_PREFIX = "llmstack:ratelimit:"

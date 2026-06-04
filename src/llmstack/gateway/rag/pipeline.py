@@ -88,13 +88,16 @@ class RAGPipeline:
         t0 = time.monotonic()
         url = f"{self._inference_url}/chat/completions"
         async with httpx.AsyncClient(timeout=120) as client:
-            resp = await client.post(url, json={
-                "model": model,
-                "messages": messages,
-                "temperature": temperature,
-                "max_tokens": max_tokens,
-                "stream": False,
-            })
+            resp = await client.post(
+                url,
+                json={
+                    "model": model,
+                    "messages": messages,
+                    "temperature": temperature,
+                    "max_tokens": max_tokens,
+                    "stream": False,
+                },
+            )
             resp.raise_for_status()
             completion = resp.json()
         timings["generation_ms"] = round((time.monotonic() - t0) * 1000, 1)
@@ -103,7 +106,11 @@ class RAGPipeline:
         usage = completion.get("usage", {})
 
         sources = [
-            {"text": r.text[:200], "source": r.metadata.get("source", ""), "score": round(r.score, 4)}
+            {
+                "text": r.text[:200],
+                "source": r.metadata.get("source", ""),
+                "score": round(r.score, 4),
+            }
             for r in results
         ]
 
@@ -144,19 +151,27 @@ class RAGPipeline:
         ]
 
         sources = [
-            {"text": r.text[:200], "source": r.metadata.get("source", ""), "score": round(r.score, 4)}
+            {
+                "text": r.text[:200],
+                "source": r.metadata.get("source", ""),
+                "score": round(r.score, 4),
+            }
             for r in results
         ]
 
         url = f"{self._inference_url}/chat/completions"
         async with httpx.AsyncClient(timeout=120) as client:
-            async with client.stream("POST", url, json={
-                "model": model,
-                "messages": messages,
-                "temperature": temperature,
-                "max_tokens": max_tokens,
-                "stream": True,
-            }) as resp:
+            async with client.stream(
+                "POST",
+                url,
+                json={
+                    "model": model,
+                    "messages": messages,
+                    "temperature": temperature,
+                    "max_tokens": max_tokens,
+                    "stream": True,
+                },
+            ) as resp:
                 resp.raise_for_status()
                 async for line in resp.aiter_lines():
                     if not line.startswith("data: "):
@@ -167,6 +182,7 @@ class RAGPipeline:
                         return
 
                     import json
+
                     try:
                         chunk = json.loads(data)
                         delta = chunk["choices"][0].get("delta", {})

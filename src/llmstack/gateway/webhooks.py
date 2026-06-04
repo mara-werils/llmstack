@@ -104,7 +104,9 @@ class WebhookDelivery:
 def _compute_signature(payload: str, secret: str) -> str:
     """Compute HMAC-SHA256 signature for webhook payload verification."""
     return hmac.new(
-        secret.encode(), payload.encode(), hashlib.sha256,
+        secret.encode(),
+        payload.encode(),
+        hashlib.sha256,
     ).hexdigest()
 
 
@@ -156,7 +158,9 @@ class WebhookManager:
             return list(self._endpoints.values())
 
     def build_payload(
-        self, event: WebhookEvent, data: dict[str, Any],
+        self,
+        event: WebhookEvent,
+        data: dict[str, Any],
     ) -> dict[str, Any]:
         """Build a webhook payload with standard envelope."""
         return {
@@ -180,9 +184,7 @@ class WebhookManager:
         deliveries = []
 
         with self._lock:
-            self._event_counts[event.value] = (
-                self._event_counts.get(event.value, 0) + 1
-            )
+            self._event_counts[event.value] = self._event_counts.get(event.value, 0) + 1
 
             for endpoint in self._endpoints.values():
                 if not endpoint.active:
@@ -204,7 +206,7 @@ class WebhookManager:
             self._deliveries.extend(deliveries)
             # Trim old deliveries
             if len(self._deliveries) > self.MAX_DELIVERIES:
-                self._deliveries = self._deliveries[-self.MAX_DELIVERIES:]
+                self._deliveries = self._deliveries[-self.MAX_DELIVERIES :]
 
         return deliveries
 
@@ -238,7 +240,9 @@ class WebhookManager:
                     break
 
     def get_deliveries(
-        self, endpoint_id: str | None = None, limit: int = 50,
+        self,
+        endpoint_id: str | None = None,
+        limit: int = 50,
     ) -> list[WebhookDelivery]:
         """Get recent delivery records."""
         with self._lock:
@@ -258,9 +262,7 @@ class WebhookManager:
             success = sum(1 for d in self._deliveries if d.success)
             return {
                 "total_endpoints": len(self._endpoints),
-                "active_endpoints": sum(
-                    1 for e in self._endpoints.values() if e.active
-                ),
+                "active_endpoints": sum(1 for e in self._endpoints.values() if e.active),
                 "total_deliveries": total,
                 "successful_deliveries": success,
                 "success_rate": round(success / total, 4) if total > 0 else 0.0,

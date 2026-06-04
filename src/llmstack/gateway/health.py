@@ -18,6 +18,7 @@ class HealthStatus(str, Enum):
 @dataclass
 class HealthCheck:
     """Result of a single health check."""
+
     name: str
     status: HealthStatus
     latency_ms: float
@@ -29,6 +30,7 @@ class HealthCheck:
 @dataclass
 class SystemHealth:
     """Overall system health."""
+
     status: HealthStatus
     checks: list[HealthCheck]
     uptime_seconds: float
@@ -70,10 +72,14 @@ class HealthMonitor:
             if isinstance(c, HealthCheck):
                 valid_checks.append(c)
             elif isinstance(c, Exception):
-                valid_checks.append(HealthCheck(
-                    name="unknown", status=HealthStatus.UNHEALTHY,
-                    latency_ms=0, message=str(c),
-                ))
+                valid_checks.append(
+                    HealthCheck(
+                        name="unknown",
+                        status=HealthStatus.UNHEALTHY,
+                        latency_ms=0,
+                        message=str(c),
+                    )
+                )
 
         # Determine overall status
         statuses = [c.status for c in valid_checks]
@@ -94,7 +100,7 @@ class HealthMonitor:
         self._last_checks = valid_checks
         self._check_history.append(health)
         if len(self._check_history) > self._max_history:
-            self._check_history = self._check_history[-self._max_history:]
+            self._check_history = self._check_history[-self._max_history :]
 
         # Fire alerts for unhealthy checks
         for check in valid_checks:
@@ -120,19 +126,22 @@ class HealthMonitor:
                 if resp.status_code == 200:
                     data = resp.json()
                     return HealthCheck(
-                        name="ollama", status=HealthStatus.HEALTHY,
+                        name="ollama",
+                        status=HealthStatus.HEALTHY,
                         latency_ms=latency,
                         message=f"v{data.get('version', 'unknown')}",
                         details=data,
                     )
                 return HealthCheck(
-                    name="ollama", status=HealthStatus.DEGRADED,
+                    name="ollama",
+                    status=HealthStatus.DEGRADED,
                     latency_ms=latency,
                     message=f"HTTP {resp.status_code}",
                 )
         except Exception as e:
             return HealthCheck(
-                name="ollama", status=HealthStatus.UNHEALTHY,
+                name="ollama",
+                status=HealthStatus.UNHEALTHY,
                 latency_ms=(time.time() - start) * 1000,
                 message=str(e),
             )
@@ -157,15 +166,18 @@ class HealthMonitor:
                 status = HealthStatus.HEALTHY
 
             return HealthCheck(
-                name="disk", status=status,
+                name="disk",
+                status=status,
                 latency_ms=latency,
                 message=f"{free_gb:.1f}GB free ({pct_used:.0f}% used)",
                 details={"free_gb": free_gb, "total_gb": total_gb, "pct_used": pct_used},
             )
         except Exception as e:
             return HealthCheck(
-                name="disk", status=HealthStatus.UNKNOWN,
-                latency_ms=0, message=str(e),
+                name="disk",
+                status=HealthStatus.UNKNOWN,
+                latency_ms=0,
+                message=str(e),
             )
 
     async def _check_memory(self) -> HealthCheck:
@@ -177,7 +189,10 @@ class HealthMonitor:
 
             if platform.system() == "Darwin":
                 result = subprocess.run(
-                    ["vm_stat"], capture_output=True, text=True, timeout=5,
+                    ["vm_stat"],
+                    capture_output=True,
+                    text=True,
+                    timeout=5,
                 )
                 if result.returncode == 0:
                     lines = result.stdout.split("\n")
@@ -195,11 +210,14 @@ class HealthMonitor:
                     free_pages = stats.get("Pages free", 0) + stats.get("Pages speculative", 0)
                     free_gb = (free_pages * page_size) / (1024**3)
 
-                    status = HealthStatus.HEALTHY if free_gb > 2 else (
-                        HealthStatus.DEGRADED if free_gb > 0.5 else HealthStatus.UNHEALTHY
+                    status = (
+                        HealthStatus.HEALTHY
+                        if free_gb > 2
+                        else (HealthStatus.DEGRADED if free_gb > 0.5 else HealthStatus.UNHEALTHY)
                     )
                     return HealthCheck(
-                        name="memory", status=status,
+                        name="memory",
+                        status=status,
                         latency_ms=(time.time() - start) * 1000,
                         message=f"{free_gb:.1f}GB available",
                         details={"free_gb": free_gb},
@@ -217,24 +235,31 @@ class HealthMonitor:
                 available = meminfo.get("MemAvailable", 0) / (1024**2)
                 pct_used = ((total - available) / max(1, total)) * 100
 
-                status = HealthStatus.HEALTHY if pct_used < 85 else (
-                    HealthStatus.DEGRADED if pct_used < 95 else HealthStatus.UNHEALTHY
+                status = (
+                    HealthStatus.HEALTHY
+                    if pct_used < 85
+                    else (HealthStatus.DEGRADED if pct_used < 95 else HealthStatus.UNHEALTHY)
                 )
                 return HealthCheck(
-                    name="memory", status=status,
+                    name="memory",
+                    status=status,
                     latency_ms=(time.time() - start) * 1000,
                     message=f"{available:.1f}GB available ({pct_used:.0f}% used)",
                     details={"total_gb": total, "available_gb": available},
                 )
 
             return HealthCheck(
-                name="memory", status=HealthStatus.UNKNOWN,
-                latency_ms=0, message="Unsupported platform",
+                name="memory",
+                status=HealthStatus.UNKNOWN,
+                latency_ms=0,
+                message="Unsupported platform",
             )
         except Exception as e:
             return HealthCheck(
-                name="memory", status=HealthStatus.UNKNOWN,
-                latency_ms=0, message=str(e),
+                name="memory",
+                status=HealthStatus.UNKNOWN,
+                latency_ms=0,
+                message=str(e),
             )
 
     async def _check_redis(self, url: str) -> HealthCheck:
@@ -242,17 +267,20 @@ class HealthMonitor:
         start = time.time()
         try:
             import redis
+
             r = redis.from_url(url, socket_timeout=3)
             r.ping()
             info = r.info("server")
             return HealthCheck(
-                name="redis", status=HealthStatus.HEALTHY,
+                name="redis",
+                status=HealthStatus.HEALTHY,
                 latency_ms=(time.time() - start) * 1000,
                 message=f"v{info.get('redis_version', 'unknown')}",
             )
         except Exception as e:
             return HealthCheck(
-                name="redis", status=HealthStatus.UNHEALTHY,
+                name="redis",
+                status=HealthStatus.UNHEALTHY,
                 latency_ms=(time.time() - start) * 1000,
                 message=str(e),
             )
@@ -268,16 +296,21 @@ class HealthMonitor:
                 latency = (time.time() - start) * 1000
                 if resp.status_code == 200:
                     return HealthCheck(
-                        name="qdrant", status=HealthStatus.HEALTHY,
-                        latency_ms=latency, message="OK",
+                        name="qdrant",
+                        status=HealthStatus.HEALTHY,
+                        latency_ms=latency,
+                        message="OK",
                     )
                 return HealthCheck(
-                    name="qdrant", status=HealthStatus.DEGRADED,
-                    latency_ms=latency, message=f"HTTP {resp.status_code}",
+                    name="qdrant",
+                    status=HealthStatus.DEGRADED,
+                    latency_ms=latency,
+                    message=f"HTTP {resp.status_code}",
                 )
         except Exception as e:
             return HealthCheck(
-                name="qdrant", status=HealthStatus.UNHEALTHY,
+                name="qdrant",
+                status=HealthStatus.UNHEALTHY,
                 latency_ms=(time.time() - start) * 1000,
                 message=str(e),
             )
@@ -285,8 +318,10 @@ class HealthMonitor:
     async def _skip_check(self, name: str) -> HealthCheck:
         """Skip a check (service not configured)."""
         return HealthCheck(
-            name=name, status=HealthStatus.UNKNOWN,
-            latency_ms=0, message="Not configured",
+            name=name,
+            status=HealthStatus.UNKNOWN,
+            latency_ms=0,
+            message="Not configured",
         )
 
     def get_history(self, limit: int = 20) -> list[dict]:
@@ -296,12 +331,15 @@ class HealthMonitor:
                 "status": h.status.value,
                 "timestamp": h.timestamp,
                 "uptime": h.uptime_seconds,
-                "checks": [{
-                    "name": c.name,
-                    "status": c.status.value,
-                    "latency_ms": c.latency_ms,
-                    "message": c.message,
-                } for c in h.checks],
+                "checks": [
+                    {
+                        "name": c.name,
+                        "status": c.status.value,
+                        "latency_ms": c.latency_ms,
+                        "message": c.message,
+                    }
+                    for c in h.checks
+                ],
             }
             for h in self._check_history[-limit:]
         ]

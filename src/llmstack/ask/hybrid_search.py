@@ -139,7 +139,11 @@ class HybridSearcher:
             rrf_scores[idx] += self.bm25_weight / (self.rrf_k + rank + 1)
 
         # Vector retrieval
-        if query_embedding is not None and self._embeddings is not None and self._embeddings.size > 0:
+        if (
+            query_embedding is not None
+            and self._embeddings is not None
+            and self._embeddings.size > 0
+        ):
             vector_results = self._vector_search(query_embedding, top_k * 3)
             for rank, (idx, _score) in enumerate(vector_results):
                 rrf_scores[idx] += self.vector_weight / (self.rrf_k + rank + 1)
@@ -175,7 +179,7 @@ class HybridSearcher:
 def _tokenize(text: str) -> list[str]:
     """Simple whitespace + punctuation tokenizer for BM25."""
     text = text.lower()
-    tokens = re.findall(r'\b[a-z_][a-z0-9_]*\b', text)
+    tokens = re.findall(r"\b[a-z_][a-z0-9_]*\b", text)
     # Also split camelCase and snake_case for better code matching
     expanded: list[str] = []
     for t in tokens:
@@ -184,7 +188,7 @@ def _tokenize(text: str) -> list[str]:
         if "_" in t:
             expanded.extend(p for p in t.split("_") if len(p) >= 2)
         # Split camelCase
-        parts = re.findall(r'[A-Z]?[a-z]+|[A-Z]+(?=[A-Z]|$)', t)
+        parts = re.findall(r"[A-Z]?[a-z]+|[A-Z]+(?=[A-Z]|$)", t)
         if len(parts) > 1:
             expanded.extend(p.lower() for p in parts if len(p) >= 2)
     return expanded

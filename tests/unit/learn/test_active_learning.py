@@ -87,11 +87,13 @@ class TestActiveLearner:
         """Novel queries score higher for feedback value."""
         # Add some history
         for i in range(10):
-            store.add_feedback(Feedback(
-                feedback_type=FeedbackType.THUMBS_UP,
-                query=f"How do I write Python code for task {i}?",
-                response=f"response {i}",
-            ))
+            store.add_feedback(
+                Feedback(
+                    feedback_type=FeedbackType.THUMBS_UP,
+                    query=f"How do I write Python code for task {i}?",
+                    response=f"response {i}",
+                )
+            )
 
         # Similar query — low novelty
         similar = learner.estimate_uncertainty(

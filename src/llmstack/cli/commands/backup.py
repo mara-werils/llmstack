@@ -79,7 +79,9 @@ def backup(
     (backup_dir / BACKUP_MANIFEST).write_text(json.dumps(manifest, indent=2))
 
     # Create archive
-    archive_path = shutil.make_archive(str(backup_dir), "gztar", str(backup_dir.parent), backup_dir.name)
+    archive_path = shutil.make_archive(
+        str(backup_dir), "gztar", str(backup_dir.parent), backup_dir.name
+    )
 
     # Clean up temp dir
     shutil.rmtree(backup_dir)
@@ -112,6 +114,7 @@ def restore(
 
     # Extract to temp directory
     import tarfile
+
     temp_dir = Path(f"/tmp/llmstack_restore_{int(time.time())}")
     temp_dir.mkdir(parents=True, exist_ok=True)
 

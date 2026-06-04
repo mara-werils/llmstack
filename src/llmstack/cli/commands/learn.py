@@ -161,7 +161,9 @@ def learn_rollback() -> None:
 
     result = version_mgr.rollback()
     if result:
-        console.print(f"[green]Rolled back to v{result.version}[/] (quality={result.quality_score:.4f})")
+        console.print(
+            f"[green]Rolled back to v{result.version}[/] (quality={result.quality_score:.4f})"
+        )
     else:
         console.print("[red]No previous version available for rollback.[/]")
 
@@ -198,16 +200,15 @@ def learn_feedback(limit: int = 20, feedback_type: str | None = None) -> None:
         }
         color = type_colors.get(fb.feedback_type.value, "white")
         query_preview = fb.query[:60] + "..." if len(fb.query) > 60 else fb.query
-        console.print(
-            f"  [{color}]{fb.feedback_type.value:12}[/] {ts}  "
-            f"[dim]{query_preview}[/]"
-        )
+        console.print(f"  [{color}]{fb.feedback_type.value:12}[/] {ts}  [dim]{query_preview}[/]")
 
     # Stats
     stats = store.get_stats()
-    console.print(f"\n  Total: {stats['total_feedback']} | "
-                  f"Unused: {stats['unused_feedback']} | "
-                  f"Types: {dict(stats.get('feedback_by_type', {}))}")
+    console.print(
+        f"\n  Total: {stats['total_feedback']} | "
+        f"Unused: {stats['unused_feedback']} | "
+        f"Types: {dict(stats.get('feedback_by_type', {}))}"
+    )
 
     store.close()
 
@@ -340,10 +341,7 @@ def learn_patterns() -> None:
             conf = p.get("confidence", 0)
             count = p.get("occurrences", 0)
             color = "green" if conf > 0.7 else "yellow" if conf > 0.4 else "dim"
-            console.print(
-                f"  [{color}]{conf:.0%}[/] {p['description']} "
-                f"[dim](seen {count}x)[/]"
-            )
+            console.print(f"  [{color}]{conf:.0%}[/] {p['description']} [dim](seen {count}x)[/]")
         console.print()
 
     # Style guide
@@ -376,8 +374,7 @@ def learn_versions() -> None:
         ts = time.strftime("%Y-%m-%d %H:%M", time.localtime(v.timestamp))
         active = " [green]← active[/]" if v.is_active else ""
         console.print(
-            f"  v{v.version:3}  {ts}  quality={v.quality_score:.4f}  "
-            f"base={v.base_model}{active}"
+            f"  v{v.version:3}  {ts}  quality={v.quality_score:.4f}  base={v.base_model}{active}"
         )
 
     console.print()

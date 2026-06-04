@@ -14,9 +14,9 @@ from dataclasses import dataclass
 class QueryProfile:
     """Result of query complexity classification."""
 
-    score: float          # 0.0 (trivial) to 1.0 (expert)
-    tier: str             # "simple" | "medium" | "complex"
-    factors: dict         # {"token_count": 0.3, "task_markers": 0.7, ...}
+    score: float  # 0.0 (trivial) to 1.0 (expert)
+    tier: str  # "simple" | "medium" | "complex"
+    factors: dict  # {"token_count": 0.3, "task_markers": 0.7, ...}
     suggested_model: str | None = None  # Hint based on tier
 
     def __post_init__(self):
@@ -29,58 +29,194 @@ class QueryProfile:
 # Marker word sets
 # ---------------------------------------------------------------------------
 
-_SIMPLE_MARKERS = frozenset({
-    "hello", "hi", "hey", "thanks", "thank", "bye", "goodbye",
-    "translate", "summarize", "summary", "define", "list",
-    "tldr", "repeat", "count", "spell", "name", "greet",
-    "yes", "no", "ok", "okay", "sure", "please",
-})
+_SIMPLE_MARKERS = frozenset(
+    {
+        "hello",
+        "hi",
+        "hey",
+        "thanks",
+        "thank",
+        "bye",
+        "goodbye",
+        "translate",
+        "summarize",
+        "summary",
+        "define",
+        "list",
+        "tldr",
+        "repeat",
+        "count",
+        "spell",
+        "name",
+        "greet",
+        "yes",
+        "no",
+        "ok",
+        "okay",
+        "sure",
+        "please",
+    }
+)
 
-_COMPLEX_MARKERS = frozenset({
-    "analyze", "analyse", "compare", "contrast", "implement",
-    "debug", "refactor", "optimise", "optimize", "evaluate",
-    "explain how", "explain why", "explain the",
-    "explain step by step", "step-by-step", "step by step",
-    "critically", "critique", "assess", "investigate",
-    "troubleshoot", "diagnose", "decompose", "synthesize",
-    "trade-off", "tradeoff", "trade off", "implications",
-    "advantages and disadvantages", "pros and cons",
-    "including", "handling", "considering",
-})
+_COMPLEX_MARKERS = frozenset(
+    {
+        "analyze",
+        "analyse",
+        "compare",
+        "contrast",
+        "implement",
+        "debug",
+        "refactor",
+        "optimise",
+        "optimize",
+        "evaluate",
+        "explain how",
+        "explain why",
+        "explain the",
+        "explain step by step",
+        "step-by-step",
+        "step by step",
+        "critically",
+        "critique",
+        "assess",
+        "investigate",
+        "troubleshoot",
+        "diagnose",
+        "decompose",
+        "synthesize",
+        "trade-off",
+        "tradeoff",
+        "trade off",
+        "implications",
+        "advantages and disadvantages",
+        "pros and cons",
+        "including",
+        "handling",
+        "considering",
+    }
+)
 
-_EXPERT_MARKERS = frozenset({
-    "write a full", "design a", "architect", "build a complete",
-    "create a comprehensive", "develop a system",
-    "distributed", "consensus", "fault-tolerant", "fault tolerant",
-    "fault tolerance", "microservice", "end-to-end", "end to end",
-    "production-ready", "production ready", "scalable",
-    "high-availability", "high availability",
-    "implement a", "design a system",
-})
+_EXPERT_MARKERS = frozenset(
+    {
+        "write a full",
+        "design a",
+        "architect",
+        "build a complete",
+        "create a comprehensive",
+        "develop a system",
+        "distributed",
+        "consensus",
+        "fault-tolerant",
+        "fault tolerant",
+        "fault tolerance",
+        "microservice",
+        "end-to-end",
+        "end to end",
+        "production-ready",
+        "production ready",
+        "scalable",
+        "high-availability",
+        "high availability",
+        "implement a",
+        "design a system",
+    }
+)
 
-_CODE_KEYWORDS = frozenset({
-    "def ", "class ", "import ", "function ", "const ", "let ", "var ",
-    "return ", "async ", "await ", "for ", "while ", "if ",
-    "struct ", "impl ", "fn ", "pub ", "enum ",
-    "SELECT ", "INSERT ", "CREATE TABLE", "ALTER TABLE",
-    "```", ">>>", "$ ", "#!/",
-})
+_CODE_KEYWORDS = frozenset(
+    {
+        "def ",
+        "class ",
+        "import ",
+        "function ",
+        "const ",
+        "let ",
+        "var ",
+        "return ",
+        "async ",
+        "await ",
+        "for ",
+        "while ",
+        "if ",
+        "struct ",
+        "impl ",
+        "fn ",
+        "pub ",
+        "enum ",
+        "SELECT ",
+        "INSERT ",
+        "CREATE TABLE",
+        "ALTER TABLE",
+        "```",
+        ">>>",
+        "$ ",
+        "#!/",
+    }
+)
 
-_PROGRAMMING_TERMS = frozenset({
-    "algorithm", "recursion", "binary tree", "linked list",
-    "hash map", "api", "endpoint", "database", "sql", "regex",
-    "lambda", "closure", "decorator", "middleware", "callback",
-    "polymorphism", "inheritance", "interface", "generic",
-    "concurrency", "thread", "mutex", "semaphore", "deadlock",
-    "docker", "kubernetes", "terraform", "cicd", "ci/cd",
-    "webpack", "typescript", "python", "javascript", "rust", "golang",
-    "neural network", "backpropagation", "gradient", "machine learning",
-    "deep learning", "transformer", "embedding", "tokenizer",
-    "graphql", "rest", "microservice", "architecture",
-    "consensus", "replication", "fault tolerance", "leader election",
-    "sorting", "caching", "pipeline", "compiler", "parser",
-    "function", "class", "module", "package",
-})
+_PROGRAMMING_TERMS = frozenset(
+    {
+        "algorithm",
+        "recursion",
+        "binary tree",
+        "linked list",
+        "hash map",
+        "api",
+        "endpoint",
+        "database",
+        "sql",
+        "regex",
+        "lambda",
+        "closure",
+        "decorator",
+        "middleware",
+        "callback",
+        "polymorphism",
+        "inheritance",
+        "interface",
+        "generic",
+        "concurrency",
+        "thread",
+        "mutex",
+        "semaphore",
+        "deadlock",
+        "docker",
+        "kubernetes",
+        "terraform",
+        "cicd",
+        "ci/cd",
+        "webpack",
+        "typescript",
+        "python",
+        "javascript",
+        "rust",
+        "golang",
+        "neural network",
+        "backpropagation",
+        "gradient",
+        "machine learning",
+        "deep learning",
+        "transformer",
+        "embedding",
+        "tokenizer",
+        "graphql",
+        "rest",
+        "microservice",
+        "architecture",
+        "consensus",
+        "replication",
+        "fault tolerance",
+        "leader election",
+        "sorting",
+        "caching",
+        "pipeline",
+        "compiler",
+        "parser",
+        "function",
+        "class",
+        "module",
+        "package",
+    }
+)
 
 # Simple question patterns
 _SIMPLE_QUESTION_RE = re.compile(
@@ -107,7 +243,9 @@ _MULTI_PART_RE = re.compile(
 )
 
 # Non-ASCII / multi-language detection
-_NON_LATIN_RE = re.compile(r"[\u0400-\u04FF\u4E00-\u9FFF\u3040-\u309F\u30A0-\u30FF\uAC00-\uD7AF\u0600-\u06FF]")
+_NON_LATIN_RE = re.compile(
+    r"[\u0400-\u04FF\u4E00-\u9FFF\u3040-\u309F\u30A0-\u30FF\uAC00-\uD7AF\u0600-\u06FF]"
+)
 
 
 class QueryClassifier:

@@ -16,6 +16,7 @@ def playground(gateway_url: str | None = None) -> None:
     if not url:
         try:
             from llmstack.config.loader import load_config
+
             config = load_config()
             url = f"http://localhost:{config.gateway.port}"
         except (FileNotFoundError, SystemExit):

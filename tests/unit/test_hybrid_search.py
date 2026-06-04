@@ -17,11 +17,36 @@ from llmstack.ask.parsers import TextChunk
 @pytest.fixture
 def chunks() -> list[TextChunk]:
     return [
-        TextChunk(content="Python is a programming language for data science.", source="a.py", start_line=1, end_line=1),
-        TextChunk(content="JavaScript runs in the browser and server.", source="b.js", start_line=1, end_line=1),
-        TextChunk(content="Rust provides memory safety without garbage collection.", source="c.rs", start_line=1, end_line=1),
-        TextChunk(content="Python web frameworks include Django and Flask.", source="d.py", start_line=1, end_line=1),
-        TextChunk(content="Docker containers package applications for deployment.", source="e.md", start_line=1, end_line=1),
+        TextChunk(
+            content="Python is a programming language for data science.",
+            source="a.py",
+            start_line=1,
+            end_line=1,
+        ),
+        TextChunk(
+            content="JavaScript runs in the browser and server.",
+            source="b.js",
+            start_line=1,
+            end_line=1,
+        ),
+        TextChunk(
+            content="Rust provides memory safety without garbage collection.",
+            source="c.rs",
+            start_line=1,
+            end_line=1,
+        ),
+        TextChunk(
+            content="Python web frameworks include Django and Flask.",
+            source="d.py",
+            start_line=1,
+            end_line=1,
+        ),
+        TextChunk(
+            content="Docker containers package applications for deployment.",
+            source="e.md",
+            start_line=1,
+            end_line=1,
+        ),
     ]
 
 
@@ -203,11 +228,14 @@ class TestHybridSearcher:
 class TestVectorSearch:
     def test_vector_search_returns_top_k(self) -> None:
         hs = HybridSearcher()
-        embeddings = np.array([
-            [1, 0, 0, 0],
-            [0, 1, 0, 0],
-            [0.9, 0.1, 0, 0],
-        ], dtype=np.float32)
+        embeddings = np.array(
+            [
+                [1, 0, 0, 0],
+                [0, 1, 0, 0],
+                [0.9, 0.1, 0, 0],
+            ],
+            dtype=np.float32,
+        )
         hs._embeddings = embeddings
 
         query = np.array([1, 0, 0, 0], dtype=np.float32)

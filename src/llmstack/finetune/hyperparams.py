@@ -10,8 +10,8 @@ class TrainHyperparams:
     """Training hyperparameters for LoRA/QLoRA fine-tuning."""
 
     # LoRA params
-    lora_r: int = 16                # LoRA rank
-    lora_alpha: int = 32            # LoRA alpha (usually 2x rank)
+    lora_r: int = 16  # LoRA rank
+    lora_alpha: int = 32  # LoRA alpha (usually 2x rank)
     lora_dropout: float = 0.05
     target_modules: list[str] | None = None  # auto-detect if None
 
@@ -26,7 +26,7 @@ class TrainHyperparams:
     lr_scheduler: str = "cosine"
 
     # QLoRA specific
-    use_4bit: bool = True           # QLoRA 4-bit quantization
+    use_4bit: bool = True  # QLoRA 4-bit quantization
     bnb_4bit_compute_dtype: str = "bfloat16"
     bnb_4bit_quant_type: str = "nf4"
 
@@ -143,11 +143,24 @@ def estimate_model_size(model_name: str) -> float:
     name = model_name.lower()
 
     size_patterns = [
-        ("405b", 405.0), ("70b", 70.0), ("34b", 34.0), ("33b", 33.0),
-        ("30b", 30.0), ("27b", 27.0), ("14b", 14.0), ("13b", 13.0),
-        ("8b", 8.0), ("7b", 7.0), ("3b", 3.0), ("2b", 2.0),
-        ("1b", 1.0), ("0.5b", 0.5),
-        (":1b", 1.0), (":3b", 3.0), (":8b", 8.0), (":70b", 70.0),
+        ("405b", 405.0),
+        ("70b", 70.0),
+        ("34b", 34.0),
+        ("33b", 33.0),
+        ("30b", 30.0),
+        ("27b", 27.0),
+        ("14b", 14.0),
+        ("13b", 13.0),
+        ("8b", 8.0),
+        ("7b", 7.0),
+        ("3b", 3.0),
+        ("2b", 2.0),
+        ("1b", 1.0),
+        ("0.5b", 0.5),
+        (":1b", 1.0),
+        (":3b", 3.0),
+        (":8b", 8.0),
+        (":70b", 70.0),
     ]
 
     for pattern, size in size_patterns:

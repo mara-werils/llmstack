@@ -21,12 +21,12 @@ from dataclasses import dataclass
 class QualityScore:
     """Quality scores for a single response."""
 
-    coherence: float = 0.0    # 0-1: structural quality
-    relevance: float = 0.0    # 0-1: addresses the query
-    refusal: float = 0.0      # 0-1: how likely it's a refusal (lower is better)
-    toxicity: float = 0.0     # 0-1: harmful content flag (lower is better)
-    repetition: float = 0.0   # 0-1: repetition level (lower is better)
-    overall: float = 0.0      # 0-1: weighted aggregate
+    coherence: float = 0.0  # 0-1: structural quality
+    relevance: float = 0.0  # 0-1: addresses the query
+    refusal: float = 0.0  # 0-1: how likely it's a refusal (lower is better)
+    toxicity: float = 0.0  # 0-1: harmful content flag (lower is better)
+    repetition: float = 0.0  # 0-1: repetition level (lower is better)
+    overall: float = 0.0  # 0-1: weighted aggregate
 
     def to_dict(self) -> dict[str, float]:
         return {
@@ -115,17 +115,17 @@ class QualityScorer:
             score += 0.7  # very long responses slightly penalized
 
         # Sentence structure
-        sentences = re.split(r'[.!?]+', response)
+        sentences = re.split(r"[.!?]+", response)
         sentences = [s.strip() for s in sentences if s.strip()]
         if len(sentences) >= 2:
             score += 0.1
 
         # Has some structure (paragraphs, lists, code)
-        if '\n' in response:
+        if "\n" in response:
             score += 0.05
-        if re.search(r'^\s*[-*\d]+[.)]\s', response, re.MULTILINE):
+        if re.search(r"^\s*[-*\d]+[.)]\s", response, re.MULTILINE):
             score += 0.05
-        if '```' in response:
+        if "```" in response:
             score += 0.05
 
         return min(1.0, score)
@@ -135,8 +135,8 @@ class QualityScorer:
         if not query:
             return 0.5
 
-        query_words = set(re.findall(r'\b\w{3,}\b', query.lower()))
-        response_words = set(re.findall(r'\b\w{3,}\b', response.lower()))
+        query_words = set(re.findall(r"\b\w{3,}\b", query.lower()))
+        response_words = set(re.findall(r"\b\w{3,}\b", response.lower()))
 
         if not query_words:
             return 0.5
@@ -170,7 +170,7 @@ class QualityScorer:
             return 0.0
 
         # Check for repeated sentences
-        sentences = re.split(r'[.!?\n]+', response)
+        sentences = re.split(r"[.!?\n]+", response)
         sentences = [s.strip().lower() for s in sentences if len(s.strip()) > 20]
 
         if not sentences:
@@ -185,7 +185,7 @@ class QualityScorer:
         # Check for repeated n-grams (3-grams)
         words = response.lower().split()
         if len(words) >= 10:
-            trigrams = [" ".join(words[i:i+3]) for i in range(len(words) - 2)]
+            trigrams = [" ".join(words[i : i + 3]) for i in range(len(words) - 2)]
             unique_trigrams = set(trigrams)
             trigram_dup = 1.0 - (len(unique_trigrams) / max(len(trigrams), 1))
             # Normal text has ~10-20% trigram duplication

@@ -25,18 +25,48 @@ class TextChunk:
 
 PLAIN_TEXT_EXTS = {".txt", ".md", ".rst"}
 CODE_EXTS = {
-    ".py", ".js", ".ts", ".go", ".rs", ".java", ".c", ".cpp", ".h",
-    ".rb", ".php", ".swift", ".kt",
+    ".py",
+    ".js",
+    ".ts",
+    ".go",
+    ".rs",
+    ".java",
+    ".c",
+    ".cpp",
+    ".h",
+    ".rb",
+    ".php",
+    ".swift",
+    ".kt",
 }
 CONFIG_EXTS = {".json", ".yaml", ".yml", ".toml"}
 MARKUP_EXTS = {".html", ".xml"}
-SUPPORTED_EXTS = PLAIN_TEXT_EXTS | CODE_EXTS | CONFIG_EXTS | MARKUP_EXTS | {
-    ".csv", ".log", ".pdf", ".docx",
-}
+SUPPORTED_EXTS = (
+    PLAIN_TEXT_EXTS
+    | CODE_EXTS
+    | CONFIG_EXTS
+    | MARKUP_EXTS
+    | {
+        ".csv",
+        ".log",
+        ".pdf",
+        ".docx",
+    }
+)
 
 SKIP_DIRS = {
-    "node_modules", "__pycache__", ".git", "venv", ".venv", "dist", "build",
-    ".tox", ".mypy_cache", ".pytest_cache", ".ruff_cache", "egg-info",
+    "node_modules",
+    "__pycache__",
+    ".git",
+    "venv",
+    ".venv",
+    "dist",
+    "build",
+    ".tox",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".ruff_cache",
+    "egg-info",
 }
 
 # Regex patterns for detecting function/class boundaries in code
@@ -51,9 +81,7 @@ _CODE_BOUNDARY = re.compile(
     re.MULTILINE,
 )
 
-_TIMESTAMP_PATTERN = re.compile(
-    r"^\d{4}[-/]\d{2}[-/]\d{2}[T ]\d{2}:\d{2}"
-)
+_TIMESTAMP_PATTERN = re.compile(r"^\d{4}[-/]\d{2}[-/]\d{2}[T ]\d{2}:\d{2}")
 
 _HTML_TAG = re.compile(r"<[^>]+>")
 
@@ -140,21 +168,21 @@ def _read_text(path: Path) -> str:
     return path.read_text(encoding="utf-8", errors="replace")
 
 
-def _lines_to_chunks(
-    lines: list[str], source: str, max_lines: int = 100
-) -> list[TextChunk]:
+def _lines_to_chunks(lines: list[str], source: str, max_lines: int = 100) -> list[TextChunk]:
     """Split a list of lines into chunks of at most *max_lines*."""
     chunks: list[TextChunk] = []
     for i in range(0, len(lines), max_lines):
         block = lines[i : i + max_lines]
         content = "\n".join(block).strip()
         if content:
-            chunks.append(TextChunk(
-                content=content,
-                source=source,
-                start_line=i + 1,
-                end_line=i + len(block),
-            ))
+            chunks.append(
+                TextChunk(
+                    content=content,
+                    source=source,
+                    start_line=i + 1,
+                    end_line=i + len(block),
+                )
+            )
     return chunks
 
 
@@ -175,12 +203,14 @@ def _parse_plain_text(path: Path) -> list[TextChunk]:
         if line.strip() == "" and para_lines:
             content = "\n".join(para_lines).strip()
             if content:
-                chunks.append(TextChunk(
-                    content=content,
-                    source=source,
-                    start_line=para_start,
-                    end_line=i - 1,
-                ))
+                chunks.append(
+                    TextChunk(
+                        content=content,
+                        source=source,
+                        start_line=para_start,
+                        end_line=i - 1,
+                    )
+                )
             para_lines = []
             para_start = i + 1
         else:
@@ -192,14 +222,24 @@ def _parse_plain_text(path: Path) -> list[TextChunk]:
     if para_lines:
         content = "\n".join(para_lines).strip()
         if content:
-            chunks.append(TextChunk(
-                content=content,
-                source=source,
-                start_line=para_start,
-                end_line=len(lines),
-            ))
+            chunks.append(
+                TextChunk(
+                    content=content,
+                    source=source,
+                    start_line=para_start,
+                    end_line=len(lines),
+                )
+            )
 
-    return chunks if chunks else [TextChunk(content=text.strip(), source=source, start_line=1, end_line=max(len(lines), 1))]
+    return (
+        chunks
+        if chunks
+        else [
+            TextChunk(
+                content=text.strip(), source=source, start_line=1, end_line=max(len(lines), 1)
+            )
+        ]
+    )
 
 
 def _parse_code(path: Path) -> list[TextChunk]:
@@ -227,12 +267,14 @@ def _parse_code(path: Path) -> list[TextChunk]:
     if boundaries[0] > 0:
         pre = "\n".join(lines[: boundaries[0]]).strip()
         if pre:
-            chunks.append(TextChunk(
-                content=pre,
-                source=source,
-                start_line=1,
-                end_line=boundaries[0],
-            ))
+            chunks.append(
+                TextChunk(
+                    content=pre,
+                    source=source,
+                    start_line=1,
+                    end_line=boundaries[0],
+                )
+            )
 
     # Each boundary to the next
     for idx in range(len(boundaries)):
@@ -240,12 +282,14 @@ def _parse_code(path: Path) -> list[TextChunk]:
         end = boundaries[idx + 1] if idx + 1 < len(boundaries) else len(lines)
         content = "\n".join(lines[start:end]).strip()
         if content:
-            chunks.append(TextChunk(
-                content=content,
-                source=source,
-                start_line=start + 1,
-                end_line=end,
-            ))
+            chunks.append(
+                TextChunk(
+                    content=content,
+                    source=source,
+                    start_line=start + 1,
+                    end_line=end,
+                )
+            )
 
     return chunks if chunks else _lines_to_chunks(lines, source, max_lines=100)
 
@@ -257,12 +301,18 @@ def _parse_config(path: Path) -> list[TextChunk]:
     lines = text.splitlines()
 
     if len(lines) <= 50:
-        return [TextChunk(
-            content=text.strip(),
-            source=source,
-            start_line=1,
-            end_line=max(len(lines), 1),
-        )] if text.strip() else []
+        return (
+            [
+                TextChunk(
+                    content=text.strip(),
+                    source=source,
+                    start_line=1,
+                    end_line=max(len(lines), 1),
+                )
+            ]
+            if text.strip()
+            else []
+        )
 
     # For large config files, split by top-level keys (lines with no leading whitespace)
     ext = path.suffix.lower()
@@ -284,12 +334,14 @@ def _parse_config(path: Path) -> list[TextChunk]:
         if is_top_level and block_lines:
             content = "\n".join(block_lines).strip()
             if content:
-                chunks.append(TextChunk(
-                    content=content,
-                    source=source,
-                    start_line=block_start,
-                    end_line=i - 1,
-                ))
+                chunks.append(
+                    TextChunk(
+                        content=content,
+                        source=source,
+                        start_line=block_start,
+                        end_line=i - 1,
+                    )
+                )
             block_lines = [line]
             block_start = i
         else:
@@ -300,14 +352,24 @@ def _parse_config(path: Path) -> list[TextChunk]:
     if block_lines:
         content = "\n".join(block_lines).strip()
         if content:
-            chunks.append(TextChunk(
-                content=content,
-                source=source,
-                start_line=block_start,
-                end_line=len(lines),
-            ))
+            chunks.append(
+                TextChunk(
+                    content=content,
+                    source=source,
+                    start_line=block_start,
+                    end_line=len(lines),
+                )
+            )
 
-    return chunks if chunks else [TextChunk(content=text.strip(), source=source, start_line=1, end_line=max(len(lines), 1))]
+    return (
+        chunks
+        if chunks
+        else [
+            TextChunk(
+                content=text.strip(), source=source, start_line=1, end_line=max(len(lines), 1)
+            )
+        ]
+    )
 
 
 def _parse_csv(path: Path) -> list[TextChunk]:
@@ -324,12 +386,14 @@ def _parse_csv(path: Path) -> list[TextChunk]:
     content = "\n".join(rows).strip()
     if not content:
         return []
-    return [TextChunk(
-        content=content,
-        source=source,
-        start_line=1,
-        end_line=len(rows),
-    )]
+    return [
+        TextChunk(
+            content=content,
+            source=source,
+            start_line=1,
+            end_line=len(rows),
+        )
+    ]
 
 
 def _parse_markup(path: Path) -> list[TextChunk]:
@@ -374,12 +438,14 @@ def _parse_log(path: Path) -> list[TextChunk]:
             if _TIMESTAMP_PATTERN.match(line) and block_lines and len(block_lines) >= 10:
                 content = "\n".join(block_lines).strip()
                 if content:
-                    chunks.append(TextChunk(
-                        content=content,
-                        source=source,
-                        start_line=block_start,
-                        end_line=i - 1,
-                    ))
+                    chunks.append(
+                        TextChunk(
+                            content=content,
+                            source=source,
+                            start_line=block_start,
+                            end_line=i - 1,
+                        )
+                    )
                 block_lines = [line]
                 block_start = i
             else:
@@ -390,12 +456,14 @@ def _parse_log(path: Path) -> list[TextChunk]:
         if block_lines:
             content = "\n".join(block_lines).strip()
             if content:
-                chunks.append(TextChunk(
-                    content=content,
-                    source=source,
-                    start_line=block_start,
-                    end_line=len(lines),
-                ))
+                chunks.append(
+                    TextChunk(
+                        content=content,
+                        source=source,
+                        start_line=block_start,
+                        end_line=len(lines),
+                    )
+                )
 
         if chunks:
             return chunks
@@ -409,12 +477,14 @@ def _parse_pdf(path: Path) -> list[TextChunk]:
     try:
         import fitz  # pymupdf
     except ImportError:
-        return [TextChunk(
-            content="[PDF support unavailable — pip install pymupdf for PDF support]",
-            source=str(path),
-            start_line=1,
-            end_line=1,
-        )]
+        return [
+            TextChunk(
+                content="[PDF support unavailable — pip install pymupdf for PDF support]",
+                source=str(path),
+                start_line=1,
+                end_line=1,
+            )
+        ]
 
     source = str(path)
     chunks: list[TextChunk] = []
@@ -425,20 +495,24 @@ def _parse_pdf(path: Path) -> list[TextChunk]:
             page = doc[page_num]
             text = page.get_text().strip()
             if text:
-                chunks.append(TextChunk(
-                    content=text,
-                    source=source,
-                    start_line=page_num + 1,
-                    end_line=page_num + 1,
-                ))
+                chunks.append(
+                    TextChunk(
+                        content=text,
+                        source=source,
+                        start_line=page_num + 1,
+                        end_line=page_num + 1,
+                    )
+                )
         doc.close()
     except Exception as exc:
-        chunks.append(TextChunk(
-            content=f"[Error reading PDF: {exc}]",
-            source=source,
-            start_line=1,
-            end_line=1,
-        ))
+        chunks.append(
+            TextChunk(
+                content=f"[Error reading PDF: {exc}]",
+                source=source,
+                start_line=1,
+                end_line=1,
+            )
+        )
 
     return chunks
 
@@ -448,12 +522,14 @@ def _parse_docx(path: Path) -> list[TextChunk]:
     try:
         import docx  # python-docx
     except ImportError:
-        return [TextChunk(
-            content="[DOCX support unavailable — pip install python-docx for DOCX support]",
-            source=str(path),
-            start_line=1,
-            end_line=1,
-        )]
+        return [
+            TextChunk(
+                content="[DOCX support unavailable — pip install python-docx for DOCX support]",
+                source=str(path),
+                start_line=1,
+                end_line=1,
+            )
+        ]
 
     source = str(path)
     try:
@@ -475,29 +551,35 @@ def _parse_docx(path: Path) -> list[TextChunk]:
         for i, para in enumerate(paragraphs, start=1):
             block.append(para)
             if len(block) >= 10:
-                chunks.append(TextChunk(
-                    content="\n\n".join(block),
-                    source=source,
-                    start_line=block_start,
-                    end_line=i,
-                ))
+                chunks.append(
+                    TextChunk(
+                        content="\n\n".join(block),
+                        source=source,
+                        start_line=block_start,
+                        end_line=i,
+                    )
+                )
                 block = []
                 block_start = i + 1
 
         if block:
-            chunks.append(TextChunk(
-                content="\n\n".join(block),
-                source=source,
-                start_line=block_start,
-                end_line=len(paragraphs),
-            ))
+            chunks.append(
+                TextChunk(
+                    content="\n\n".join(block),
+                    source=source,
+                    start_line=block_start,
+                    end_line=len(paragraphs),
+                )
+            )
 
         return chunks
 
     except Exception as exc:
-        return [TextChunk(
-            content=f"[Error reading DOCX: {exc}]",
-            source=source,
-            start_line=1,
-            end_line=1,
-        )]
+        return [
+            TextChunk(
+                content=f"[Error reading DOCX: {exc}]",
+                source=source,
+                start_line=1,
+                end_line=1,
+            )
+        ]

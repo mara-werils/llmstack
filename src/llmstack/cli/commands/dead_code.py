@@ -85,19 +85,28 @@ def dead_code(
     # Summary
     summary_parts = [f"{t}: {c}" for t, c in sorted(type_counts.items())]
     console.print()
-    console.print(Panel(
-        f"[bold]Total:[/] {len(items)} items\n"
-        f"[bold]By type:[/] {', '.join(summary_parts)}\n\n"
-        f"[dim]Note: Some items may be used dynamically (reflection, decorators, etc.)\n"
-        f"Review with caution before removing.[/]",
-        title="Dead Code Summary",
-        border_style="yellow",
-    ))
+    console.print(
+        Panel(
+            f"[bold]Total:[/] {len(items)} items\n"
+            f"[bold]By type:[/] {', '.join(summary_parts)}\n\n"
+            f"[dim]Note: Some items may be used dynamically (reflection, decorators, etc.)\n"
+            f"Review with caution before removing.[/]",
+            title="Dead Code Summary",
+            border_style="yellow",
+        )
+    )
 
     if output:
-        data = [{
-            "type": i.type, "name": i.name, "file": i.file,
-            "line": i.line, "confidence": i.confidence, "reason": i.reason,
-        } for i in items]
+        data = [
+            {
+                "type": i.type,
+                "name": i.name,
+                "file": i.file,
+                "line": i.line,
+                "confidence": i.confidence,
+                "reason": i.reason,
+            }
+            for i in items
+        ]
         Path(output).write_text(json.dumps(data, indent=2))
         console.print(f"\n[green]Report saved to {output}[/]")

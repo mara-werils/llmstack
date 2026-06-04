@@ -83,7 +83,9 @@ def chat(model: str | None = None) -> None:
 
         if text.startswith("/system "):
             system_prompt = text[8:].strip()
-            console.print(f"[dim]System prompt set: {system_prompt[:60]}{'...' if len(system_prompt) > 60 else ''}[/]\n")
+            console.print(
+                f"[dim]System prompt set: {system_prompt[:60]}{'...' if len(system_prompt) > 60 else ''}[/]\n"
+            )
             continue
 
         # Feedback commands
@@ -104,7 +106,9 @@ def chat(model: str | None = None) -> None:
 
         if text == "/learn":
             stats = collector.get_stats()
-            console.print(f"[dim]Learning: {stats['total_stored']} total, {stats['pending']} pending[/]")
+            console.print(
+                f"[dim]Learning: {stats['total_stored']} total, {stats['pending']} pending[/]"
+            )
             continue
 
         messages.append({"role": "user", "content": text})
@@ -120,7 +124,10 @@ def chat(model: str | None = None) -> None:
                 headers=headers,
                 json={
                     "model": model_name,
-                    "messages": ([{"role": "system", "content": system_prompt}] if system_prompt else []) + messages,
+                    "messages": (
+                        [{"role": "system", "content": system_prompt}] if system_prompt else []
+                    )
+                    + messages,
                     "stream": True,
                 },
                 timeout=httpx.Timeout(300, connect=10),
@@ -157,8 +164,10 @@ def chat(model: str | None = None) -> None:
         if assistant_text:
             messages.append({"role": "assistant", "content": assistant_text})
             collector.record_interaction(
-                query=text, response=assistant_text,
-                model=model_name, command="chat",
+                query=text,
+                response=assistant_text,
+                model=model_name,
+                command="chat",
             )
 
         # Periodic feedback prompt

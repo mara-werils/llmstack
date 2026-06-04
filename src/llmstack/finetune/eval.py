@@ -92,7 +92,9 @@ def _combined_score(reference: str, response: str) -> float:
 
 
 async def _generate(
-    ollama_url: str, model: str, messages: list[dict],
+    ollama_url: str,
+    model: str,
+    messages: list[dict],
 ) -> tuple[str, float]:
     """Generate a response from Ollama. Returns (text, latency_ms)."""
     t0 = time.monotonic()
@@ -160,15 +162,17 @@ async def evaluate_model(
         tuned_score = _combined_score(expected, tuned_resp)
         improvement = tuned_score - base_score
 
-        scores.append(EvalScore(
-            prompt=prompt[:200],
-            expected=expected[:200],
-            base_response=base_resp[:200],
-            tuned_response=tuned_resp[:200],
-            base_similarity=round(base_score, 4),
-            tuned_similarity=round(tuned_score, 4),
-            improvement=round(improvement, 4),
-        ))
+        scores.append(
+            EvalScore(
+                prompt=prompt[:200],
+                expected=expected[:200],
+                base_response=base_resp[:200],
+                tuned_response=tuned_resp[:200],
+                base_similarity=round(base_score, 4),
+                tuned_similarity=round(tuned_score, 4),
+                improvement=round(improvement, 4),
+            )
+        )
 
     # Aggregate
     base_avg = sum(s.base_similarity for s in scores) / max(len(scores), 1)

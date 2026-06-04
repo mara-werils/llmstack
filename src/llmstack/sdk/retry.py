@@ -31,7 +31,7 @@ def _calculate_delay(
     if retry_after is not None:
         return min(retry_after, config.max_delay)
 
-    delay = config.initial_delay * (config.backoff_factor ** attempt)
+    delay = config.initial_delay * (config.backoff_factor**attempt)
     delay = min(delay, config.max_delay)
 
     if config.jitter:
@@ -68,9 +68,7 @@ def sync_retry(
             if attempt == config.max_retries:
                 return response
 
-            delay = _calculate_delay(
-                attempt, config, _get_retry_after(response)
-            )
+            delay = _calculate_delay(attempt, config, _get_retry_after(response))
             time.sleep(delay)
 
         except (
@@ -104,9 +102,7 @@ async def async_retry(
             if attempt == config.max_retries:
                 return response
 
-            delay = _calculate_delay(
-                attempt, config, _get_retry_after(response)
-            )
+            delay = _calculate_delay(attempt, config, _get_retry_after(response))
             await asyncio.sleep(delay)
 
         except (

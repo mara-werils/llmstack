@@ -16,6 +16,7 @@ def cost(gateway_url: str | None = None) -> None:
     if not url:
         try:
             from llmstack.config.loader import load_config
+
             config = load_config()
             url = f"http://localhost:{config.gateway.port}"
         except (FileNotFoundError, SystemExit):
@@ -41,7 +42,9 @@ def cost(gateway_url: str | None = None) -> None:
         console.print("\n[accent]Overview[/]")
         console.print(f"  Total requests    [bold]{total_requests:,}[/]")
         console.print(f"  Total cost        [cost]${total_cost:.4f}[/]")
-        console.print(f"  Savings           [speed]{savings_pct:.1f}%[/] vs always using largest model")
+        console.print(
+            f"  Savings           [speed]{savings_pct:.1f}%[/] vs always using largest model"
+        )
 
         if tiers:
             console.print("\n[accent]Tier Distribution[/]")
@@ -54,7 +57,9 @@ def cost(gateway_url: str | None = None) -> None:
             for tier_name in ["simple", "medium", "complex"]:
                 count = tiers.get(tier_name, 0)
                 pct = count / total * 100
-                style = {"simple": "green", "medium": "yellow", "complex": "magenta"}.get(tier_name, "")
+                style = {"simple": "green", "medium": "yellow", "complex": "magenta"}.get(
+                    tier_name, ""
+                )
                 table.add_row(f"[{style}]{tier_name}[/]", str(count), f"{pct:.1f}%")
 
             console.print(table)

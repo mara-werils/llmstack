@@ -11,6 +11,7 @@ from math import log2
 @dataclass
 class FunctionMetrics:
     """Metrics for a single function/method."""
+
     name: str
     file: str
     line: int
@@ -27,6 +28,7 @@ class FunctionMetrics:
 @dataclass
 class FileMetrics:
     """Metrics for a file."""
+
     file: str
     total_lines: int
     code_lines: int
@@ -117,8 +119,19 @@ def _max_nesting(node: ast.AST, depth: int = 0) -> int:
     max_depth = depth
 
     for child in ast.iter_child_nodes(node):
-        if isinstance(child, (ast.If, ast.While, ast.For, ast.AsyncFor,
-                              ast.With, ast.AsyncWith, ast.Try, ast.ExceptHandler)):
+        if isinstance(
+            child,
+            (
+                ast.If,
+                ast.While,
+                ast.For,
+                ast.AsyncFor,
+                ast.With,
+                ast.AsyncWith,
+                ast.Try,
+                ast.ExceptHandler,
+            ),
+        ):
             max_depth = max(max_depth, _max_nesting(child, depth + 1))
         else:
             max_depth = max(max_depth, _max_nesting(child, depth))
@@ -155,7 +168,7 @@ def analyze_python_file(file_path: Path) -> FileMetrics | None:
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
             cc = _cyclomatic_complexity(node)
             cog = _cognitive_complexity(node)
-            end_line = getattr(node, 'end_lineno', node.lineno)
+            end_line = getattr(node, "end_lineno", node.lineno)
             loc = end_line - node.lineno + 1
             params = len(node.args.args) + len(node.args.kwonlyargs)
             returns = _count_returns(node)
@@ -170,25 +183,32 @@ def analyze_python_file(file_path: Path) -> FileMetrics | None:
                             name = f"{parent.name}.{node.name}"
                             break
 
-            function_metrics.append(FunctionMetrics(
-                name=name,
-                file=str(file_path),
-                line=node.lineno,
-                end_line=end_line,
-                cyclomatic=cc,
-                cognitive=cog,
-                lines_of_code=loc,
-                parameters=params,
-                returns=returns,
-                nested_depth=depth,
-                grade=_grade_complexity(cc),
-            ))
+            function_metrics.append(
+                FunctionMetrics(
+                    name=name,
+                    file=str(file_path),
+                    line=node.lineno,
+                    end_line=end_line,
+                    cyclomatic=cc,
+                    cognitive=cog,
+                    lines_of_code=loc,
+                    parameters=params,
+                    returns=returns,
+                    nested_depth=depth,
+                    grade=_grade_complexity(cc),
+                )
+            )
 
     # Calculate maintainability index
     # MI = max(0, (171 - 5.2 * ln(V) - 0.23 * G - 16.2 * ln(LOC)) * 100 / 171)
     avg_cc = sum(f.cyclomatic for f in function_metrics) / max(1, len(function_metrics))
     volume = max(1, code_lines * log2(max(1, len(set(content.split())))))
-    mi = max(0, (171 - 5.2 * log2(max(1, volume)) - 0.23 * avg_cc - 16.2 * log2(max(1, code_lines))) * 100 / 171)
+    mi = max(
+        0,
+        (171 - 5.2 * log2(max(1, volume)) - 0.23 * avg_cc - 16.2 * log2(max(1, code_lines)))
+        * 100
+        / 171,
+    )
 
     max_cc = max((f.cyclomatic for f in function_metrics), default=0)
 

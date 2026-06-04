@@ -30,10 +30,16 @@ def diff_explain(
     file: str | None = None,
 ) -> None:
     """Explain git diff in plain English."""
-    asyncio.run(_diff_async(
-        target=target, model=model, ollama_url=ollama_url,
-        staged=staged, commits=commits, file=file,
-    ))
+    asyncio.run(
+        _diff_async(
+            target=target,
+            model=model,
+            ollama_url=ollama_url,
+            staged=staged,
+            commits=commits,
+            file=file,
+        )
+    )
 
 
 def _get_diff(target: str, staged: bool, commits: int, file: str | None) -> str:
@@ -43,7 +49,11 @@ def _get_diff(target: str, staged: bool, commits: int, file: str | None) -> str:
     def run_git(*args):
         try:
             result = subprocess.run(
-                ["git", *args], capture_output=True, text=True, cwd=cwd, timeout=30,
+                ["git", *args],
+                capture_output=True,
+                text=True,
+                cwd=cwd,
+                timeout=30,
             )
             return result.stdout if result.returncode == 0 else ""
         except Exception:
@@ -95,7 +105,11 @@ async def _diff_async(
     def run_git(*args):
         try:
             result = subprocess.run(
-                ["git", *args], capture_output=True, text=True, cwd=str(Path.cwd()), timeout=10,
+                ["git", *args],
+                capture_output=True,
+                text=True,
+                cwd=str(Path.cwd()),
+                timeout=10,
             )
             return result.stdout if result.returncode == 0 else ""
         except Exception:
@@ -117,14 +131,17 @@ async def _diff_async(
 Diff:
 {diff}"""
 
-    with Progress(SpinnerColumn(), TextColumn("[bold blue]Analyzing diff..."), console=console) as progress:
+    with Progress(
+        SpinnerColumn(), TextColumn("[bold blue]Analyzing diff..."), console=console
+    ) as progress:
         task = progress.add_task("Analyzing", total=None)
 
         timeout = httpx.Timeout(300, connect=10, read=300, write=30)
         result = ""
         async with httpx.AsyncClient(timeout=timeout) as client:
             async with client.stream(
-                "POST", f"{ollama_url}/api/chat",
+                "POST",
+                f"{ollama_url}/api/chat",
                 json={
                     "model": model,
                     "messages": [

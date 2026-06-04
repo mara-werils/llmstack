@@ -51,6 +51,7 @@ class FeedbackCollector:
     def store(self) -> FeedbackStore:
         if self._store is None:
             from pathlib import Path
+
             self._store = FeedbackStore(db_path=Path(self.config.storage.db_path))
         return self._store
 
@@ -58,6 +59,7 @@ class FeedbackCollector:
     def preference_learner(self) -> PreferenceLearner:
         if self._pref_learner is None:
             from pathlib import Path
+
             self._pref_learner = PreferenceLearner(
                 store=self.store,
                 preferences_path=Path(self.config.storage.preferences_path),
@@ -68,6 +70,7 @@ class FeedbackCollector:
     def pattern_learner(self) -> PatternLearner:
         if self._pattern_learner is None:
             from pathlib import Path
+
             self._pattern_learner = PatternLearner(
                 store=self.store,
                 patterns_path=Path(self.config.storage.prompts_dir) / "code_patterns.json",

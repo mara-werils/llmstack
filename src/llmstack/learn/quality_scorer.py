@@ -162,7 +162,7 @@ class DataQualityScorer:
         score = 0.8  # Base score
 
         # Check for broken sentences
-        sentences = re.split(r'[.!?]+', response)
+        sentences = re.split(r"[.!?]+", response)
         if sentences:
             avg_len = sum(len(s.strip()) for s in sentences) / len(sentences)
             if avg_len < 5:
@@ -225,7 +225,7 @@ class DataQualityScorer:
             score += 0.2
 
         # Lists/structure indicate organized info
-        if re.search(r'^\s*[-*•]\s', response, re.MULTILINE):
+        if re.search(r"^\s*[-*•]\s", response, re.MULTILINE):
             score += 0.1
 
         return min(1.0, score)

@@ -26,7 +26,8 @@ CORRELATION_HEADER = "X-Request-ID"
 
 # Context-var for use outside of request-state (e.g. background tasks).
 _current_request_id: contextvars.ContextVar[str] = contextvars.ContextVar(
-    "request_id", default="unknown",
+    "request_id",
+    default="unknown",
 )
 
 

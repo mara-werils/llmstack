@@ -26,6 +26,7 @@ from llmstack.mcp.server import MCPServer
 # ToolResult tests
 # ===================================================================
 
+
 class TestToolResult:
     def test_success_message(self):
         r = ToolResult(output="hello", success=True)
@@ -43,6 +44,7 @@ class TestToolResult:
 # ===================================================================
 # Tool schema tests
 # ===================================================================
+
 
 class TestToolSchema:
     def test_schema_format(self):
@@ -69,6 +71,7 @@ class TestToolSchema:
 # ===================================================================
 # ReadFile tool tests
 # ===================================================================
+
 
 class TestReadFileTool:
     @pytest.fixture
@@ -113,6 +116,7 @@ class TestReadFileTool:
 # WriteFile tool tests
 # ===================================================================
 
+
 class TestWriteFileTool:
     @pytest.mark.asyncio
     async def test_write_new_file(self, tmp_path):
@@ -141,6 +145,7 @@ class TestWriteFileTool:
 # ===================================================================
 # ListDirectory tool tests
 # ===================================================================
+
 
 class TestListDirectoryTool:
     @pytest.mark.asyncio
@@ -187,6 +192,7 @@ class TestListDirectoryTool:
 # Grep tool tests
 # ===================================================================
 
+
 class TestGrepTool:
     @pytest.mark.asyncio
     async def test_grep_finds_match(self, tmp_path):
@@ -215,6 +221,7 @@ class TestGrepTool:
 # ===================================================================
 # Shell tool tests
 # ===================================================================
+
 
 class TestShellTool:
     @pytest.mark.asyncio
@@ -256,6 +263,7 @@ class TestShellTool:
 # Tool Registry tests
 # ===================================================================
 
+
 class TestToolRegistry:
     def test_register_and_get(self):
         registry = ToolRegistry()
@@ -296,6 +304,7 @@ class TestToolRegistry:
 # AgentConfig tests
 # ===================================================================
 
+
 class TestAgentConfig:
     def test_defaults(self):
         config = AgentConfig()
@@ -318,11 +327,15 @@ class TestAgentConfig:
 # AgentEvent tests
 # ===================================================================
 
+
 class TestAgentEvent:
     def test_to_dict(self):
         event = AgentEvent(
-            type="tool_call", tool_name="read_file",
-            tool_args={"path": "test.py"}, step=1, elapsed_ms=50.0,
+            type="tool_call",
+            tool_name="read_file",
+            tool_args={"path": "test.py"},
+            step=1,
+            elapsed_ms=50.0,
         )
         d = event.to_dict()
         assert d["type"] == "tool_call"
@@ -344,6 +357,7 @@ class TestAgentEvent:
 # ===================================================================
 # AgentLoop tests (unit — mock LLM responses)
 # ===================================================================
+
 
 class TestAgentLoop:
     def test_init(self):
@@ -369,6 +383,7 @@ class TestAgentLoop:
 # MCP Server tests (protocol layer)
 # ===================================================================
 
+
 class TestMCPServer:
     @pytest.fixture
     def server(self):
@@ -376,11 +391,13 @@ class TestMCPServer:
 
     @pytest.mark.asyncio
     async def test_initialize(self, server):
-        result = await server._handle_initialize({
-            "protocolVersion": "2024-11-05",
-            "capabilities": {},
-            "clientInfo": {"name": "test", "version": "1.0"},
-        })
+        result = await server._handle_initialize(
+            {
+                "protocolVersion": "2024-11-05",
+                "capabilities": {},
+                "clientInfo": {"name": "test", "version": "1.0"},
+            }
+        )
         assert result["protocolVersion"] == "2024-11-05"
         assert "tools" in result["capabilities"]
         assert result["serverInfo"]["name"] == "llmstack"
@@ -421,19 +438,23 @@ class TestMCPServer:
         # Replace the server's tool registry with one pointing to tmp_path
         server.tools = create_default_registry(str(tmp_path))
 
-        result = await server._handle_tools_call({
-            "name": "read_file",
-            "arguments": {"path": str(test_file)},
-        })
+        result = await server._handle_tools_call(
+            {
+                "name": "read_file",
+                "arguments": {"path": str(test_file)},
+            }
+        )
         assert not result.get("isError", False)
         assert "Hello, MCP!" in result["content"][0]["text"]
 
     @pytest.mark.asyncio
     async def test_tool_call_unknown_tool(self, server):
-        result = await server._handle_tools_call({
-            "name": "nonexistent_tool",
-            "arguments": {},
-        })
+        result = await server._handle_tools_call(
+            {
+                "name": "nonexistent_tool",
+                "arguments": {},
+            }
+        )
         assert result["isError"] is True
         assert "Unknown tool" in result["content"][0]["text"]
 
@@ -443,30 +464,36 @@ class TestMCPServer:
         (tmp_path / "file2.py").write_text("b")
         server.tools = create_default_registry(str(tmp_path))
 
-        result = await server._handle_tools_call({
-            "name": "list_directory",
-            "arguments": {"path": "."},
-        })
+        result = await server._handle_tools_call(
+            {
+                "name": "list_directory",
+                "arguments": {"path": "."},
+            }
+        )
         assert not result.get("isError", False)
         assert "file1.txt" in result["content"][0]["text"]
         assert "file2.py" in result["content"][0]["text"]
 
     @pytest.mark.asyncio
     async def test_tool_call_shell(self, server):
-        result = await server._handle_tools_call({
-            "name": "shell",
-            "arguments": {"command": "echo mcp_test"},
-        })
+        result = await server._handle_tools_call(
+            {
+                "name": "shell",
+                "arguments": {"command": "echo mcp_test"},
+            }
+        )
         assert not result.get("isError", False)
         assert "mcp_test" in result["content"][0]["text"]
 
     @pytest.mark.asyncio
     async def test_tool_call_write_file(self, server, tmp_path):
         server.tools = create_default_registry(str(tmp_path))
-        result = await server._handle_tools_call({
-            "name": "write_file",
-            "arguments": {"path": "output.txt", "content": "MCP wrote this"},
-        })
+        result = await server._handle_tools_call(
+            {
+                "name": "write_file",
+                "arguments": {"path": "output.txt", "content": "MCP wrote this"},
+            }
+        )
         assert not result.get("isError", False)
         assert (tmp_path / "output.txt").read_text() == "MCP wrote this"
 
@@ -497,6 +524,7 @@ class TestMCPServer:
 # MCP message dispatch tests
 # ===================================================================
 
+
 class TestMCPDispatch:
     @pytest.fixture
     def server(self):
@@ -523,9 +551,11 @@ class TestMCPDispatch:
 # Config schema tests
 # ===================================================================
 
+
 class TestAgentConfigSchema:
     def test_agent_profile_defaults(self):
         from llmstack.config.schema import AgentProfileConfig
+
         profile = AgentProfileConfig()
         assert profile.name == "default"
         assert profile.model == "llama3.2"
@@ -535,14 +565,18 @@ class TestAgentConfigSchema:
 
     def test_agents_config(self):
         from llmstack.config.schema import AgentsConfig, AgentProfileConfig
-        agents = AgentsConfig(profiles=[
-            AgentProfileConfig(name="code-review", model="llama3.1:70b", max_steps=50),
-        ])
+
+        agents = AgentsConfig(
+            profiles=[
+                AgentProfileConfig(name="code-review", model="llama3.1:70b", max_steps=50),
+            ]
+        )
         assert len(agents.profiles) == 1
         assert agents.profiles[0].name == "code-review"
 
     def test_mcp_config(self):
         from llmstack.config.schema import MCPConfig
+
         mcp = MCPConfig(enabled=True, model="llama3.2")
         assert mcp.enabled
         assert "llmstack_chat" in mcp.tools
@@ -550,6 +584,7 @@ class TestAgentConfigSchema:
 
     def test_stack_config_has_agents_and_mcp(self):
         from llmstack.config.schema import StackConfig
+
         config = StackConfig()
         assert hasattr(config, "agents")
         assert hasattr(config, "mcp")

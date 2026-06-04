@@ -104,8 +104,7 @@ class PromptPrefixCache:
         # Build prefix text
         prefix_msgs = messages[:-1] if messages and messages[-1].get("role") == "user" else messages
         prefix_text = " | ".join(
-            f"{m.get('role', '')}: {m.get('content', '')[:100]}"
-            for m in prefix_msgs
+            f"{m.get('role', '')}: {m.get('content', '')[:100]}" for m in prefix_msgs
         )
 
         if len(prefix_text) < self._min_prefix_length:

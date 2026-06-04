@@ -109,7 +109,8 @@ def _init_router() -> None:
     init_router(router, stats)
     logger.info(
         "Smart Model Router initialised: %d models, strategy=%s",
-        len(tiers), strategy,
+        len(tiers),
+        strategy,
     )
 
 
@@ -146,7 +147,9 @@ def _init_providers() -> None:
     from llmstack.gateway.providers.anthropic_provider import AnthropicProvider
     from llmstack.gateway.providers.google_provider import GoogleProvider
     from llmstack.gateway.providers.openai_compat import (
-        GroqProvider, TogetherProvider, MistralProvider,
+        GroqProvider,
+        TogetherProvider,
+        MistralProvider,
     )
 
     _PROVIDER_CLASSES = {
@@ -221,6 +224,7 @@ def _init_observe() -> None:
 async def lifespan(app: FastAPI):
     """Startup: connect cache, init router, providers, observe. Shutdown: close connections."""
     from llmstack.gateway.cache import get_cache
+
     cache = await get_cache()
     _init_router()
     _init_providers()
@@ -392,6 +396,7 @@ def create_app() -> FastAPI:
 
     # Serve Web UI
     if _UI_DIR.is_dir():
+
         @app.get("/", include_in_schema=False)
         async def serve_ui():
             return FileResponse(_UI_DIR / "index.html", media_type="text/html")

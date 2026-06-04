@@ -77,7 +77,8 @@ class TestPythonCodeParsing:
 
     def test_split_by_functions(self, tmp_path: Path) -> None:
         f = tmp_path / "funcs.py"
-        f.write_text(textwrap.dedent("""\
+        f.write_text(
+            textwrap.dedent("""\
             import os
 
             def func_a():
@@ -89,7 +90,8 @@ class TestPythonCodeParsing:
             class MyClass:
                 def method(self):
                     pass
-        """))
+        """)
+        )
         chunks = parse_file(f)
         assert len(chunks) >= 3  # import block + func_a + func_b/class
 
@@ -166,9 +168,7 @@ class TestMarkupParsing:
 
     def test_strip_script_tags(self, tmp_path: Path) -> None:
         f = tmp_path / "script.html"
-        f.write_text(
-            "<html><script>var x=1;</script><body>Content here</body></html>"
-        )
+        f.write_text("<html><script>var x=1;</script><body>Content here</body></html>")
         chunks = parse_file(f)
         content = " ".join(c.content for c in chunks)
         assert "Content here" in content
@@ -229,7 +229,7 @@ class TestLogParsing:
         f = tmp_path / "timed.log"
         lines = []
         for i in range(30):
-            lines.append(f"2024-01-{i+1:02d}T10:00:00 Event {i}")
+            lines.append(f"2024-01-{i + 1:02d}T10:00:00 Event {i}")
         f.write_text("\n".join(lines))
         chunks = parse_file(f)
         assert len(chunks) >= 1

@@ -24,9 +24,9 @@ class RegressionSeverity(str, Enum):
     """Severity of detected regression."""
 
     NONE = "none"
-    MILD = "mild"         # <5% drop, monitor
+    MILD = "mild"  # <5% drop, monitor
     MODERATE = "moderate"  # 5-15% drop, alert
-    SEVERE = "severe"      # >15% drop, auto-rollback
+    SEVERE = "severe"  # >15% drop, auto-rollback
 
 
 @dataclass
@@ -70,9 +70,9 @@ class RegressionConfig:
     window_size: int = 20
 
     # Thresholds for severity levels (as proportion of baseline)
-    mild_threshold: float = 0.03      # 3% drop
-    moderate_threshold: float = 0.08   # 8% drop
-    severe_threshold: float = 0.15     # 15% drop
+    mild_threshold: float = 0.03  # 3% drop
+    moderate_threshold: float = 0.08  # 8% drop
+    severe_threshold: float = 0.15  # 15% drop
 
     # Confidence required to trigger alert (0-1)
     min_confidence: float = 0.7
@@ -125,10 +125,7 @@ class RegressionDetector:
             if alert and alert.severity != RegressionSeverity.NONE:
                 alerts.append(alert)
 
-                if (
-                    alert.severity == RegressionSeverity.SEVERE
-                    and self.config.auto_rollback
-                ):
+                if alert.severity == RegressionSeverity.SEVERE and self.config.auto_rollback:
                     self._handle_rollback(alert)
 
         self._alerts.extend(alerts)
@@ -166,8 +163,10 @@ class RegressionDetector:
                     "min": min(values),
                     "max": max(values),
                     "samples": len(values),
-                    "trend": "improving" if len(values) > 1 and values[0] > values[-1]
-                    else "declining" if len(values) > 1 and values[0] < values[-1]
+                    "trend": "improving"
+                    if len(values) > 1 and values[0] > values[-1]
+                    else "declining"
+                    if len(values) > 1 and values[0] < values[-1]
                     else "stable",
                 }
 
@@ -180,13 +179,9 @@ class RegressionDetector:
             "recent_alerts": len(recent_alerts),
         }
 
-    def _check_metric(
-        self, version: str, metric: str, baseline: float
-    ) -> RegressionAlert | None:
+    def _check_metric(self, version: str, metric: str, baseline: float) -> RegressionAlert | None:
         """Check a single metric for regression."""
-        trend = self.store.get_quality_trend(
-            version, metric, limit=self.config.window_size
-        )
+        trend = self.store.get_quality_trend(version, metric, limit=self.config.window_size)
 
         if len(trend) < self.config.min_samples:
             return None
@@ -258,12 +253,16 @@ class RegressionDetector:
         # Abramowitz and Stegun approximation
         t = 1.0 / (1.0 + 0.2316419 * z)
         d = 0.3989422804014327  # 1/sqrt(2*pi)
-        p = d * math.exp(-z * z / 2) * (
-            0.3193815 * t
-            - 0.3565638 * t**2
-            + 1.781478 * t**3
-            - 1.821256 * t**4
-            + 1.330274 * t**5
+        p = (
+            d
+            * math.exp(-z * z / 2)
+            * (
+                0.3193815 * t
+                - 0.3565638 * t**2
+                + 1.781478 * t**3
+                - 1.821256 * t**4
+                + 1.330274 * t**5
+            )
         )
 
         return 1.0 - p  # confidence = 1 - p_value

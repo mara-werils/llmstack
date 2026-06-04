@@ -19,7 +19,8 @@ class TestTenantManager:
 
     def test_create_with_api_keys(self, manager):
         t = manager.create_tenant(
-            name="Test", api_keys=["sk-123", "sk-456"],
+            name="Test",
+            api_keys=["sk-123", "sk-456"],
         )
         assert len(t.api_keys) == 2
 

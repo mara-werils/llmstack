@@ -29,8 +29,13 @@ _PRICING: dict[str, tuple[float, float]] = {
 }
 
 _DEFAULT_MODELS = [
-    ProviderModel(id=mid, provider="openai", context_length=128_000,
-                  cost_per_m_input=p[0], cost_per_m_output=p[1])
+    ProviderModel(
+        id=mid,
+        provider="openai",
+        context_length=128_000,
+        cost_per_m_input=p[0],
+        cost_per_m_output=p[1],
+    )
     for mid, p in _PRICING.items()
 ]
 
@@ -97,7 +102,9 @@ class OpenAIProvider(Provider):
 
         try:
             async with httpx.AsyncClient(timeout=120) as client:
-                async with client.stream("POST", url, json=payload, headers=self._headers()) as resp:
+                async with client.stream(
+                    "POST", url, json=payload, headers=self._headers()
+                ) as resp:
                     resp.raise_for_status()
                     async for chunk in resp.aiter_bytes():
                         yield chunk

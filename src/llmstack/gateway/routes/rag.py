@@ -39,17 +39,24 @@ async def ingest(request: Request):
     if len(text) > 1_000_000:
         return JSONResponse(
             status_code=400,
-            content={"error": {"message": "Document too large (max 1MB text)", "type": "validation_error"}},
+            content={
+                "error": {
+                    "message": "Document too large (max 1MB text)",
+                    "type": "validation_error",
+                }
+            },
         )
 
     store = get_store()
     chunks_count = await store.ingest(text=text, source=source, metadata=metadata)
 
-    return JSONResponse(content={
-        "status": "ok",
-        "chunks_stored": chunks_count,
-        "source": source,
-    })
+    return JSONResponse(
+        content={
+            "status": "ok",
+            "chunks_stored": chunks_count,
+            "source": source,
+        }
+    )
 
 
 @router.post("/rag/query")
@@ -69,7 +76,9 @@ async def query(request: Request):
     if not question:
         return JSONResponse(
             status_code=400,
-            content={"error": {"message": "Field 'question' is required", "type": "validation_error"}},
+            content={
+                "error": {"message": "Field 'question' is required", "type": "validation_error"}
+            },
         )
 
     model = body.get("model", "llama3.2")
@@ -95,13 +104,15 @@ async def query(request: Request):
         max_tokens=max_tokens,
     )
 
-    return JSONResponse(content={
-        "answer": result.answer,
-        "sources": result.sources,
-        "model": result.model,
-        "usage": result.usage,
-        "latency": result.latency,
-    })
+    return JSONResponse(
+        content={
+            "answer": result.answer,
+            "sources": result.sources,
+            "model": result.model,
+            "usage": result.usage,
+            "latency": result.latency,
+        }
+    )
 
 
 async def _stream_rag(pipeline, question, model, top_k, temperature, max_tokens):

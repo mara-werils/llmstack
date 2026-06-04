@@ -22,8 +22,10 @@ class RedisService(ServiceBase):
             "ports": {"6379/tcp": self.config.port},
             "command": [
                 "redis-server",
-                "--maxmemory", self.config.max_memory,
-                "--maxmemory-policy", "allkeys-lru",
+                "--maxmemory",
+                self.config.max_memory,
+                "--maxmemory-policy",
+                "allkeys-lru",
             ],
             "environment": {},
         }

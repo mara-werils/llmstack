@@ -12,7 +12,7 @@ router = APIRouter(tags=["Widget"])
 async def widget_embed() -> HTMLResponse:
     return HTMLResponse(
         "<!DOCTYPE html><html><head><title>LLMStack Chat</title></head>"
-        '<body><h2>LLMStack Chat Widget Demo</h2>'
+        "<body><h2>LLMStack Chat Widget Demo</h2>"
         "<p>The chat widget appears in the bottom-right corner.</p>"
         '<script src="/ui/widget.js"></script>'
         "</body></html>"

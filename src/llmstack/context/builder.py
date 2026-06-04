@@ -11,6 +11,7 @@ from pathlib import Path
 @dataclass
 class ContextChunk:
     """A chunk of context with relevance metadata."""
+
     file: str
     content: str
     relevance: float  # 0-1
@@ -23,8 +24,31 @@ class ContextChunk:
 class ContextBuilder:
     """Build optimized context for LLM prompts from a codebase."""
 
-    IGNORE_DIRS = {"__pycache__", ".git", "node_modules", "venv", ".venv", "dist", "build", ".tox", ".eggs"}
-    CODE_EXTS = {".py", ".js", ".ts", ".go", ".rs", ".java", ".cpp", ".c", ".rb", ".php", ".swift", ".kt"}
+    IGNORE_DIRS = {
+        "__pycache__",
+        ".git",
+        "node_modules",
+        "venv",
+        ".venv",
+        "dist",
+        "build",
+        ".tox",
+        ".eggs",
+    }
+    CODE_EXTS = {
+        ".py",
+        ".js",
+        ".ts",
+        ".go",
+        ".rs",
+        ".java",
+        ".cpp",
+        ".c",
+        ".rb",
+        ".php",
+        ".swift",
+        ".kt",
+    }
 
     def __init__(self, directory: Path, max_tokens: int = 8000):
         self.directory = directory
@@ -63,15 +87,17 @@ class ContextBuilder:
                 best_start, best_end = self._find_best_section(lines, keywords)
                 section = "\n".join(lines[best_start:best_end])
 
-                chunks.append(ContextChunk(
-                    file=str(file_path.relative_to(self.directory)),
-                    content=section,
-                    relevance=relevance,
-                    reason="keyword match + structure analysis",
-                    line_start=best_start + 1,
-                    line_end=best_end,
-                    tokens_estimate=len(section) // 4,
-                ))
+                chunks.append(
+                    ContextChunk(
+                        file=str(file_path.relative_to(self.directory)),
+                        content=section,
+                        relevance=relevance,
+                        reason="keyword match + structure analysis",
+                        line_start=best_start + 1,
+                        line_end=best_end,
+                        tokens_estimate=len(section) // 4,
+                    )
+                )
 
         return sorted(chunks, key=lambda c: -c.relevance)
 
@@ -82,9 +108,14 @@ class ContextBuilder:
         try:
             result = subprocess.run(
                 ["git", "log", "--name-only", "--format=", "-20"],
-                capture_output=True, text=True, cwd=str(self.directory), timeout=10,
+                capture_output=True,
+                text=True,
+                cwd=str(self.directory),
+                timeout=10,
             )
-            recent_files = set(result.stdout.strip().split("\n")) if result.returncode == 0 else set()
+            recent_files = (
+                set(result.stdout.strip().split("\n")) if result.returncode == 0 else set()
+            )
         except Exception:
             recent_files = set()
 
@@ -102,17 +133,21 @@ class ContextBuilder:
             except OSError:
                 continue
 
-            relevance = self._score_relevance(content, file_path, keywords) + 0.2  # Boost for recency
+            relevance = (
+                self._score_relevance(content, file_path, keywords) + 0.2
+            )  # Boost for recency
 
-            chunks.append(ContextChunk(
-                file=rel_path,
-                content=content[:3000],
-                relevance=min(1.0, relevance),
-                reason="recently modified",
-                line_start=1,
-                line_end=content.count("\n") + 1,
-                tokens_estimate=len(content[:3000]) // 4,
-            ))
+            chunks.append(
+                ContextChunk(
+                    file=rel_path,
+                    content=content[:3000],
+                    relevance=min(1.0, relevance),
+                    reason="recently modified",
+                    line_start=1,
+                    line_end=content.count("\n") + 1,
+                    tokens_estimate=len(content[:3000]) // 4,
+                )
+            )
 
         return sorted(chunks, key=lambda c: -c.relevance)
 
@@ -162,15 +197,17 @@ class ContextBuilder:
                 except OSError:
                     continue
 
-                chunks.append(ContextChunk(
-                    file=rel,
-                    content=content,
-                    relevance=0.7,
-                    reason=f"imported by {best_file.name}",
-                    line_start=1,
-                    line_end=content.count("\n") + 1,
-                    tokens_estimate=len(content) // 4,
-                ))
+                chunks.append(
+                    ContextChunk(
+                        file=rel,
+                        content=content,
+                        relevance=0.7,
+                        reason=f"imported by {best_file.name}",
+                        line_start=1,
+                        line_end=content.count("\n") + 1,
+                        tokens_estimate=len(content) // 4,
+                    )
+                )
 
         return chunks
 
@@ -190,15 +227,17 @@ class ContextBuilder:
                 except OSError:
                     continue
 
-                chunks.append(ContextChunk(
-                    file=str(file_path.relative_to(self.directory)),
-                    content=content,
-                    relevance=0.5 + (name_matches * 0.15),
-                    reason="filename match",
-                    line_start=1,
-                    line_end=content.count("\n") + 1,
-                    tokens_estimate=len(content) // 4,
-                ))
+                chunks.append(
+                    ContextChunk(
+                        file=str(file_path.relative_to(self.directory)),
+                        content=content,
+                        relevance=0.5 + (name_matches * 0.15),
+                        reason="filename match",
+                        line_start=1,
+                        line_end=content.count("\n") + 1,
+                        tokens_estimate=len(content) // 4,
+                    )
+                )
 
         return sorted(chunks, key=lambda c: -c.relevance)
 
@@ -219,7 +258,9 @@ class ContextBuilder:
 
         return min(1.0, score)
 
-    def _find_best_section(self, lines: list[str], keywords: set[str], window: int = 50) -> tuple[int, int]:
+    def _find_best_section(
+        self, lines: list[str], keywords: set[str], window: int = 50
+    ) -> tuple[int, int]:
         """Find the most relevant section of a file."""
         if len(lines) <= window:
             return 0, len(lines)
@@ -228,7 +269,7 @@ class ContextBuilder:
         best_start = 0
 
         for i in range(0, len(lines) - window, 10):
-            section = "\n".join(lines[i:i + window]).lower()
+            section = "\n".join(lines[i : i + window]).lower()
             score = sum(1 for kw in keywords if kw in section)
             if score > best_score:
                 best_score = score
@@ -259,7 +300,9 @@ class ContextBuilder:
     def _iter_code_files(self):
         """Iterate over code files in directory."""
         for p in sorted(self.directory.rglob("*")):
-            if p.is_file() and p.suffix in self.CODE_EXTS and not any(
-                part in self.IGNORE_DIRS for part in p.parts
+            if (
+                p.is_file()
+                and p.suffix in self.CODE_EXTS
+                and not any(part in self.IGNORE_DIRS for part in p.parts)
             ):
                 yield p

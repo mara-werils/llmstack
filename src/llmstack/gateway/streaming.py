@@ -19,6 +19,7 @@ class StreamTimeoutError(Exception):
 @dataclass
 class StreamMetrics:
     """Metrics collected during a streaming response."""
+
     first_token_ms: float = 0
     total_tokens: int = 0
     total_duration_ms: float = 0
@@ -31,6 +32,7 @@ class StreamMetrics:
 @dataclass
 class StreamChunk:
     """A single chunk in a stream."""
+
     content: str
     token_index: int
     timestamp: float
@@ -69,21 +71,18 @@ class StreamProcessor:
         while True:
             try:
                 token = await asyncio.wait_for(
-                    aiter.__anext__(), timeout=self.chunk_timeout,
+                    aiter.__anext__(),
+                    timeout=self.chunk_timeout,
                 )
             except asyncio.TimeoutError:
                 self.metrics.errors += 1
-                raise StreamTimeoutError(
-                    f"No data received for {self.chunk_timeout}s"
-                )
+                raise StreamTimeoutError(f"No data received for {self.chunk_timeout}s")
             except StopAsyncIteration:
                 break
 
             if token_index == 0:
                 self._first_token_time = time.time()
-                self.metrics.first_token_ms = (
-                    (self._first_token_time - self._start_time) * 1000
-                )
+                self.metrics.first_token_ms = (self._first_token_time - self._start_time) * 1000
 
             token_index += 1
             self.metrics.total_tokens = token_index
@@ -106,9 +105,7 @@ class StreamProcessor:
             self.metrics.bytes_sent += len(formatted.encode())
             if self.metrics.bytes_sent > self.max_bytes:
                 self.metrics.errors += 1
-                raise StreamTimeoutError(
-                    f"Stream exceeded max size of {self.max_bytes} bytes"
-                )
+                raise StreamTimeoutError(f"Stream exceeded max size of {self.max_bytes} bytes")
             yield formatted
 
         # Send final metrics
@@ -126,11 +123,13 @@ class StreamProcessor:
             "object": "chat.completion.chunk",
             "created": int(chunk.timestamp),
             "model": self.model,
-            "choices": [{
-                "index": 0,
-                "delta": {"content": chunk.content},
-                "finish_reason": chunk.finish_reason,
-            }],
+            "choices": [
+                {
+                    "index": 0,
+                    "delta": {"content": chunk.content},
+                    "finish_reason": chunk.finish_reason,
+                }
+            ],
         }
         return f"data: {json.dumps(data)}\n\n"
 
@@ -143,23 +142,33 @@ class StreamProcessor:
 
     def _format_ndjson(self, chunk: StreamChunk) -> str:
         """Format as newline-delimited JSON."""
-        return json.dumps({
-            "token": chunk.content,
-            "index": chunk.token_index,
-            "model": self.model,
-        }) + "\n"
+        return (
+            json.dumps(
+                {
+                    "token": chunk.content,
+                    "index": chunk.token_index,
+                    "model": self.model,
+                }
+            )
+            + "\n"
+        )
 
     def _format_ndjson_done(self) -> str:
         """Format NDJSON done event."""
-        return json.dumps({
-            "done": True,
-            "metrics": {
-                "first_token_ms": round(self.metrics.first_token_ms, 1),
-                "total_tokens": self.metrics.total_tokens,
-                "tokens_per_second": round(self.metrics.tokens_per_second, 1),
-                "total_duration_ms": round(self.metrics.total_duration_ms, 1),
-            },
-        }) + "\n"
+        return (
+            json.dumps(
+                {
+                    "done": True,
+                    "metrics": {
+                        "first_token_ms": round(self.metrics.first_token_ms, 1),
+                        "total_tokens": self.metrics.total_tokens,
+                        "tokens_per_second": round(self.metrics.tokens_per_second, 1),
+                        "total_duration_ms": round(self.metrics.total_duration_ms, 1),
+                    },
+                }
+            )
+            + "\n"
+        )
 
     def _finalize_metrics(self) -> None:
         """Calculate final metrics."""
@@ -184,11 +193,9 @@ class StreamBuffer:
         now = time.time()
 
         # Flush on word boundaries, sentence endings, or time interval
-        should_flush = (
-            len(self.buffer) >= self.min_buffer_size and (
-                self.buffer.endswith((" ", "\n", ".", "!", "?", ",", ";", ":"))
-                or now - self._last_flush > self.flush_interval
-            )
+        should_flush = len(self.buffer) >= self.min_buffer_size and (
+            self.buffer.endswith((" ", "\n", ".", "!", "?", ",", ";", ":"))
+            or now - self._last_flush > self.flush_interval
         )
 
         if should_flush:

@@ -20,6 +20,7 @@ def _reset_metrics():
     _latency_count.clear()
     _latency_buckets.clear()
     import llmstack.gateway.middleware.metrics as m
+
     m._tokens_in = 0
     m._tokens_out = 0
 
@@ -52,7 +53,7 @@ def test_prometheus_format():
     assert "llmstack_errors_total" in output
     assert "llmstack_request_duration_seconds" in output
     assert "llmstack_tokens_total" in output
-    assert '/v1/chat/completions' in output
+    assert "/v1/chat/completions" in output
 
 
 def test_prometheus_token_counter():

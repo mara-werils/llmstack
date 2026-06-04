@@ -52,7 +52,8 @@ class ContextProfile:
     def get_best_contexts(self, query_pattern: str, top_k: int = 3) -> list[str]:
         """Get the most effective context types for a query pattern."""
         relevant = [
-            s for s in self.signals.values()
+            s
+            for s in self.signals.values()
             if s.query_pattern == query_pattern and s.total_uses >= 3
         ]
         relevant.sort(key=lambda s: s.effectiveness, reverse=True)
@@ -121,9 +122,9 @@ class ContextMemory:
         # Track query pattern
         if query_pattern not in self.profile.query_patterns:
             self.profile.query_patterns[query_pattern] = []
-        self.profile.query_patterns[query_pattern] = list(set(
-            self.profile.query_patterns[query_pattern] + context_types
-        ))[:10]
+        self.profile.query_patterns[query_pattern] = list(
+            set(self.profile.query_patterns[query_pattern] + context_types)
+        )[:10]
 
         self.profile.last_updated = time.time()
         self._save()

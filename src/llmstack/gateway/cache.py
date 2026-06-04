@@ -31,15 +31,14 @@ class CacheStats:
     evictions: int = 0
     avg_hit_latency_ms: float = 0.0
     _hit_latencies: deque[float] = field(
-        default_factory=lambda: deque(maxlen=1000), repr=False,
+        default_factory=lambda: deque(maxlen=1000),
+        repr=False,
     )
 
     def record_hit(self, latency_ms: float) -> None:
         self.hits += 1
         self._hit_latencies.append(latency_ms)
-        self.avg_hit_latency_ms = sum(self._hit_latencies) / len(
-            self._hit_latencies
-        )
+        self.avg_hit_latency_ms = sum(self._hit_latencies) / len(self._hit_latencies)
 
     def record_miss(self) -> None:
         self.misses += 1
@@ -104,10 +103,12 @@ class ResponseCache:
         # Normalize messages to a stable representation
         normalized = []
         for msg in messages:
-            normalized.append({
-                "role": msg.get("role", ""),
-                "content": msg.get("content", ""),
-            })
+            normalized.append(
+                {
+                    "role": msg.get("role", ""),
+                    "content": msg.get("content", ""),
+                }
+            )
 
         payload = json.dumps({"model": model, "messages": normalized}, sort_keys=True)
         digest = hashlib.sha256(payload.encode()).hexdigest()
@@ -142,8 +143,9 @@ class ResponseCache:
             self._stats.record_miss()
             return None
 
-    async def put(self, model: str, messages: list[dict], response: dict,
-                  temperature: float = 1.0) -> None:
+    async def put(
+        self, model: str, messages: list[dict], response: dict, temperature: float = 1.0
+    ) -> None:
         """Store a response in the cache."""
         if not self._connected or not CACHE_ENABLED:
             return

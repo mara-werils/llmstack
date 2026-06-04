@@ -23,7 +23,9 @@ router = APIRouter(prefix="/learn", tags=["learning"])
 class FeedbackRequest(BaseModel):
     """Submit feedback for a response."""
 
-    feedback_type: str = Field(..., description="Type: thumbs_up, thumbs_down, correction, edit, preference")
+    feedback_type: str = Field(
+        ..., description="Type: thumbs_up, thumbs_down, correction, edit, preference"
+    )
     query: str = Field("", description="The original query")
     response: str = Field("", description="The AI response being judged")
     correction: str = Field("", description="User's corrected/preferred response")

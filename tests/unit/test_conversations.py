@@ -1,6 +1,5 @@
 """Tests for the conversation history persistence system."""
 
-
 import pytest
 
 from llmstack.gateway.conversations import ConversationStore, Conversation, Message

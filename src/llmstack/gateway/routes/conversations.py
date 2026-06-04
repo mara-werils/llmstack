@@ -35,7 +35,9 @@ class AddMessageRequest(BaseModel):
 
 @router.get("/conversations")
 async def list_conversations(
-    limit: int = 50, offset: int = 0, search: str | None = None,
+    limit: int = 50,
+    offset: int = 0,
+    search: str | None = None,
 ):
     """List recent conversations with optional search."""
     store = get_store()
@@ -48,7 +50,9 @@ async def create_conversation(req: CreateConversationRequest):
     """Start a new conversation."""
     store = get_store()
     conv = store.create_conversation(
-        title=req.title, model=req.model, tags=req.tags,
+        title=req.title,
+        model=req.model,
+        tags=req.tags,
     )
     return conv.to_dict()
 

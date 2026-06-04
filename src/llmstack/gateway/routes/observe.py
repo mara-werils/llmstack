@@ -11,6 +11,7 @@ router = APIRouter()
 @router.get("/observe/traces")
 async def list_traces(limit: int = 50, model: str = "", provider: str = ""):
     from llmstack.observe._state import get_trace_store
+
     store = get_trace_store()
     if store is None:
         return JSONResponse(content={"traces": [], "error": "observe not enabled"})
@@ -22,15 +23,18 @@ async def list_traces(limit: int = 50, model: str = "", provider: str = ""):
         kwargs["provider"] = provider
 
     traces = store.query(**kwargs)
-    return JSONResponse(content={
-        "traces": [t.to_dict() for t in traces],
-        "total": store.total_count,
-    })
+    return JSONResponse(
+        content={
+            "traces": [t.to_dict() for t in traces],
+            "total": store.total_count,
+        }
+    )
 
 
 @router.get("/observe/traces/summary")
 async def traces_summary():
     from llmstack.observe._state import get_trace_store
+
     store = get_trace_store()
     if store is None:
         return JSONResponse(content={"error": "observe not enabled"})
@@ -40,6 +44,7 @@ async def traces_summary():
 @router.get("/observe/quality")
 async def quality_summary():
     from llmstack.observe._state import get_tracker
+
     tracker = get_tracker()
     if tracker is None:
         return JSONResponse(content={"error": "observe not enabled"})
@@ -49,6 +54,7 @@ async def quality_summary():
 @router.get("/observe/alerts")
 async def list_alerts(limit: int = 20):
     from llmstack.observe._state import get_tracker
+
     tracker = get_tracker()
     if tracker is None:
         return JSONResponse(content={"alerts": []})
@@ -78,6 +84,7 @@ async def create_ab_test(request_data: dict):
 @router.get("/observe/ab-test")
 async def list_ab_tests():
     from llmstack.observe._state import get_ab_manager
+
     manager = get_ab_manager()
     if manager is None:
         return JSONResponse(content={"tests": []})
@@ -93,6 +100,7 @@ async def list_ab_tests():
 @router.get("/observe/ab-test/{test_name}")
 async def get_ab_test(test_name: str):
     from llmstack.observe._state import get_ab_manager
+
     manager = get_ab_manager()
     if manager is None:
         return JSONResponse(content={"error": "observe not enabled"}, status_code=503)
@@ -139,6 +147,7 @@ async def observe_stats():
 @router.delete("/observe/ab-test/{test_name}")
 async def stop_ab_test(test_name: str):
     from llmstack.observe._state import get_ab_manager
+
     manager = get_ab_manager()
     if manager is None:
         return JSONResponse(content={"error": "observe not enabled"}, status_code=503)

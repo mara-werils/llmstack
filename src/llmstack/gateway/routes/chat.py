@@ -75,6 +75,7 @@ def _resolve_provider_for_model(model_id: str) -> str | None:
     """Check if a model belongs to a registered provider."""
     try:
         from llmstack.gateway.providers.registry import get_registry
+
         registry = get_registry()
         if registry is None:
             return None
@@ -89,8 +90,13 @@ def _resolve_provider_for_model(model_id: str) -> str | None:
 
 
 def _record_trace(
-    payload: dict, result: dict, model: str, provider: str | None,
-    tier: str | None, latency_ms: float, cost_usd: float,
+    payload: dict,
+    result: dict,
+    model: str,
+    provider: str | None,
+    tier: str | None,
+    latency_ms: float,
+    cost_usd: float,
     cached: bool = False,
 ) -> None:
     """Record a trace with quality scoring for observability."""
@@ -160,8 +166,11 @@ def _record_trace(
 
 
 def _record_stats(
-    model: str | None, tier: str | None, latency_ms: float,
-    provider: str | None = None, cost_usd: float = 0.0,
+    model: str | None,
+    tier: str | None,
+    latency_ms: float,
+    provider: str | None = None,
+    cost_usd: float = 0.0,
 ) -> None:
     """Record routing stats if the router is active."""
     if model is None:
@@ -178,7 +187,9 @@ def _record_stats(
         # Build a minimal decision for recording
         profile = QueryProfile(score=0.0, tier=tier or "simple", factors={})
         decision = RoutingDecision(
-            model=model, profile=profile, provider=provider or "local",
+            model=model,
+            profile=profile,
+            provider=provider or "local",
         )
         stats.record(decision, latency_ms, cost_usd=cost_usd)
     except Exception:
@@ -225,7 +236,9 @@ async def chat_completions(request: Request):
             )
         else:
             result = await proxy_chat_completion(
-                payload, stream=False, provider_name=provider,
+                payload,
+                stream=False,
+                provider_name=provider,
             )
             elapsed_ms = (time.monotonic() - t0) * 1000
 
@@ -239,8 +252,13 @@ async def chat_completions(request: Request):
 
             # Trace and quality scoring
             _record_trace(
-                payload, result, routed_model or payload.get("model", ""),
-                provider, tier, elapsed_ms, cost_usd,
+                payload,
+                result,
+                routed_model or payload.get("model", ""),
+                provider,
+                tier,
+                elapsed_ms,
+                cost_usd,
                 cached=isinstance(result, dict) and result.get("_cached", False),
             )
 

@@ -27,8 +27,10 @@ class TestStreamMetrics:
 
     def test_to_dict(self):
         m = StreamMetrics(
-            request_id="test", model="llama3.2",
-            ttft_ms=50, token_count=10,
+            request_id="test",
+            model="llama3.2",
+            ttft_ms=50,
+            token_count=10,
         )
         d = m.to_dict()
         assert d["model"] == "llama3.2"

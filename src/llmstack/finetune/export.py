@@ -77,7 +77,10 @@ def export_gguf(
 
 
 def _export_via_unsloth(
-    adapter_dir: Path, base_model: str, output: Path, quantization: str,
+    adapter_dir: Path,
+    base_model: str,
+    output: Path,
+    quantization: str,
 ) -> ExportResult:
     """Export using unsloth's save_pretrained_gguf."""
     try:
@@ -115,7 +118,10 @@ def _export_via_unsloth(
 
 
 def _export_via_llamacpp(
-    adapter_dir: Path, base_model: str, output: Path, quantization: str,
+    adapter_dir: Path,
+    base_model: str,
+    output: Path,
+    quantization: str,
 ) -> ExportResult:
     """Export using llama.cpp's convert tool."""
     # Check if llama-quantize is available
@@ -131,8 +137,14 @@ def _export_via_llamacpp(
 
         # Convert to GGUF
         convert_cmd = [
-            "python3", "-m", "llama_cpp.convert",
-            str(merged_dir), "--outfile", str(output), "--outtype", "f16",
+            "python3",
+            "-m",
+            "llama_cpp.convert",
+            str(merged_dir),
+            "--outfile",
+            str(output),
+            "--outtype",
+            "f16",
         ]
         subprocess.run(convert_cmd, capture_output=True, text=True, timeout=600, check=True)
 
@@ -146,8 +158,10 @@ def _export_via_llamacpp(
 
         size_mb = output.stat().st_size / (1024 * 1024)
         return ExportResult(
-            success=True, gguf_path=str(output),
-            quantization=quantization, size_mb=size_mb,
+            success=True,
+            gguf_path=str(output),
+            quantization=quantization,
+            size_mb=size_mb,
         )
 
     except Exception as exc:
@@ -185,14 +199,14 @@ def create_ollama_model(
         return ExportResult(success=False, error=f"GGUF file not found: {gguf_path}")
 
     # Write Modelfile
-    modelfile_content = f'FROM {gguf.resolve()}\n'
+    modelfile_content = f"FROM {gguf.resolve()}\n"
     if system_prompt:
         escaped = system_prompt.replace('"', '\\"')
         modelfile_content += f'SYSTEM "{escaped}"\n'
 
     # Standard parameters
-    modelfile_content += 'PARAMETER temperature 0.7\n'
-    modelfile_content += 'PARAMETER top_p 0.9\n'
+    modelfile_content += "PARAMETER temperature 0.7\n"
+    modelfile_content += "PARAMETER top_p 0.9\n"
     modelfile_content += 'PARAMETER stop "<|eot_id|>"\n'
     modelfile_content += 'PARAMETER stop "<|end_of_text|>"\n'
 
@@ -203,7 +217,9 @@ def create_ollama_model(
     try:
         result = subprocess.run(
             ["ollama", "create", model_name, "-f", str(modelfile_path)],
-            capture_output=True, text=True, timeout=300,
+            capture_output=True,
+            text=True,
+            timeout=300,
         )
 
         if result.returncode != 0:
@@ -229,6 +245,7 @@ def create_ollama_model(
         )
     except subprocess.TimeoutExpired:
         return ExportResult(
-            success=False, error="ollama create timed out",
+            success=False,
+            error="ollama create timed out",
             gguf_path=str(gguf),
         )

@@ -41,11 +41,19 @@ def review(
     commits: int = 1,
 ) -> None:
     """Run AI code review."""
-    asyncio.run(_review_async(
-        target=target, pr_url=pr_url, model=model, ollama_url=ollama_url,
-        output_format=output_format, severity=severity,
-        output_file=output_file, staged=staged, commits=commits,
-    ))
+    asyncio.run(
+        _review_async(
+            target=target,
+            pr_url=pr_url,
+            model=model,
+            ollama_url=ollama_url,
+            output_format=output_format,
+            severity=severity,
+            output_file=output_file,
+            staged=staged,
+            commits=commits,
+        )
+    )
 
 
 def _get_git_diff(target: str, staged: bool, commits: int) -> str:
@@ -55,7 +63,11 @@ def _get_git_diff(target: str, staged: bool, commits: int) -> str:
     def run_git(*args):
         try:
             result = subprocess.run(
-                ["git", *args], capture_output=True, text=True, cwd=cwd, timeout=30,
+                ["git", *args],
+                capture_output=True,
+                text=True,
+                cwd=cwd,
+                timeout=30,
             )
             return result.stdout if result.returncode == 0 else ""
         except Exception:
@@ -133,10 +145,13 @@ async def _review_async(
                 console.print("[error]Ollama is not responding.[/]")
                 raise typer.Exit(1)
     except httpx.ConnectError:
-        console.print(Panel(
-            "[error]Cannot connect to Ollama.[/]\n\nMake sure Ollama is running:\n  [bold cyan]ollama serve[/]",
-            title="Connection Error", border_style="red",
-        ))
+        console.print(
+            Panel(
+                "[error]Cannot connect to Ollama.[/]\n\nMake sure Ollama is running:\n  [bold cyan]ollama serve[/]",
+                title="Connection Error",
+                border_style="red",
+            )
+        )
         raise typer.Exit(1)
 
     # Get diff
@@ -158,7 +173,9 @@ async def _review_async(
         diff = diff[:MAX_DIFF] + f"\n\n... (diff truncated, showing first {MAX_DIFF} chars)"
 
     console.print()
-    console.print(f"[bold]llmstack review[/]  model=[cyan]{model}[/]  source=[dim]{source_label}[/]")
+    console.print(
+        f"[bold]llmstack review[/]  model=[cyan]{model}[/]  source=[dim]{source_label}[/]"
+    )
     console.print(f"  [dim]Diff size: {len(diff)} chars[/]")
     console.print()
 
@@ -185,7 +202,8 @@ Start directly with JSON output, no preamble."""
         async with httpx.AsyncClient(timeout=timeout) as client:
             full_response = ""
             async with client.stream(
-                "POST", f"{ollama_url}/api/chat",
+                "POST",
+                f"{ollama_url}/api/chat",
                 json={
                     "model": model,
                     "messages": [
@@ -249,6 +267,7 @@ Start directly with JSON output, no preamble."""
             console.print(f"[green]Report saved to {output_file}[/]")
         else:
             from rich.markdown import Markdown
+
             console.print(Markdown(md))
     elif output_format == "json":
         output_data = {"source": source_label, "issues": issues, "summary": summary_data}
@@ -309,16 +328,18 @@ def _display_terminal(issues: list, summary_data: dict | None, diff: str) -> Non
         verdict = summary_data.get("verdict", "")
         verdict_color = "green" if verdict == "APPROVED" else "red"
         console.print()
-        console.print(Panel(
-            f"[bold]Verdict:[/] [{verdict_color}]{verdict}[/]\n\n"
-            f"{summary_data.get('summary', '')}\n\n"
-            f"[dim]Total: {summary_data.get('total_issues', 0)} issues | "
-            f"Critical: {summary_data.get('critical', 0)} | "
-            f"Warnings: {summary_data.get('warnings', 0)} | "
-            f"Info: {summary_data.get('info', 0)}[/]",
-            title="Review Summary",
-            border_style=verdict_color,
-        ))
+        console.print(
+            Panel(
+                f"[bold]Verdict:[/] [{verdict_color}]{verdict}[/]\n\n"
+                f"{summary_data.get('summary', '')}\n\n"
+                f"[dim]Total: {summary_data.get('total_issues', 0)} issues | "
+                f"Critical: {summary_data.get('critical', 0)} | "
+                f"Warnings: {summary_data.get('warnings', 0)} | "
+                f"Info: {summary_data.get('info', 0)}[/]",
+                title="Review Summary",
+                border_style=verdict_color,
+            )
+        )
 
 
 def _format_markdown(issues: list, summary_data: dict | None, source: str) -> str:

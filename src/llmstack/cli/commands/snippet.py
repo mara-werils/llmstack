@@ -8,11 +8,25 @@ from llmstack.cli.console import console
 
 
 EXTENSION_TO_LANG = {
-    ".py": "python", ".js": "javascript", ".ts": "typescript",
-    ".go": "go", ".rs": "rust", ".java": "java", ".cpp": "cpp",
-    ".c": "c", ".rb": "ruby", ".php": "php", ".swift": "swift",
-    ".kt": "kotlin", ".sh": "bash", ".sql": "sql", ".html": "html",
-    ".css": "css", ".yaml": "yaml", ".json": "json", ".toml": "toml",
+    ".py": "python",
+    ".js": "javascript",
+    ".ts": "typescript",
+    ".go": "go",
+    ".rs": "rust",
+    ".java": "java",
+    ".cpp": "cpp",
+    ".c": "c",
+    ".rb": "ruby",
+    ".php": "php",
+    ".swift": "swift",
+    ".kt": "kotlin",
+    ".sh": "bash",
+    ".sql": "sql",
+    ".html": "html",
+    ".css": "css",
+    ".yaml": "yaml",
+    ".json": "json",
+    ".toml": "toml",
 }
 
 
@@ -52,8 +66,12 @@ def snippet_save(
 
         tag_list = [t.strip() for t in tags.split(",")] if tags else []
         snippet = mgr.save(
-            title=title, code=content, language=language,
-            tags=tag_list, description=description, source_file=str(file_path),
+            title=title,
+            code=content,
+            language=language,
+            tags=tag_list,
+            description=description,
+            source_file=str(file_path),
         )
         console.print(f"[green]Snippet saved:[/] [bold]{snippet.title}[/]  id=[dim]{snippet.id}[/]")
     else:
@@ -190,10 +208,12 @@ def snippet_stats() -> None:
     lang_str = ", ".join(f"{k}: {v}" for k, v in list(languages.items())[:10])
     tag_str = ", ".join(f"{k} ({v})" for k, v in list(tags.items())[:10])
 
-    console.print(Panel(
-        f"[bold]Total snippets:[/] {total}\n"
-        f"[bold]Languages:[/] {lang_str or 'none'}\n"
-        f"[bold]Top tags:[/] {tag_str or 'none'}",
-        title="Snippet Library",
-        border_style="cyan",
-    ))
+    console.print(
+        Panel(
+            f"[bold]Total snippets:[/] {total}\n"
+            f"[bold]Languages:[/] {lang_str or 'none'}\n"
+            f"[bold]Top tags:[/] {tag_str or 'none'}",
+            title="Snippet Library",
+            border_style="cyan",
+        )
+    )

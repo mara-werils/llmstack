@@ -32,10 +32,12 @@ def _setup_logger() -> None:
     if LOG_FORMAT == "json":
         handler.setFormatter(_JsonFormatter())
     else:
-        handler.setFormatter(logging.Formatter(
-            "%(asctime)s %(levelname)s [%(request_id)s] %(message)s",
-            datefmt="%Y-%m-%dT%H:%M:%S",
-        ))
+        handler.setFormatter(
+            logging.Formatter(
+                "%(asctime)s %(levelname)s [%(request_id)s] %(message)s",
+                datefmt="%Y-%m-%dT%H:%M:%S",
+            )
+        )
 
     logger.addHandler(handler)
     logger.setLevel(getattr(logging, LOG_LEVEL, logging.INFO))
@@ -53,10 +55,23 @@ class _JsonFormatter(logging.Formatter):
         }
         # Merge extra fields
         for key in (
-            "request_id", "method", "path", "status", "duration_ms",
-            "client_ip", "tokens_in", "tokens_out", "cache_hit", "model",
-            "provider", "cost_usd", "user_agent", "content_length",
-            "correlation_id", "error", "tier",
+            "request_id",
+            "method",
+            "path",
+            "status",
+            "duration_ms",
+            "client_ip",
+            "tokens_in",
+            "tokens_out",
+            "cache_hit",
+            "model",
+            "provider",
+            "cost_usd",
+            "user_agent",
+            "content_length",
+            "correlation_id",
+            "error",
+            "tier",
         ):
             val = getattr(record, key, None)
             if val is not None:
@@ -113,9 +128,7 @@ class LoggingMiddleware(BaseHTTPMiddleware):
                 "duration_ms": duration_ms,
                 "client_ip": client_ip,
                 "user_agent": request.headers.get("User-Agent", ""),
-                "content_length": request.headers.get(
-                    "Content-Length", ""
-                ),
+                "content_length": request.headers.get("Content-Length", ""),
             },
         )
 

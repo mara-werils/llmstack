@@ -74,6 +74,7 @@ class TestLatencyTracker:
         tracker = LatencyTracker(config)
         tracker.record(100.0)
         import time
+
         time.sleep(0.02)
         # Old samples should be excluded
         assert tracker.percentile(50) == 0.0

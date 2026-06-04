@@ -94,23 +94,29 @@ async def warmup_model(
         elapsed = (time.monotonic() - t0) * 1000
         logger.info("Model '%s' warmed up in %.1fms", model, elapsed)
         return WarmupResult(
-            model=model, provider=provider,
-            success=True, latency_ms=elapsed,
+            model=model,
+            provider=provider,
+            success=True,
+            latency_ms=elapsed,
         )
     except asyncio.TimeoutError:
         elapsed = (time.monotonic() - t0) * 1000
         logger.warning("Model '%s' warmup timed out after %.1fms", model, elapsed)
         return WarmupResult(
-            model=model, provider=provider,
-            success=False, latency_ms=elapsed,
+            model=model,
+            provider=provider,
+            success=False,
+            latency_ms=elapsed,
             error=f"Timeout after {timeout}s",
         )
     except Exception as exc:
         elapsed = (time.monotonic() - t0) * 1000
         logger.warning("Model '%s' warmup failed: %s", model, exc)
         return WarmupResult(
-            model=model, provider=provider,
-            success=False, latency_ms=elapsed,
+            model=model,
+            provider=provider,
+            success=False,
+            latency_ms=elapsed,
             error=str(exc),
         )
 
@@ -147,15 +153,21 @@ async def warmup_all(
         if isinstance(r, WarmupResult):
             report.results.append(r)
         elif isinstance(r, Exception):
-            report.results.append(WarmupResult(
-                model="unknown", success=False, error=str(r),
-            ))
+            report.results.append(
+                WarmupResult(
+                    model="unknown",
+                    success=False,
+                    error=str(r),
+                )
+            )
 
     report.total_time_ms = (time.monotonic() - t0) * 1000
 
     logger.info(
         "Warmup complete: %d/%d models ready in %.1fms",
-        report.success_count, len(models), report.total_time_ms,
+        report.success_count,
+        len(models),
+        report.total_time_ms,
     )
 
     return report

@@ -16,7 +16,7 @@ from threading import Lock
 class QualityAlert:
     """An alert fired when quality degrades."""
 
-    metric: str              # "coherence", "relevance", "overall", etc.
+    metric: str  # "coherence", "relevance", "overall", etc.
     model: str = ""
     provider: str = ""
     current_value: float = 0.0
@@ -159,7 +159,7 @@ class QualityTracker:
                         window_size=window.count(),
                         severity="critical" if recent < self._alert_threshold * 0.5 else "warning",
                         message=f"{metric} quality dropped to {recent:.3f} "
-                                f"(threshold: {self._alert_threshold})",
+                        f"(threshold: {self._alert_threshold})",
                         timestamp=ts,
                     )
                     alerts.append(alert)

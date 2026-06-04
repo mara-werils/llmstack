@@ -42,10 +42,15 @@ def diagram(
     output: str | None = None,
 ) -> None:
     """Generate architecture diagrams from code."""
-    asyncio.run(_diagram_async(
-        target=target, diagram_type=diagram_type, model=model,
-        ollama_url=ollama_url, output=output,
-    ))
+    asyncio.run(
+        _diagram_async(
+            target=target,
+            diagram_type=diagram_type,
+            model=model,
+            ollama_url=ollama_url,
+            output=output,
+        )
+    )
 
 
 def _collect_structure(directory: Path) -> str:
@@ -70,9 +75,22 @@ def _collect_structure(directory: Path) -> str:
                 content = p.read_text(errors="replace")
                 for line in content.split("\n")[:100]:
                     stripped = line.strip()
-                    if any(stripped.startswith(kw) for kw in
-                           ["class ", "def ", "async def ", "function ", "func ", "fn ", "pub fn ",
-                            "export ", "interface ", "type ", "struct "]):
+                    if any(
+                        stripped.startswith(kw)
+                        for kw in [
+                            "class ",
+                            "def ",
+                            "async def ",
+                            "function ",
+                            "func ",
+                            "fn ",
+                            "pub fn ",
+                            "export ",
+                            "interface ",
+                            "type ",
+                            "struct ",
+                        ]
+                    ):
                         lines.append(f"    → {stripped[:80]}")
             except OSError:
                 pass
@@ -169,7 +187,8 @@ Generate a Mermaid diagram. Output ONLY the Mermaid code, no explanations."""
         timeout = httpx.Timeout(300, connect=10, read=300, write=30)
         async with httpx.AsyncClient(timeout=timeout) as client:
             async with client.stream(
-                "POST", f"{ollama_url}/api/chat",
+                "POST",
+                f"{ollama_url}/api/chat",
                 json={
                     "model": model,
                     "messages": [

@@ -31,7 +31,9 @@ class GitInfo:
         if self.recent_commits:
             parts.append("\nRecent commits:")
             for c in self.recent_commits[:10]:
-                parts.append(f"  {c.get('hash', '')[:8]} {c.get('message', '')} ({c.get('author', '')})")
+                parts.append(
+                    f"  {c.get('hash', '')[:8]} {c.get('message', '')} ({c.get('author', '')})"
+                )
 
         if self.changed_files:
             parts.append(f"\nUncommitted changes ({len(self.changed_files)} files):")
@@ -65,18 +67,18 @@ def get_git_info(project_dir: str | Path, max_commits: int = 15) -> GitInfo:
     for line in log_output.strip().splitlines():
         parts = line.split("|", 3)
         if len(parts) >= 4:
-            info.recent_commits.append({
-                "hash": parts[0],
-                "author": parts[1],
-                "message": parts[2],
-                "when": parts[3],
-            })
+            info.recent_commits.append(
+                {
+                    "hash": parts[0],
+                    "author": parts[1],
+                    "message": parts[2],
+                    "when": parts[3],
+                }
+            )
 
     # Changed files (unstaged + staged)
     status = _run_git(["status", "--porcelain"], cwd)
-    info.changed_files = [
-        line[3:].strip() for line in status.splitlines() if line.strip()
-    ]
+    info.changed_files = [line[3:].strip() for line in status.splitlines() if line.strip()]
 
     # Diff summary (last commit)
     info.diff_summary = _run_git(["diff", "--stat", "HEAD~1..HEAD"], cwd)
@@ -132,7 +134,10 @@ def _run_git(args: list[str], cwd: str) -> str:
     try:
         result = subprocess.run(
             ["git", *args],
-            capture_output=True, text=True, timeout=10, cwd=cwd,
+            capture_output=True,
+            text=True,
+            timeout=10,
+            cwd=cwd,
         )
         return result.stdout if result.returncode == 0 else ""
     except (FileNotFoundError, subprocess.TimeoutExpired, OSError):

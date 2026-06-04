@@ -18,11 +18,17 @@ def agent(
     verbose: bool = False,
 ) -> None:
     """Run an AI agent that uses tools to complete a task."""
-    asyncio.run(_agent_async(
-        task=task, model=model, ollama_url=ollama_url,
-        max_steps=max_steps, tools_filter=tools,
-        working_dir=working_dir, verbose=verbose,
-    ))
+    asyncio.run(
+        _agent_async(
+            task=task,
+            model=model,
+            ollama_url=ollama_url,
+            max_steps=max_steps,
+            tools_filter=tools,
+            working_dir=working_dir,
+            verbose=verbose,
+        )
+    )
 
 
 async def _agent_async(
@@ -51,13 +57,16 @@ async def _agent_async(
             resp = await client.get(ollama_url)
             resp.raise_for_status()
     except Exception:
-        console.print(Panel(
-            f"[error]Cannot connect to Ollama at {ollama_url}[/]\n\n"
-            "Make sure Ollama is running:\n"
-            "  [info]ollama serve[/]\n"
-            "  [info]ollama pull {model_name}[/]",
-            title="Connection Error", border_style="red",
-        ))
+        console.print(
+            Panel(
+                f"[error]Cannot connect to Ollama at {ollama_url}[/]\n\n"
+                "Make sure Ollama is running:\n"
+                "  [info]ollama serve[/]\n"
+                "  [info]ollama pull {model_name}[/]",
+                title="Connection Error",
+                border_style="red",
+            )
+        )
         sys.exit(1)
 
     # Set up tools
@@ -82,13 +91,16 @@ async def _agent_async(
 
     # Display header
     tool_names = ", ".join(registry.names())
-    console.print(Panel(
-        f"[bold]Task:[/] {task}\n"
-        f"[bold]Model:[/] {model_name}\n"
-        f"[bold]Tools:[/] {tool_names}\n"
-        f"[bold]Max steps:[/] {max_steps}",
-        title="LLMStack Agent", border_style="cyan",
-    ))
+    console.print(
+        Panel(
+            f"[bold]Task:[/] {task}\n"
+            f"[bold]Model:[/] {model_name}\n"
+            f"[bold]Tools:[/] {tool_names}\n"
+            f"[bold]Max steps:[/] {max_steps}",
+            title="LLMStack Agent",
+            border_style="cyan",
+        )
+    )
     console.print()
 
     # Run agent and display events
@@ -134,13 +146,13 @@ async def _agent_async(
     # Show final answer
     if final_answer:
         console.print()
-        console.print(Panel(
-            Markdown(final_answer),
-            title="Agent Response",
-            border_style="green",
-        ))
+        console.print(
+            Panel(
+                Markdown(final_answer),
+                title="Agent Response",
+                border_style="green",
+            )
+        )
 
     # Show summary
-    console.print(
-        f"\n[info]Completed in {agent_loop.steps_taken} steps[/]"
-    )
+    console.print(f"\n[info]Completed in {agent_loop.steps_taken} steps[/]")

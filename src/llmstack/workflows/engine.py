@@ -22,7 +22,11 @@ BUILTIN_WORKFLOWS = {
         "name": "Code Health Check",
         "description": "Comprehensive code quality analysis",
         "steps": [
-            {"name": "complexity", "command": "complexity", "args": {"target": ".", "show_all": True}},
+            {
+                "name": "complexity",
+                "command": "complexity",
+                "args": {"target": ".", "show_all": True},
+            },
             {"name": "dead-code", "command": "dead-code", "args": {"target": "."}},
             {"name": "tokens", "command": "tokens", "args": {"target": "."}},
             {"name": "deps", "command": "deps", "args": {}},
@@ -35,7 +39,11 @@ BUILTIN_WORKFLOWS = {
             {"name": "info", "command": "info", "args": {}},
             {"name": "tokens", "command": "tokens", "args": {"target": "."}},
             {"name": "complexity", "command": "complexity", "args": {"target": "."}},
-            {"name": "diagram", "command": "diagram", "args": {"target": ".", "diagram_type": "architecture"}},
+            {
+                "name": "diagram",
+                "command": "diagram",
+                "args": {"target": ".", "diagram_type": "architecture"},
+            },
         ],
     },
     "ship-it": {
@@ -61,6 +69,7 @@ BUILTIN_WORKFLOWS = {
 @dataclass
 class WorkflowStep:
     """A single step in a workflow."""
+
     name: str
     command: str
     args: dict = field(default_factory=dict)
@@ -70,6 +79,7 @@ class WorkflowStep:
 @dataclass
 class WorkflowResult:
     """Result of a workflow execution."""
+
     name: str
     total_steps: int
     completed: int
@@ -103,21 +113,25 @@ class WorkflowEngine:
         """List all available workflows."""
         workflows = []
         for name, wf in BUILTIN_WORKFLOWS.items():
-            workflows.append({
-                "name": name,
-                "title": wf["name"],
-                "description": wf["description"],
-                "steps": len(wf["steps"]),
-                "builtin": True,
-            })
+            workflows.append(
+                {
+                    "name": name,
+                    "title": wf["name"],
+                    "description": wf["description"],
+                    "steps": len(wf["steps"]),
+                    "builtin": True,
+                }
+            )
         for name, wf in self.custom_workflows.items():
-            workflows.append({
-                "name": name,
-                "title": wf.get("name", name),
-                "description": wf.get("description", ""),
-                "steps": len(wf.get("steps", [])),
-                "builtin": False,
-            })
+            workflows.append(
+                {
+                    "name": name,
+                    "title": wf.get("name", name),
+                    "description": wf.get("description", ""),
+                    "steps": len(wf.get("steps", [])),
+                    "builtin": False,
+                }
+            )
         return workflows
 
     def get_workflow(self, name: str) -> dict | None:

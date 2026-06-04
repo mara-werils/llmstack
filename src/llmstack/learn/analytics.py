@@ -66,9 +66,7 @@ class LearningMetrics:
                 "trend": self.quality_trend,
             },
             "efficiency": {
-                "feedback_to_improvement": round(
-                    self.feedback_to_improvement_ratio, 4
-                ),
+                "feedback_to_improvement": round(self.feedback_to_improvement_ratio, 4),
             },
         }
 
@@ -107,10 +105,7 @@ class LearningAnalytics:
         if total_rated > 0:
             metrics.positive_rate = by_type.get("thumbs_up", 0) / total_rated
 
-        corrections = (
-            by_type.get("correction", 0)
-            + by_type.get("edit", 0)
-        )
+        corrections = by_type.get("correction", 0) + by_type.get("edit", 0)
         if metrics.total_feedback > 0:
             metrics.correction_rate = corrections / metrics.total_feedback
 

@@ -46,7 +46,7 @@ def _apply_env_overrides(raw: dict) -> dict:
     for key, value in os.environ.items():
         if not key.startswith(prefix):
             continue
-        parts = key[len(prefix):].lower().split("__")
+        parts = key[len(prefix) :].lower().split("__")
         target = raw
         for part in parts[:-1]:
             if part not in target:

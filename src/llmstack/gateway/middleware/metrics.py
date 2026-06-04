@@ -17,9 +17,7 @@ _tokens_out: int = 0
 _active_requests: int = 0
 
 # Per-model token tracking
-_tokens_by_model: dict[str, dict[str, int]] = defaultdict(
-    lambda: {"input": 0, "output": 0}
-)
+_tokens_by_model: dict[str, dict[str, int]] = defaultdict(lambda: {"input": 0, "output": 0})
 _cost_by_model: dict[str, float] = defaultdict(float)
 _cache_hits: int = 0
 _cache_misses: int = 0
@@ -29,9 +27,7 @@ _model_request_count: dict[str, int] = defaultdict(int)
 
 # Histogram buckets for latency
 _BUCKETS = [0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0, 60.0, 120.0]
-_latency_buckets: dict[str, list[int]] = defaultdict(
-    lambda: [0] * (len(_BUCKETS) + 1)
-)
+_latency_buckets: dict[str, list[int]] = defaultdict(lambda: [0] * (len(_BUCKETS) + 1))
 _latency_sum: dict[str, float] = defaultdict(float)
 _latency_count: dict[str, int] = defaultdict(int)
 
@@ -46,8 +42,10 @@ class MetricsMiddleware(BaseHTTPMiddleware):
         with _lock:
             _active_requests += 1
         start = time.monotonic()
+        response = None
         try:
             response = await call_next(request)
+            return response
         finally:
             duration = time.monotonic() - start
             with _lock:
@@ -63,10 +61,8 @@ class MetricsMiddleware(BaseHTTPMiddleware):
                         buckets[i] += 1
                 buckets[-1] += 1  # +Inf
 
-                if response.status_code >= 400:
+                if response is not None and response.status_code >= 400:
                     _error_count[path] += 1
-
-        return response
 
 
 def get_active_requests() -> int:
@@ -75,9 +71,7 @@ def get_active_requests() -> int:
         return _active_requests
 
 
-def record_tokens(
-    input_tokens: int = 0, output_tokens: int = 0, model: str = ""
-) -> None:
+def record_tokens(input_tokens: int = 0, output_tokens: int = 0, model: str = "") -> None:
     """Record token usage from a chat completion response."""
     global _tokens_in, _tokens_out
     with _lock:
@@ -118,16 +112,12 @@ def get_metrics() -> dict:
             result[path] = {
                 "requests": _request_count[path],
                 "errors": _error_count.get(path, 0),
-                "latency_avg_ms": round(
-                    (_latency_sum[path] / _latency_count[path]) * 1000, 1
-                )
+                "latency_avg_ms": round((_latency_sum[path] / _latency_count[path]) * 1000, 1)
                 if _latency_count[path]
                 else 0,
             }
         result["tokens"] = {"input": _tokens_in, "output": _tokens_out}
-        result["tokens_by_model"] = {
-            m: dict(v) for m, v in _tokens_by_model.items()
-        }
+        result["tokens_by_model"] = {m: dict(v) for m, v in _tokens_by_model.items()}
         result["cost_by_model"] = dict(_cost_by_model)
         result["cache"] = {"hits": _cache_hits, "misses": _cache_misses}
         result["active_requests"] = _active_requests
@@ -144,28 +134,17 @@ def get_prometheus_metrics() -> str:
         lines.append("# HELP llmstack_requests_total Total HTTP requests")
         lines.append("# TYPE llmstack_requests_total counter")
         for path, count in _request_count.items():
-            lines.append(
-                f'llmstack_requests_total{{path="{path}"}} {count}'
-            )
+            lines.append(f'llmstack_requests_total{{path="{path}"}} {count}')
 
         # Error counter
-        lines.append(
-            "# HELP llmstack_errors_total Total HTTP errors (4xx/5xx)"
-        )
+        lines.append("# HELP llmstack_errors_total Total HTTP errors (4xx/5xx)")
         lines.append("# TYPE llmstack_errors_total counter")
         for path, count in _error_count.items():
-            lines.append(
-                f'llmstack_errors_total{{path="{path}"}} {count}'
-            )
+            lines.append(f'llmstack_errors_total{{path="{path}"}} {count}')
 
         # Latency histogram
-        lines.append(
-            "# HELP llmstack_request_duration_seconds "
-            "Request latency histogram"
-        )
-        lines.append(
-            "# TYPE llmstack_request_duration_seconds histogram"
-        )
+        lines.append("# HELP llmstack_request_duration_seconds Request latency histogram")
+        lines.append("# TYPE llmstack_request_duration_seconds histogram")
         for path in _latency_count:
             buckets = _latency_buckets[path]
             cumulative = 0
@@ -177,86 +156,54 @@ def get_prometheus_metrics() -> str:
                 )
             cumulative += buckets[-1]
             lines.append(
-                f"llmstack_request_duration_seconds_bucket"
-                f'{{path="{path}",le="+Inf"}} {cumulative}'
+                f'llmstack_request_duration_seconds_bucket{{path="{path}",le="+Inf"}} {cumulative}'
             )
             lines.append(
-                f"llmstack_request_duration_seconds_sum"
-                f'{{path="{path}"}} {_latency_sum[path]:.4f}'
+                f'llmstack_request_duration_seconds_sum{{path="{path}"}} {_latency_sum[path]:.4f}'
             )
             lines.append(
-                f"llmstack_request_duration_seconds_count"
-                f'{{path="{path}"}} {_latency_count[path]}'
+                f'llmstack_request_duration_seconds_count{{path="{path}"}} {_latency_count[path]}'
             )
 
         # Token counter (aggregate)
-        lines.append(
-            "# HELP llmstack_tokens_total Total tokens processed"
-        )
+        lines.append("# HELP llmstack_tokens_total Total tokens processed")
         lines.append("# TYPE llmstack_tokens_total counter")
         lines.append(f'llmstack_tokens_total{{type="input"}} {_tokens_in}')
-        lines.append(
-            f'llmstack_tokens_total{{type="output"}} {_tokens_out}'
-        )
+        lines.append(f'llmstack_tokens_total{{type="output"}} {_tokens_out}')
 
         # Per-model token counter
-        lines.append(
-            "# HELP llmstack_model_tokens_total "
-            "Tokens processed per model"
-        )
+        lines.append("# HELP llmstack_model_tokens_total Tokens processed per model")
         lines.append("# TYPE llmstack_model_tokens_total counter")
         for model, counts in _tokens_by_model.items():
             lines.append(
-                f"llmstack_model_tokens_total"
-                f'{{model="{model}",type="input"}} {counts["input"]}'
+                f'llmstack_model_tokens_total{{model="{model}",type="input"}} {counts["input"]}'
             )
             lines.append(
-                f"llmstack_model_tokens_total"
-                f'{{model="{model}",type="output"}} {counts["output"]}'
+                f'llmstack_model_tokens_total{{model="{model}",type="output"}} {counts["output"]}'
             )
 
         # Active requests gauge
-        lines.append(
-            "# HELP llmstack_active_requests "
-            "Current in-flight requests"
-        )
+        lines.append("# HELP llmstack_active_requests Current in-flight requests")
         lines.append("# TYPE llmstack_active_requests gauge")
         lines.append(f"llmstack_active_requests {_active_requests}")
 
         # Cache hit/miss counter
-        lines.append(
-            "# HELP llmstack_cache_total Cache hit and miss counts"
-        )
+        lines.append("# HELP llmstack_cache_total Cache hit and miss counts")
         lines.append("# TYPE llmstack_cache_total counter")
-        lines.append(
-            f'llmstack_cache_total{{result="hit"}} {_cache_hits}'
-        )
-        lines.append(
-            f'llmstack_cache_total{{result="miss"}} {_cache_misses}'
-        )
+        lines.append(f'llmstack_cache_total{{result="hit"}} {_cache_hits}')
+        lines.append(f'llmstack_cache_total{{result="miss"}} {_cache_misses}')
 
         # Cost per model counter
-        lines.append(
-            "# HELP llmstack_cost_usd_total "
-            "Cumulative cost in USD per model"
-        )
+        lines.append("# HELP llmstack_cost_usd_total Cumulative cost in USD per model")
         lines.append("# TYPE llmstack_cost_usd_total counter")
         for model, cost in _cost_by_model.items():
-            lines.append(
-                f'llmstack_cost_usd_total{{model="{model}"}} {cost:.6f}'
-            )
+            lines.append(f'llmstack_cost_usd_total{{model="{model}"}} {cost:.6f}')
 
         # Per-model request breakdown
-        lines.append(
-            "# HELP llmstack_model_requests_total "
-            "Requests per model"
-        )
+        lines.append("# HELP llmstack_model_requests_total Requests per model")
         lines.append("# TYPE llmstack_model_requests_total counter")
         for model, count in _model_request_count.items():
-            lines.append(
-                f'llmstack_model_requests_total{{model="{model}"}} '
-                f"{count}"
-            )
+            lines.append(f'llmstack_model_requests_total{{model="{model}"}} {count}')
 
     lines.append("")
     return "\n".join(lines)

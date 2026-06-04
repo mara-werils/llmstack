@@ -20,6 +20,7 @@ from llmstack.ask.parsers import TextChunk
 # Persistent Index tests
 # ===================================================================
 
+
 class TestPersistentIndex:
     @pytest.fixture
     def project(self, tmp_path):
@@ -93,10 +94,12 @@ class TestPersistentIndex:
 
     def test_load_chunks(self, project):
         idx = PersistentIndex(project)
-        chunks = {"a.py": [
-            TextChunk("line1", "a.py", 1, 1),
-            TextChunk("line2", "a.py", 2, 2),
-        ]}
+        chunks = {
+            "a.py": [
+                TextChunk("line1", "a.py", 1, 1),
+                TextChunk("line2", "a.py", 2, 2),
+            ]
+        }
         idx.update(chunks, None, {"a.py": "hash"}, chunks["a.py"])
         loaded = idx.load_chunks()
         assert len(loaded) == 2
@@ -106,7 +109,12 @@ class TestPersistentIndex:
     def test_save_and_load_embeddings(self, project):
         idx = PersistentIndex(project)
         emb = np.random.rand(5, 128).astype(np.float32)
-        idx.update({"a.py": [TextChunk("x", "a.py", 1, 1)]}, emb, {"a.py": "h"}, [TextChunk("x", "a.py", 1, 1)])
+        idx.update(
+            {"a.py": [TextChunk("x", "a.py", 1, 1)]},
+            emb,
+            {"a.py": "h"},
+            [TextChunk("x", "a.py", 1, 1)],
+        )
         loaded = idx.load_embeddings()
         assert loaded is not None
         assert loaded.shape == (5, 128)
@@ -114,7 +122,12 @@ class TestPersistentIndex:
 
     def test_clear(self, project):
         idx = PersistentIndex(project)
-        idx.update({"a.py": [TextChunk("x", "a.py", 1, 1)]}, None, {"a.py": "h"}, [TextChunk("x", "a.py", 1, 1)])
+        idx.update(
+            {"a.py": [TextChunk("x", "a.py", 1, 1)]},
+            None,
+            {"a.py": "h"},
+            [TextChunk("x", "a.py", 1, 1)],
+        )
         assert idx.chunk_count() == 1
         idx.clear()
         assert idx.chunk_count() == 0
@@ -157,6 +170,7 @@ class TestFileHash:
 # AST Chunker tests
 # ===================================================================
 
+
 class TestPythonASTChunker:
     def test_splits_functions(self):
         source = textwrap.dedent("""\
@@ -187,8 +201,7 @@ class TestPythonASTChunker:
 
     def test_large_class_splits_methods(self):
         methods = "\n".join(
-            f"    def method_{i}(self):\n" + "        pass\n" * 5
-            for i in range(20)
+            f"    def method_{i}(self):\n" + "        pass\n" * 5 for i in range(20)
         )
         source = f"class BigClass:\n{methods}"
         chunks = chunk_python(source, "test.py")
@@ -245,6 +258,7 @@ class TestCodeChunker:
 # ===================================================================
 # BM25 tests
 # ===================================================================
+
 
 class TestBM25:
     @pytest.fixture
@@ -305,6 +319,7 @@ class TestTokenizer:
 # Hybrid Search tests
 # ===================================================================
 
+
 class TestHybridSearcher:
     @pytest.fixture
     def searcher(self):
@@ -349,6 +364,7 @@ class TestHybridSearcher:
 # Git Context tests
 # ===================================================================
 
+
 class TestGitInfo:
     def test_to_context_no_repo(self):
         info = GitInfo(is_repo=False)
@@ -389,6 +405,7 @@ class TestGetGitInfo:
 # ===================================================================
 # Conversation tests
 # ===================================================================
+
 
 class TestConversationTurn:
     def test_fields(self):
@@ -444,6 +461,7 @@ class TestConversationEngine:
 # ===================================================================
 # Integration: combined features
 # ===================================================================
+
 
 class TestIndexWithASTChunker:
     def test_index_python_with_ast(self, tmp_path):

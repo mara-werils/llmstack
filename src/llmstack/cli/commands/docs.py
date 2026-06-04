@@ -35,10 +35,16 @@ def docs(
     write: bool = False,
 ) -> None:
     """Generate documentation for code."""
-    asyncio.run(_docs_async(
-        target=target, output=output, model=model, ollama_url=ollama_url,
-        doc_type=doc_type, write=write,
-    ))
+    asyncio.run(
+        _docs_async(
+            target=target,
+            output=output,
+            model=model,
+            ollama_url=ollama_url,
+            doc_type=doc_type,
+            write=write,
+        )
+    )
 
 
 async def _docs_async(
@@ -130,14 +136,17 @@ Output only the README.md content in Markdown."""
     console.print(f"[bold]llmstack docs readme[/]  model=[cyan]{model}[/]")
     console.print()
 
-    with Progress(SpinnerColumn(), TextColumn("[bold blue]Generating README..."), console=console) as progress:
+    with Progress(
+        SpinnerColumn(), TextColumn("[bold blue]Generating README..."), console=console
+    ) as progress:
         task = progress.add_task("Generating", total=None)
 
         timeout = httpx.Timeout(300, connect=10, read=300, write=30)
         result = ""
         async with httpx.AsyncClient(timeout=timeout) as client:
             async with client.stream(
-                "POST", f"{ollama_url}/api/chat",
+                "POST",
+                f"{ollama_url}/api/chat",
                 json={
                     "model": model,
                     "messages": [
@@ -191,7 +200,8 @@ async def _generate_docstrings(
         py_files = [target_path]
     else:
         py_files = [
-            p for p in target_path.rglob("*.py")
+            p
+            for p in target_path.rglob("*.py")
             if not any(x in str(p) for x in ["__pycache__", ".git", "venv", "node_modules"])
         ]
 
@@ -233,7 +243,8 @@ Output the COMPLETE file with docstrings added. Output ONLY the Python code, no 
             result = ""
             async with httpx.AsyncClient(timeout=timeout) as client:
                 async with client.stream(
-                    "POST", f"{ollama_url}/api/chat",
+                    "POST",
+                    f"{ollama_url}/api/chat",
                     json={
                         "model": model,
                         "messages": [
@@ -270,7 +281,9 @@ Output the COMPLETE file with docstrings added. Output ONLY the Python code, no 
                 else:
                     console.print()
                     console.print(f"[bold]{fpath.relative_to(Path.cwd())}[/]")
-                    console.print(Syntax(result[:3000], "python", theme="monokai", line_numbers=True))
+                    console.print(
+                        Syntax(result[:3000], "python", theme="monokai", line_numbers=True)
+                    )
 
             progress.advance(task)
 

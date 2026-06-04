@@ -73,6 +73,7 @@ class TestSearchResult:
 
     def test_search_result_fields(self):
         from llmstack.gateway.rag.store import SearchResult
+
         result = SearchResult(text="hello", score=0.95, metadata={"source": "test.txt"})
         assert result.text == "hello"
         assert result.score == 0.95

@@ -1299,7 +1299,9 @@ def apikey_cmd(
 
 @app.command(name="openapi")
 def openapi_cmd(
-    output: str = typer.Option("", "--output", "-o", help="Output file path (prints to stdout if empty)"),
+    output: str = typer.Option(
+        "", "--output", "-o", help="Output file path (prints to stdout if empty)"
+    ),
     pretty: bool = typer.Option(True, "--pretty/--compact", help="Pretty-print JSON"),
 ) -> None:
     """Export the OpenAPI spec from the gateway."""

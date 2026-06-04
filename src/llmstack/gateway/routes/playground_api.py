@@ -16,6 +16,7 @@ router = APIRouter(prefix="/v1/playground", tags=["playground"])
 
 class PlaygroundSession(BaseModel):
     """A playground session with messages and settings."""
+
     id: str = ""
     title: str = ""
     model: str = "llama3.2"
@@ -29,6 +30,7 @@ class PlaygroundSession(BaseModel):
 
 class CompareRequest(BaseModel):
     """Request to compare multiple models."""
+
     prompt: str
     models: list[str]
     system_prompt: str = ""
@@ -38,6 +40,7 @@ class CompareRequest(BaseModel):
 
 class ShareRequest(BaseModel):
     """Request to create a shareable conversation."""
+
     session_id: str
     title: str = ""
 
@@ -89,9 +92,17 @@ class PlaygroundStore:
                 """INSERT OR REPLACE INTO sessions
                    (id, title, model, system_prompt, temperature, max_tokens, messages, created_at, updated_at)
                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-                (session.id, session.title, session.model, session.system_prompt,
-                 session.temperature, session.max_tokens,
-                 json.dumps(session.messages), session.created_at, session.updated_at),
+                (
+                    session.id,
+                    session.title,
+                    session.model,
+                    session.system_prompt,
+                    session.temperature,
+                    session.max_tokens,
+                    json.dumps(session.messages),
+                    session.created_at,
+                    session.updated_at,
+                ),
             )
             conn.commit()
         return session
@@ -102,10 +113,15 @@ class PlaygroundStore:
             row = conn.execute("SELECT * FROM sessions WHERE id = ?", (session_id,)).fetchone()
             if row:
                 return PlaygroundSession(
-                    id=row["id"], title=row["title"], model=row["model"],
-                    system_prompt=row["system_prompt"], temperature=row["temperature"],
-                    max_tokens=row["max_tokens"], messages=json.loads(row["messages"]),
-                    created_at=row["created_at"], updated_at=row["updated_at"],
+                    id=row["id"],
+                    title=row["title"],
+                    model=row["model"],
+                    system_prompt=row["system_prompt"],
+                    temperature=row["temperature"],
+                    max_tokens=row["max_tokens"],
+                    messages=json.loads(row["messages"]),
+                    created_at=row["created_at"],
+                    updated_at=row["updated_at"],
                 )
         return None
 
@@ -130,11 +146,13 @@ class PlaygroundStore:
             raise ValueError("Session not found")
 
         share_id = hashlib.sha256(f"{session_id}{time.time()}".encode()).hexdigest()[:16]
-        data = json.dumps({
-            "title": title or session.title,
-            "model": session.model,
-            "messages": session.messages,
-        })
+        data = json.dumps(
+            {
+                "title": title or session.title,
+                "model": session.model,
+                "messages": session.messages,
+            }
+        )
 
         with sqlite3.connect(self.db_path) as conn:
             conn.execute(

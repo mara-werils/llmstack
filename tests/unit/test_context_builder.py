@@ -16,21 +16,21 @@ def main():
 def load_config():
     return {"port": 8000}
 ''')
-    (tmp_path / "server.py").write_text('''
+    (tmp_path / "server.py").write_text("""
 import main
 
 def start_server(config):
     port = config["port"]
     print(f"Starting on {port}")
     return {"running": True}
-''')
-    (tmp_path / "utils.py").write_text('''
+""")
+    (tmp_path / "utils.py").write_text("""
 def helper():
     return "hello"
 
 def format_output(data):
     return str(data)
-''')
+""")
     (tmp_path / "README.md").write_text("# Test Project")
     return tmp_path
 

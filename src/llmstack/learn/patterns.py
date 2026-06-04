@@ -122,12 +122,8 @@ class PatternLearner:
         """Rebuild patterns from all historical code corrections."""
         self.profile = CodeStyleProfile()
 
-        corrections = self.store.get_feedback(
-            feedback_type=FeedbackType.CORRECTION, limit=limit
-        )
-        edits = self.store.get_feedback(
-            feedback_type=FeedbackType.EDIT, limit=limit
-        )
+        corrections = self.store.get_feedback(feedback_type=FeedbackType.CORRECTION, limit=limit)
+        edits = self.store.get_feedback(feedback_type=FeedbackType.EDIT, limit=limit)
 
         for fb in corrections + edits:
             if fb.correction:
@@ -222,8 +218,16 @@ class PatternLearner:
 
     def _learn_imports(self, original: str, correction: str) -> None:
         """Learn import style preferences."""
-        orig_imports = [line for line in original.split("\n") if line.startswith("import ") or line.startswith("from ")]
-        corr_imports = [line for line in correction.split("\n") if line.startswith("import ") or line.startswith("from ")]
+        orig_imports = [
+            line
+            for line in original.split("\n")
+            if line.startswith("import ") or line.startswith("from ")
+        ]
+        corr_imports = [
+            line
+            for line in correction.split("\n")
+            if line.startswith("import ") or line.startswith("from ")
+        ]
 
         if not corr_imports:
             return
@@ -256,20 +260,32 @@ class PatternLearner:
                     pattern.examples = pattern.examples[-5:]
                 return
 
-        self.profile.patterns.append(CodePattern(
-            name=name,
-            description=description,
-            examples=[example] if example else [],
-            occurrences=1,
-            confidence=0.1,
-        ))
+        self.profile.patterns.append(
+            CodePattern(
+                name=name,
+                description=description,
+                examples=[example] if example else [],
+                occurrences=1,
+                confidence=0.1,
+            )
+        )
 
     def _is_code_content(self, text: str) -> bool:
         """Check if text likely contains code."""
         code_indicators = [
-            "def ", "class ", "import ", "function ", "const ",
-            "let ", "var ", "return ", "if (", "for ",
-            "```", "    ", "\t",
+            "def ",
+            "class ",
+            "import ",
+            "function ",
+            "const ",
+            "let ",
+            "var ",
+            "return ",
+            "if (",
+            "for ",
+            "```",
+            "    ",
+            "\t",
         ]
         return any(indicator in text for indicator in code_indicators)
 
@@ -277,11 +293,11 @@ class PatternLearner:
         """Extract likely identifiers from code."""
         # Match function/variable names
         patterns = [
-            r'def\s+(\w+)',
-            r'class\s+(\w+)',
-            r'(\w+)\s*=',
-            r'function\s+(\w+)',
-            r'(?:const|let|var)\s+(\w+)',
+            r"def\s+(\w+)",
+            r"class\s+(\w+)",
+            r"(\w+)\s*=",
+            r"function\s+(\w+)",
+            r"(?:const|let|var)\s+(\w+)",
         ]
         identifiers: list[str] = []
         for pattern in patterns:
@@ -312,14 +328,16 @@ class PatternLearner:
             profile.last_updated = data.get("last_updated", 0)
             profile.total_code_corrections = data.get("total_code_corrections", 0)
             for p in data.get("patterns", []):
-                profile.patterns.append(CodePattern(
-                    name=p["name"],
-                    description=p["description"],
-                    examples=p.get("examples", []),
-                    counter_examples=p.get("counter_examples", []),
-                    confidence=p.get("confidence", 0),
-                    occurrences=p.get("occurrences", 0),
-                ))
+                profile.patterns.append(
+                    CodePattern(
+                        name=p["name"],
+                        description=p["description"],
+                        examples=p.get("examples", []),
+                        counter_examples=p.get("counter_examples", []),
+                        confidence=p.get("confidence", 0),
+                        occurrences=p.get("occurrences", 0),
+                    )
+                )
             return profile
         except (json.JSONDecodeError, KeyError):
             return CodeStyleProfile()
@@ -327,6 +345,4 @@ class PatternLearner:
     def _save(self) -> None:
         """Save patterns to disk."""
         self.patterns_path.parent.mkdir(parents=True, exist_ok=True)
-        self.patterns_path.write_text(
-            json.dumps(self.profile.to_dict(), indent=2)
-        )
+        self.patterns_path.write_text(json.dumps(self.profile.to_dict(), indent=2))

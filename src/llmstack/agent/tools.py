@@ -75,19 +75,29 @@ class Tool(ABC):
 # Built-in tools
 # ---------------------------------------------------------------------------
 
+
 class ReadFileTool(Tool):
     name = "read_file"
     description = "Read the contents of a file. Returns the file content with line numbers."
     parameters = [
         ToolParam(name="path", description="Path to the file to read"),
-        ToolParam(name="start_line", type="integer", description="Start reading from this line (1-based)", required=False),
-        ToolParam(name="end_line", type="integer", description="Stop reading at this line", required=False),
+        ToolParam(
+            name="start_line",
+            type="integer",
+            description="Start reading from this line (1-based)",
+            required=False,
+        ),
+        ToolParam(
+            name="end_line", type="integer", description="Stop reading at this line", required=False
+        ),
     ]
 
     def __init__(self, working_dir: str = "."):
         self._cwd = Path(working_dir).resolve()
 
-    async def execute(self, path: str = "", start_line: int = 0, end_line: int = 0, **kw) -> ToolResult:
+    async def execute(
+        self, path: str = "", start_line: int = 0, end_line: int = 0, **kw
+    ) -> ToolResult:
         target = self._resolve(path)
         if not target.is_file():
             return ToolResult(output="", success=False, error=f"File not found: {path}")
@@ -183,17 +193,23 @@ class ListDirectoryTool(Tool):
 
 class GrepTool(Tool):
     name = "grep"
-    description = "Search for a pattern in files. Returns matching lines with file paths and line numbers."
+    description = (
+        "Search for a pattern in files. Returns matching lines with file paths and line numbers."
+    )
     parameters = [
         ToolParam(name="pattern", description="Regex pattern to search for"),
         ToolParam(name="path", description="File or directory to search in", required=False),
-        ToolParam(name="include", description="Glob pattern for file names (e.g. '*.py')", required=False),
+        ToolParam(
+            name="include", description="Glob pattern for file names (e.g. '*.py')", required=False
+        ),
     ]
 
     def __init__(self, working_dir: str = "."):
         self._cwd = Path(working_dir).resolve()
 
-    async def execute(self, pattern: str = "", path: str = ".", include: str = "", **kw) -> ToolResult:
+    async def execute(
+        self, pattern: str = "", path: str = ".", include: str = "", **kw
+    ) -> ToolResult:
         target = self._resolve(path)
         cmd = ["grep", "-rn", "--color=never"]
         if include:
@@ -201,7 +217,9 @@ class GrepTool(Tool):
         cmd.extend([pattern, str(target)])
 
         try:
-            result = subprocess.run(cmd, capture_output=True, text=True, timeout=30, cwd=str(self._cwd))
+            result = subprocess.run(
+                cmd, capture_output=True, text=True, timeout=30, cwd=str(self._cwd)
+            )
             output = result.stdout.strip()
             if not output:
                 return ToolResult(output="No matches found.")
@@ -224,7 +242,9 @@ class GrepTool(Tool):
 
 class ShellTool(Tool):
     name = "shell"
-    description = "Execute a shell command and return stdout/stderr. Use for git, tests, builds, etc."
+    description = (
+        "Execute a shell command and return stdout/stderr. Use for git, tests, builds, etc."
+    )
     parameters = [
         ToolParam(name="command", description="Shell command to execute"),
     ]
@@ -242,8 +262,12 @@ class ShellTool(Tool):
 
         try:
             result = subprocess.run(
-                command, shell=True, capture_output=True, text=True,
-                timeout=self._timeout, cwd=str(self._cwd),
+                command,
+                shell=True,
+                capture_output=True,
+                text=True,
+                timeout=self._timeout,
+                cwd=str(self._cwd),
                 env={**os.environ, "TERM": "dumb"},
             )
             output = result.stdout
@@ -262,7 +286,9 @@ class ShellTool(Tool):
                 error=f"Exit code: {result.returncode}" if result.returncode != 0 else None,
             )
         except subprocess.TimeoutExpired:
-            return ToolResult(output="", success=False, error=f"Command timed out after {self._timeout}s")
+            return ToolResult(
+                output="", success=False, error=f"Command timed out after {self._timeout}s"
+            )
         except Exception as exc:
             return ToolResult(output="", success=False, error=str(exc))
 
@@ -276,6 +302,7 @@ class HttpGetTool(Tool):
 
     async def execute(self, url: str = "", **kw) -> ToolResult:
         import httpx
+
         try:
             async with httpx.AsyncClient(timeout=30, follow_redirects=True) as client:
                 resp = await client.get(url)
@@ -291,6 +318,7 @@ class HttpGetTool(Tool):
 # ---------------------------------------------------------------------------
 # Tool registry
 # ---------------------------------------------------------------------------
+
 
 class ToolRegistry:
     """Manages available tools for agents."""

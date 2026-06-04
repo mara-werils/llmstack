@@ -35,20 +35,25 @@ from llmstack.finetune.export import ExportResult
 # ChatExample tests
 # ===================================================================
 
+
 class TestChatExample:
     def test_to_dict(self):
-        ex = ChatExample(messages=[
-            {"role": "user", "content": "hello"},
-            {"role": "assistant", "content": "hi"},
-        ])
+        ex = ChatExample(
+            messages=[
+                {"role": "user", "content": "hello"},
+                {"role": "assistant", "content": "hi"},
+            ]
+        )
         d = ex.to_dict()
         assert d["messages"][0]["role"] == "user"
         assert d["messages"][1]["content"] == "hi"
 
     def test_token_estimate(self):
-        ex = ChatExample(messages=[
-            {"role": "user", "content": "x" * 400},
-        ])
+        ex = ChatExample(
+            messages=[
+                {"role": "user", "content": "x" * 400},
+            ]
+        )
         tokens = ex.token_estimate()
         assert tokens == 100  # 400 chars / 4
 
@@ -60,6 +65,7 @@ class TestChatExample:
 # ===================================================================
 # Format detection tests
 # ===================================================================
+
 
 class TestFormatDetection:
     def test_jsonl(self):
@@ -90,6 +96,7 @@ class TestFormatDetection:
 # ===================================================================
 # Column detection tests
 # ===================================================================
+
 
 class TestColumnDetection:
     def test_instruction_output(self):
@@ -132,11 +139,14 @@ class TestColumnDetection:
 # Row to chat conversion tests
 # ===================================================================
 
+
 class TestRowToChat:
     def test_basic_conversion(self):
         ex = _row_to_chat(
             {"input": "hello", "output": "hi there"},
-            "input", "output", "",
+            "input",
+            "output",
+            "",
         )
         assert ex is not None
         assert len(ex.messages) == 2
@@ -146,7 +156,9 @@ class TestRowToChat:
     def test_with_system_prompt(self):
         ex = _row_to_chat(
             {"input": "hello", "output": "hi"},
-            "input", "output", "You are helpful.",
+            "input",
+            "output",
+            "You are helpful.",
         )
         assert ex is not None
         assert len(ex.messages) == 3
@@ -183,6 +195,7 @@ class TestRowToChat:
 # ===================================================================
 # Data loading tests
 # ===================================================================
+
 
 class TestLoadData:
     def test_load_jsonl(self, tmp_path):
@@ -227,7 +240,9 @@ class TestLoadData:
 
     def test_load_text(self, tmp_path):
         f = tmp_path / "data.txt"
-        f.write_text("What is Python?\n\nPython is a programming language.\n\nWhat is Rust?\n\nRust is a systems language.\n")
+        f.write_text(
+            "What is Python?\n\nPython is a programming language.\n\nWhat is Rust?\n\nRust is a systems language.\n"
+        )
 
         rows, fmt = load_raw_data(f)
         assert fmt == "text"
@@ -244,6 +259,7 @@ class TestLoadData:
 # ===================================================================
 # Dataset preparation tests
 # ===================================================================
+
 
 class TestPrepareDataset:
     def test_full_pipeline(self, tmp_path):
@@ -325,6 +341,7 @@ class TestPrepareDataset:
 # Hyperparameter auto-selection tests
 # ===================================================================
 
+
 class TestAutoHyperparams:
     def test_small_dataset(self):
         hp = auto_hyperparams(num_examples=50, model_size_b=7.0)
@@ -381,6 +398,7 @@ class TestAutoHyperparams:
 # Model size estimation tests
 # ===================================================================
 
+
 class TestEstimateModelSize:
     def test_llama_70b(self):
         assert estimate_model_size("llama3.1:70b") == 70.0
@@ -407,6 +425,7 @@ class TestEstimateModelSize:
 # ===================================================================
 # TrainConfig and TrainResult tests
 # ===================================================================
+
 
 class TestTrainConfig:
     def test_defaults(self):
@@ -450,6 +469,7 @@ class TestTrainResult:
 # ===================================================================
 # Eval scoring tests
 # ===================================================================
+
 
 class TestEvalScoring:
     def test_word_overlap_identical(self):
@@ -505,6 +525,7 @@ class TestEvalResult:
 # Export tests
 # ===================================================================
 
+
 class TestExportResult:
     def test_to_dict(self):
         r = ExportResult(
@@ -529,9 +550,11 @@ class TestExportResult:
 # Config schema tests
 # ===================================================================
 
+
 class TestFinetuneConfigSchema:
     def test_defaults(self):
         from llmstack.config.schema import FinetuneConfig
+
         config = FinetuneConfig()
         assert config.method == "qlora"
         assert config.lora_r == 16
@@ -539,6 +562,7 @@ class TestFinetuneConfigSchema:
 
     def test_custom(self):
         from llmstack.config.schema import FinetuneConfig
+
         config = FinetuneConfig(
             base_model="custom/model",
             method="lora",
@@ -550,6 +574,7 @@ class TestFinetuneConfigSchema:
 
     def test_stack_config_has_finetune(self):
         from llmstack.config.schema import StackConfig
+
         config = StackConfig()
         assert hasattr(config, "finetune")
         assert config.finetune.method == "qlora"
@@ -558,6 +583,7 @@ class TestFinetuneConfigSchema:
 # ===================================================================
 # DatasetStats tests
 # ===================================================================
+
 
 class TestDatasetStats:
     def test_to_dict(self):

@@ -125,8 +125,15 @@ class CurriculumScheduler:
 
         # Multi-concept queries
         concept_keywords = [
-            "and", "also", "additionally", "plus", "with", "including",
-            "both", "multiple", "several",
+            "and",
+            "also",
+            "additionally",
+            "plus",
+            "with",
+            "including",
+            "both",
+            "multiple",
+            "several",
         ]
         concept_count = sum(1 for kw in concept_keywords if kw in feedback.query.lower())
         scores.append(min(1.0, concept_count * 0.2))
@@ -144,12 +151,11 @@ class CurriculumScheduler:
 
         # Determine thresholds
         if self.config.thresholds and len(self.config.thresholds) >= self.config.num_stages - 1:
-            thresholds = self.config.thresholds[:self.config.num_stages - 1]
+            thresholds = self.config.thresholds[: self.config.num_stages - 1]
         else:
             # Auto-compute evenly spaced thresholds
             thresholds = [
-                (i + 1) / self.config.num_stages
-                for i in range(self.config.num_stages - 1)
+                (i + 1) / self.config.num_stages for i in range(self.config.num_stages - 1)
             ]
 
         # Create stages
@@ -163,10 +169,7 @@ class CurriculumScheduler:
                 min_score=bounds[i],
                 max_score=bounds[i + 1],
             )
-            stage.examples = [
-                ex for ex, score in scored
-                if bounds[i] <= score < bounds[i + 1]
-            ]
+            stage.examples = [ex for ex, score in scored if bounds[i] <= score < bounds[i + 1]]
             stages.append(stage)
 
         self._stages = stages

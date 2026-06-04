@@ -40,11 +40,11 @@ class DriftConfig:
 
     # Window sizes for comparison (in seconds)
     baseline_window: float = 604800  # 7 days
-    recent_window: float = 86400     # 1 day
+    recent_window: float = 86400  # 1 day
 
     # Thresholds
     distribution_threshold: float = 0.3  # KL divergence threshold
-    topic_threshold: float = 0.4         # topic shift threshold
+    topic_threshold: float = 0.4  # topic shift threshold
     feedback_shift_threshold: float = 0.2  # feedback pattern shift
 
     # Minimum samples
@@ -151,8 +151,7 @@ class DriftDetector:
 
         # New topics that didn't exist in baseline
         new_topics = [
-            t for t in all_topics
-            if recent_dist.get(t, 0) > 0.1 and baseline_dist.get(t, 0) < 0.02
+            t for t in all_topics if recent_dist.get(t, 0) > 0.1 and baseline_dist.get(t, 0) < 0.02
         ]
 
         if new_topics:
@@ -180,12 +179,10 @@ class DriftDetector:
 
         # Check if negative feedback rate has increased
         baseline_negative = (
-            baseline_types.get("thumbs_down", 0)
-            + baseline_types.get("regenerate", 0)
+            baseline_types.get("thumbs_down", 0) + baseline_types.get("regenerate", 0)
         ) / baseline_total
         recent_negative = (
-            recent_types.get("thumbs_down", 0)
-            + recent_types.get("regenerate", 0)
+            recent_types.get("thumbs_down", 0) + recent_types.get("regenerate", 0)
         ) / recent_total
 
         shift = recent_negative - baseline_negative

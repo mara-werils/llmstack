@@ -60,8 +60,7 @@ def _install_completion(shell: str, script: str) -> None:
         comp_file.write_text(script)
         success(f"Installed zsh completion to {comp_file}")
         info(
-            "Add to .zshrc: fpath=(~/.zsh/completions $fpath)"
-            " && autoload -Uz compinit && compinit"
+            "Add to .zshrc: fpath=(~/.zsh/completions $fpath) && autoload -Uz compinit && compinit"
         )
     elif shell == "bash":
         comp_dir = Path.home() / ".local" / "share" / "bash-completion" / "completions"

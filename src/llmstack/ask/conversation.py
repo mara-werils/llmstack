@@ -32,7 +32,7 @@ Rules:
 class ConversationTurn:
     """A single turn in the conversation."""
 
-    role: str            # "user" or "assistant"
+    role: str  # "user" or "assistant"
     content: str
     sources: list[str] = field(default_factory=list)  # source references for this turn
 
@@ -107,9 +107,13 @@ class ConversationEngine:
             yield token
 
         # Record assistant turn
-        self._history.append(ConversationTurn(
-            role="assistant", content=assistant_text, sources=sources,
-        ))
+        self._history.append(
+            ConversationTurn(
+                role="assistant",
+                content=assistant_text,
+                sources=sources,
+            )
+        )
 
     def _build_messages(self, current_user_msg: str) -> list[dict[str, str]]:
         """Build the full message array including history."""
@@ -123,7 +127,7 @@ class ConversationEngine:
         messages.append({"role": "system", "content": system})
 
         # Conversation history (keep last 10 turns to fit context window)
-        recent = self._history[-(10 * 2):]  # 10 user+assistant pairs
+        recent = self._history[-(10 * 2) :]  # 10 user+assistant pairs
         for turn in recent:
             messages.append({"role": turn.role, "content": turn.content})
 

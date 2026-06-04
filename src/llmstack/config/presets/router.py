@@ -5,7 +5,6 @@ smart model router to automatically select the optimal model per query.
 """
 
 
-
 def router_preset() -> dict:
     """Multi-model setup with smart routing.
 

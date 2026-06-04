@@ -25,21 +25,24 @@ async def list_models():
     # Add models from all registered providers
     try:
         from llmstack.gateway.providers.registry import get_registry
+
         registry = get_registry()
         if registry is not None:
             for pm in registry.all_models():
-                local_models.append({
-                    "id": pm.id,
-                    "object": "model",
-                    "created": int(time.time()),
-                    "owned_by": pm.provider,
-                    "context_length": pm.context_length,
-                    "x_llmstack": {
-                        "provider": pm.provider,
-                        "cost_per_m_input": pm.cost_per_m_input,
-                        "cost_per_m_output": pm.cost_per_m_output,
-                    },
-                })
+                local_models.append(
+                    {
+                        "id": pm.id,
+                        "object": "model",
+                        "created": int(time.time()),
+                        "owned_by": pm.provider,
+                        "context_length": pm.context_length,
+                        "x_llmstack": {
+                            "provider": pm.provider,
+                            "cost_per_m_input": pm.cost_per_m_input,
+                            "cost_per_m_output": pm.cost_per_m_output,
+                        },
+                    }
+                )
     except Exception:
         pass
 

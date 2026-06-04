@@ -1,10 +1,12 @@
 """Tests for smart retry with provider fallback."""
 
-
 import pytest
 
 from llmstack.gateway.retry import (
-    RetryConfig, FallbackChain, retry_with_fallback, _compute_delay,
+    RetryConfig,
+    FallbackChain,
+    retry_with_fallback,
+    _compute_delay,
 )
 
 
@@ -38,8 +40,10 @@ class TestComputeDelay:
 
     def test_max_delay_cap(self):
         config = RetryConfig(
-            initial_delay_ms=1000, max_delay_ms=5000,
-            exponential_base=10.0, jitter=False,
+            initial_delay_ms=1000,
+            max_delay_ms=5000,
+            exponential_base=10.0,
+            jitter=False,
         )
         assert _compute_delay(5, config) == 5000
 
@@ -92,7 +96,9 @@ class TestRetryWithFallback:
 
         config = RetryConfig(max_retries=3, initial_delay_ms=1, jitter=False)
         result = await retry_with_fallback(
-            handler, {}, config=config,
+            handler,
+            {},
+            config=config,
             fallback_providers=["primary", "backup"],
         )
         assert result.success is True

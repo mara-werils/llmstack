@@ -65,6 +65,7 @@ class TestInMemoryBucket:
     def test_refills_over_time(self):
         """Bucket should refill tokens based on elapsed time."""
         import time
+
         bucket = _InMemoryBucket(capacity=1, refill_rate=1000.0)  # fast refill
         bucket.try_acquire()
         time.sleep(0.01)  # allow 10ms to elapse for refill

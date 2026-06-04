@@ -20,8 +20,7 @@ _ERROR_SUGGESTIONS: list[tuple[str, str, str]] = [
     (
         "ConnectError",
         "Cannot connect to the inference backend",
-        "Check if Ollama is running: curl http://localhost:11434\n"
-        "  Or start it with: llmstack up",
+        "Check if Ollama is running: curl http://localhost:11434\n  Or start it with: llmstack up",
     ),
     (
         "model.*not found",
@@ -39,14 +38,12 @@ _ERROR_SUGGESTIONS: list[tuple[str, str, str]] = [
     (
         "docker.errors",
         "Docker error",
-        "Check Docker is running: docker info\n"
-        "  Or install: https://docs.docker.com/get-docker/",
+        "Check Docker is running: docker info\n  Or install: https://docs.docker.com/get-docker/",
     ),
     (
         "redis.exceptions.ConnectionError",
         "Cannot connect to Redis",
-        "Start Redis: docker run -d -p 6379:6379 redis:7\n"
-        "  Or start the full stack: llmstack up",
+        "Start Redis: docker run -d -p 6379:6379 redis:7\n  Or start the full stack: llmstack up",
     ),
     (
         "No such file or directory.*llmstack.yaml",
@@ -98,16 +95,12 @@ def friendly_errors(func: Callable) -> Callable:
                     console.print(f"\n[bold red]Error:[/] {title}")
                     console.print(f"  [dim]{error_str}[/]\n")
                     console.print(f"[bold]How to fix:[/]\n  {suggestion}\n")
-                    console.print(
-                        "[dim]Run 'llmstack doctor' for a full system check.[/]"
-                    )
+                    console.print("[dim]Run 'llmstack doctor' for a full system check.[/]")
                     sys.exit(1)
 
             # No match -- show raw error with general advice
             console.print(f"\n[bold red]Error:[/] {error_type}: {error_str}")
-            console.print(
-                "\n[dim]Run 'llmstack doctor' to diagnose common issues.[/]"
-            )
+            console.print("\n[dim]Run 'llmstack doctor' to diagnose common issues.[/]")
             sys.exit(1)
 
     return wrapper

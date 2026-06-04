@@ -46,10 +46,16 @@ def explain(
     output: str | None = None,
 ) -> None:
     """Explain code in detail with diagrams and examples."""
-    asyncio.run(_explain_async(
-        target=target, symbol=symbol, model=model,
-        ollama_url=ollama_url, level=level, output=output,
-    ))
+    asyncio.run(
+        _explain_async(
+            target=target,
+            symbol=symbol,
+            model=model,
+            ollama_url=ollama_url,
+            level=level,
+            output=output,
+        )
+    )
 
 
 def _extract_symbol(content: str, symbol: str, file_ext: str) -> str | None:
@@ -81,7 +87,20 @@ def _extract_symbol(content: str, symbol: str, file_ext: str) -> str | None:
 
         # JS/TS/Go/Rust/Java-style (brace-based)
         elif file_ext in (".js", ".ts", ".go", ".rs", ".java", ".cpp", ".c"):
-            if symbol in stripped and any(kw in stripped for kw in ["function ", "func ", "fn ", "def ", "class ", "pub ", "private ", "public ", "const "]):
+            if symbol in stripped and any(
+                kw in stripped
+                for kw in [
+                    "function ",
+                    "func ",
+                    "fn ",
+                    "def ",
+                    "class ",
+                    "pub ",
+                    "private ",
+                    "public ",
+                    "const ",
+                ]
+            ):
                 found = True
                 brace_count = 0
             if found:
@@ -117,10 +136,13 @@ async def _explain_async(
                 console.print("[error]Ollama is not responding.[/]")
                 raise typer.Exit(1)
     except httpx.ConnectError:
-        console.print(Panel(
-            "[error]Cannot connect to Ollama.[/]",
-            title="Connection Error", border_style="red",
-        ))
+        console.print(
+            Panel(
+                "[error]Cannot connect to Ollama.[/]",
+                title="Connection Error",
+                border_style="red",
+            )
+        )
         raise typer.Exit(1)
 
     target_path = Path(target)
@@ -157,7 +179,7 @@ async def _explain_async(
     console.print()
 
     system_prompt = EXPLAIN_FUNCTION_PROMPT if symbol else EXPLAIN_SYSTEM_PROMPT
-    prompt = f"""{level_desc.get(level, level_desc['mid'])}
+    prompt = f"""{level_desc.get(level, level_desc["mid"])}
 
 File: {target_path.name}
 Language: {target_path.suffix}
@@ -180,7 +202,8 @@ Provide a thorough explanation."""
         timeout = httpx.Timeout(300, connect=10, read=300, write=30)
         async with httpx.AsyncClient(timeout=timeout) as client:
             async with client.stream(
-                "POST", f"{ollama_url}/api/chat",
+                "POST",
+                f"{ollama_url}/api/chat",
                 json={
                     "model": model,
                     "messages": [

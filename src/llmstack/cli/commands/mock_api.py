@@ -32,10 +32,16 @@ def mock_api(
     port: int = 9000,
 ) -> None:
     """Generate a mock API server."""
-    asyncio.run(_mock_async(
-        spec=spec, description=description, model=model,
-        ollama_url=ollama_url, output=output, port=port,
-    ))
+    asyncio.run(
+        _mock_async(
+            spec=spec,
+            description=description,
+            model=model,
+            ollama_url=ollama_url,
+            output=output,
+            port=port,
+        )
+    )
 
 
 async def _mock_async(
@@ -105,7 +111,8 @@ Include pagination, filtering, CRUD operations where appropriate."""
         timeout = httpx.Timeout(300, connect=10, read=300, write=30)
         async with httpx.AsyncClient(timeout=timeout) as client:
             async with client.stream(
-                "POST", f"{ollama_url}/api/chat",
+                "POST",
+                f"{ollama_url}/api/chat",
                 json={
                     "model": model,
                     "messages": [

@@ -328,7 +328,8 @@ def _display_single_model(model_result: ModelResult) -> None:
 
     header = Text.assemble(
         ("llmstack bench", "bold magenta"),
-        " — ", ("Model Benchmark", "bold"),
+        " — ",
+        ("Model Benchmark", "bold"),
     )
     console.print(Panel(header, expand=True, border_style="bright_magenta"))
     console.print()
@@ -380,7 +381,11 @@ def _display_single_model(model_result: ModelResult) -> None:
             f"  Avg TTFT:       [bold]{model_result.avg_ttft_ms:.0f}ms[/]\n"
             f"  Avg Tokens/sec: [bold]{model_result.avg_tokens_per_second:.2f} t/s[/]\n"
             f"  Total time:     [bold]{model_result.total_time:.1f}s[/]"
-            + (f"\n  Errors:         [red]{model_result.total_errors}[/]" if model_result.total_errors else ""),
+            + (
+                f"\n  Errors:         [red]{model_result.total_errors}[/]"
+                if model_result.total_errors
+                else ""
+            ),
             title="[bold]Summary[/]",
             border_style="dim",
             expand=True,
@@ -392,7 +397,8 @@ def _display_comparison(results: list[ModelResult]) -> None:
     """Render a comparison table when multiple models are benchmarked."""
     header = Text.assemble(
         ("llmstack bench", "bold magenta"),
-        " — ", ("Multi-Model Comparison", "bold"),
+        " — ",
+        ("Multi-Model Comparison", "bold"),
     )
     console.print(Panel(header, expand=True, border_style="bright_magenta"))
     console.print()
@@ -478,15 +484,17 @@ def _results_to_dict(results: list[ModelResult]) -> list[dict[str, Any]]:
                 "prompts": [],
             }
             for pr in sr.prompts:
-                suite_data["prompts"].append({
-                    "prompt": pr.prompt[:120],
-                    "ttft_ms": round(pr.ttft_ms, 2),
-                    "total_time_s": round(pr.total_time_s, 2),
-                    "input_tokens": pr.input_tokens,
-                    "output_tokens": pr.output_tokens,
-                    "tokens_per_second": round(pr.tokens_per_second, 2),
-                    "error": pr.error,
-                })
+                suite_data["prompts"].append(
+                    {
+                        "prompt": pr.prompt[:120],
+                        "ttft_ms": round(pr.ttft_ms, 2),
+                        "total_time_s": round(pr.total_time_s, 2),
+                        "input_tokens": pr.input_tokens,
+                        "output_tokens": pr.output_tokens,
+                        "tokens_per_second": round(pr.tokens_per_second, 2),
+                        "error": pr.error,
+                    }
+                )
             model_data["suites"].append(suite_data)
         output.append(model_data)
     return output
@@ -571,7 +579,10 @@ def bench(
             Text.assemble(
                 ("llmstack bench", "bold magenta"),
                 "\n",
-                (f"{len(models)} model(s) × {len(selected_suites)} suite(s) × {total_prompts} prompt(s)", "dim"),
+                (
+                    f"{len(models)} model(s) × {len(selected_suites)} suite(s) × {total_prompts} prompt(s)",
+                    "dim",
+                ),
             ),
             border_style="bright_magenta",
             expand=True,

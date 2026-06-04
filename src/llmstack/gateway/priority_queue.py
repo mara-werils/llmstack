@@ -84,9 +84,7 @@ class RequestPriorityQueue:
         with self._lock:
             if len(self._heap) >= self._max_size:
                 self._total_rejected += 1
-                raise QueueFullError(
-                    f"Queue full ({self._max_size} requests pending)"
-                )
+                raise QueueFullError(f"Queue full ({self._max_size} requests pending)")
 
             try:
                 loop = asyncio.get_running_loop()
@@ -136,7 +134,11 @@ class RequestPriorityQueue:
             priority_counts: dict[str, int] = {}
             tier_counts: dict[str, int] = {}
             for req in self._heap:
-                pname = Priority(req.priority).name if req.priority in Priority._value2member_map_ else str(req.priority)
+                pname = (
+                    Priority(req.priority).name
+                    if req.priority in Priority._value2member_map_
+                    else str(req.priority)
+                )
                 priority_counts[pname] = priority_counts.get(pname, 0) + 1
                 tier_counts[req.tier] = tier_counts.get(req.tier, 0) + 1
 
@@ -153,6 +155,7 @@ class RequestPriorityQueue:
 
 class QueueFullError(Exception):
     """Raised when the priority queue is at capacity."""
+
     pass
 
 

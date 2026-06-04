@@ -1,6 +1,5 @@
 """Tests for snippet manager."""
 
-
 import pytest
 
 from llmstack.snippets.manager import SnippetManager
@@ -32,7 +31,9 @@ def test_save_and_get(manager):
 
 def test_search_by_query(manager):
     manager.save(title="FastAPI Router", code="@app.get('/')", language="python", tags=["web"])
-    manager.save(title="React Component", code="function App() {}", language="javascript", tags=["frontend"])
+    manager.save(
+        title="React Component", code="function App() {}", language="javascript", tags=["frontend"]
+    )
 
     results = manager.search("FastAPI")
     assert len(results) >= 1

@@ -43,7 +43,7 @@ class LatencyTracker:
         with self._lock:
             self._samples.append((time.time(), latency_ms))
             if len(self._samples) > self.config.max_samples:
-                self._samples = self._samples[-self.config.max_samples:]
+                self._samples = self._samples[-self.config.max_samples :]
 
     def percentile(self, p: float) -> float:
         """Compute the p-th percentile of recorded latencies.

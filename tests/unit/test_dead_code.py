@@ -19,24 +19,24 @@ def unused_function():
     return 42
 ''')
 
-    (tmp_path / "utils.py").write_text('''
+    (tmp_path / "utils.py").write_text("""
 def helper():
     return "hello"
 
 def another_unused():
     return "world"
-''')
+""")
     return tmp_path
 
 
 def test_detects_unused_imports(tmp_path):
-    (tmp_path / "test.py").write_text('''
+    (tmp_path / "test.py").write_text("""
 import os
 import sys
 import json
 
 x = json.dumps({"a": 1})
-''')
+""")
     detector = DeadCodeDetector(tmp_path)
     items = detector.scan()
 
@@ -56,7 +56,7 @@ def test_detects_unused_functions(project_dir):
 
 
 def test_ignores_dunder_methods(tmp_path):
-    (tmp_path / "cls.py").write_text('''
+    (tmp_path / "cls.py").write_text("""
 class Foo:
     def __init__(self):
         self.x = 1
@@ -66,7 +66,7 @@ class Foo:
 
     def __repr__(self):
         return f"Foo({self.x})"
-''')
+""")
     detector = DeadCodeDetector(tmp_path)
     items = detector.scan()
 
@@ -76,13 +76,13 @@ class Foo:
 
 
 def test_ignores_test_functions(tmp_path):
-    (tmp_path / "test_something.py").write_text('''
+    (tmp_path / "test_something.py").write_text("""
 def test_foo():
     assert True
 
 def test_bar():
     assert 1 + 1 == 2
-''')
+""")
     detector = DeadCodeDetector(tmp_path)
     items = detector.scan()
 
@@ -91,7 +91,7 @@ def test_bar():
 
 
 def test_respects_all_exports(tmp_path):
-    (tmp_path / "api.py").write_text('''
+    (tmp_path / "api.py").write_text("""
 __all__ = ["public_func"]
 
 def public_func():
@@ -99,7 +99,7 @@ def public_func():
 
 def internal_func():
     return "internal"
-''')
+""")
     detector = DeadCodeDetector(tmp_path)
     items = detector.scan()
 

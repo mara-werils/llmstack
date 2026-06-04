@@ -108,7 +108,7 @@ class ErrorRateMonitor:
             )
             self._events.append(event)
             if len(self._events) > self.config.max_events:
-                self._events = self._events[-self.config.max_events:]
+                self._events = self._events[-self.config.max_events :]
 
             # Track consecutive errors
             key = provider or "global"
@@ -129,12 +129,14 @@ class ErrorRateMonitor:
         with self._lock:
             cutoff = time.time() - self.config.window_seconds
             errors = [
-                e for e in self._events
+                e
+                for e in self._events
                 if e.timestamp >= cutoff and (not provider or e.provider == provider)
             ]
             total_key = f"{provider}:"
             total = sum(
-                v for k, v in self._request_counts.items()
+                v
+                for k, v in self._request_counts.items()
                 if k.startswith(total_key) or not provider
             )
             if total == 0:
@@ -178,7 +180,8 @@ class ErrorRateMonitor:
         # Check error rate
         cutoff = time.time() - self.config.window_seconds
         recent_errors = [
-            e for e in self._events
+            e
+            for e in self._events
             if e.timestamp >= cutoff and (not provider or e.provider == provider)
         ]
         total_key = f"{provider}:{endpoint}"

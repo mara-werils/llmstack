@@ -6,8 +6,7 @@ inference backends.
 
 from __future__ import annotations
 
-import json
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import pytest
 from fastapi.testclient import TestClient
@@ -17,8 +16,9 @@ from fastapi.testclient import TestClient
 def client():
     """Create a test client with the gateway app."""
     from llmstack.gateway.main import create_app
+
     app = create_app()
-    return TestClient(app)
+    return TestClient(app, raise_server_exceptions=False)
 
 
 class TestHealthEndpoints:
@@ -77,10 +77,13 @@ class TestChatCompletions:
         )
         assert resp.status_code == 422
 
-    @patch("llmstack.gateway.proxy.proxy_chat_completion")
-    async def test_chat_success_with_mock(self, mock_proxy, client):
+    def test_chat_success_with_mock(self):
         """Successful chat completion with mocked backend."""
-        mock_proxy.return_value = {
+        from unittest.mock import AsyncMock
+
+        from llmstack.gateway.main import create_app
+
+        mock_result = {
             "id": "chatcmpl-test",
             "object": "chat.completion",
             "choices": [
@@ -93,26 +96,35 @@ class TestChatCompletions:
             "usage": {"prompt_tokens": 5, "completion_tokens": 2, "total_tokens": 7},
         }
 
-        resp = client.post(
-            "/v1/chat/completions",
-            json={
-                "model": "test-model",
-                "messages": [{"role": "user", "content": "Hello"}],
-            },
-        )
-        assert resp.status_code == 200
-        data = resp.json()
-        assert data["choices"][0]["message"]["content"] == "Hello!"
+        with patch(
+            "llmstack.gateway.routes.chat.proxy_chat_completion",
+            new_callable=AsyncMock,
+            return_value=mock_result,
+        ):
+            app = create_app()
+            c = TestClient(app, raise_server_exceptions=False)
+            resp = c.post(
+                "/v1/chat/completions",
+                json={
+                    "model": "test-model",
+                    "messages": [{"role": "user", "content": "Hello"}],
+                },
+            )
+            assert resp.status_code == 200
+            data = resp.json()
+            assert data["choices"][0]["message"]["content"] == "Hello!"
 
 
 class TestAuthMiddleware:
     def test_auth_required_when_configured(self):
         """When API keys are set, auth should be required."""
         import os
+
         with patch.dict(os.environ, {"LLMSTACK_API_KEYS": "test-key-123"}):
             from llmstack.gateway.main import create_app
+
             app = create_app()
-            c = TestClient(app)
+            c = TestClient(app, raise_server_exceptions=False)
 
             # Without auth header
             resp = c.post(
@@ -121,22 +133,24 @@ class TestAuthMiddleware:
             )
             assert resp.status_code == 401
 
-            # With correct auth header
+            # With correct auth header — should pass auth
+            # (may fail at proxy level with 500 but not at auth with 401)
             resp = c.post(
                 "/v1/chat/completions",
                 json={"model": "m", "messages": [{"role": "user", "content": "x"}]},
                 headers={"Authorization": "Bearer test-key-123"},
             )
-            # Should pass auth (may fail at proxy level but not at auth)
             assert resp.status_code != 401
 
     def test_health_bypasses_auth(self):
         """Health endpoints should not require auth."""
         import os
+
         with patch.dict(os.environ, {"LLMSTACK_API_KEYS": "test-key-123"}):
             from llmstack.gateway.main import create_app
+
             app = create_app()
-            c = TestClient(app)
+            c = TestClient(app, raise_server_exceptions=False)
             resp = c.get("/healthz")
             assert resp.status_code == 200
 

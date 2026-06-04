@@ -155,10 +155,7 @@ class TraceStore:
                 quality_sums[k] = quality_sums.get(k, 0.0) + v
                 quality_counts[k] = quality_counts.get(k, 0) + 1
 
-        avg_quality = {
-            k: round(quality_sums[k] / quality_counts[k], 4)
-            for k in quality_sums
-        }
+        avg_quality = {k: round(quality_sums[k] / quality_counts[k], 4) for k in quality_sums}
 
         n = len(traces)
         return {

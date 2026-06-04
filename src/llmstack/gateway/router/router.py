@@ -18,13 +18,13 @@ logger = logging.getLogger(__name__)
 class ModelTier:
     """Describes a model and its capabilities."""
 
-    name: str              # e.g. "llama3.2:1b", "gpt-4o", "claude-sonnet-4-20250514"
-    tier: str              # "simple" | "medium" | "complex"
+    name: str  # e.g. "llama3.2:1b", "gpt-4o", "claude-sonnet-4-20250514"
+    tier: str  # "simple" | "medium" | "complex"
     max_context: int = 8192
-    speed_score: float = 1.0    # relative speed (higher = faster)
+    speed_score: float = 1.0  # relative speed (higher = faster)
     quality_score: float = 1.0  # relative quality (higher = better)
-    provider: str = "local"     # provider name: "local", "openai", "anthropic", etc.
-    cost_per_m_input: float = 0.0   # $ per 1M input tokens
+    provider: str = "local"  # provider name: "local", "openai", "anthropic", etc.
+    cost_per_m_input: float = 0.0  # $ per 1M input tokens
     cost_per_m_output: float = 0.0  # $ per 1M output tokens
 
 
@@ -32,11 +32,11 @@ class ModelTier:
 class RoutingDecision:
     """The result of a routing decision."""
 
-    model: str                    # Selected model name
-    profile: QueryProfile         # Classification that led to this decision
+    model: str  # Selected model name
+    profile: QueryProfile  # Classification that led to this decision
     alternatives: list[str] = field(default_factory=list)
     estimated_speedup: float = 1.0  # vs always using the largest model
-    provider: str = "local"       # which provider serves this model
+    provider: str = "local"  # which provider serves this model
     estimated_cost_per_1k: float = 0.0  # estimated cost per 1K tokens (input)
 
 
@@ -106,7 +106,11 @@ class ModelRouter:
 
         logger.info(
             "Routed query: tier=%s score=%.3f model=%s provider=%s strategy=%s",
-            profile.tier, profile.score, selected.name, selected.provider, self.strategy,
+            profile.tier,
+            profile.score,
+            selected.name,
+            selected.provider,
+            self.strategy,
         )
         return decision
 
@@ -143,11 +147,14 @@ class ModelRouter:
         if not candidates:
             return self._largest_model()
         # Sort by: real cost first (cheaper is better), then tier, then speed
-        return min(candidates, key=lambda m: (
-            m.cost_per_m_input + m.cost_per_m_output,
-            _TIER_ORDER.get(m.tier, 1),
-            -m.speed_score,
-        ))
+        return min(
+            candidates,
+            key=lambda m: (
+                m.cost_per_m_input + m.cost_per_m_output,
+                _TIER_ORDER.get(m.tier, 1),
+                -m.speed_score,
+            ),
+        )
 
     def _select_quality(self, profile: QueryProfile) -> ModelTier:
         """Pick the highest-quality model for the tier or above."""

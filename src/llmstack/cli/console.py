@@ -11,20 +11,22 @@ from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn, TimeElapsedColumn
 from rich.theme import Theme
 
-theme = Theme({
-    "info": "cyan",
-    "success": "green",
-    "warning": "yellow",
-    "error": "red bold",
-    "header": "bold magenta",
-    "highlight": "bold cyan",
-    "muted": "dim",
-    "accent": "bold blue",
-    "path": "underline cyan",
-    "model": "bold green",
-    "cost": "bold yellow",
-    "speed": "bold magenta",
-})
+theme = Theme(
+    {
+        "info": "cyan",
+        "success": "green",
+        "warning": "yellow",
+        "error": "red bold",
+        "header": "bold magenta",
+        "highlight": "bold cyan",
+        "muted": "dim",
+        "accent": "bold blue",
+        "path": "underline cyan",
+        "model": "bold green",
+        "cost": "bold yellow",
+        "speed": "bold magenta",
+    }
+)
 
 console = Console(theme=theme)
 

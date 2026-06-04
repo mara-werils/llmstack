@@ -11,8 +11,13 @@ from llmstack.core.resolver import (
 
 def _make_hw(**kwargs) -> HardwareProfile:
     defaults = dict(
-        gpu_vendor="none", gpu_name=None, gpu_vram_mb=0,
-        cpu_cores=8, ram_mb=16384, os="linux", docker_runtime="default",
+        gpu_vendor="none",
+        gpu_name=None,
+        gpu_vram_mb=0,
+        cpu_cores=8,
+        ram_mb=16384,
+        os="linux",
+        docker_runtime="default",
     )
     defaults.update(kwargs)
     return HardwareProfile(**defaults)

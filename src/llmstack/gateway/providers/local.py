@@ -87,12 +87,14 @@ class LocalProvider(Provider):
 
         models = []
         for m in data.get("data", []):
-            models.append(ProviderModel(
-                id=m.get("id", ""),
-                provider="local",
-                context_length=m.get("context_length", 8192),
-                cost_per_m_input=0.0,
-                cost_per_m_output=0.0,
-            ))
+            models.append(
+                ProviderModel(
+                    id=m.get("id", ""),
+                    provider="local",
+                    context_length=m.get("context_length", 8192),
+                    cost_per_m_input=0.0,
+                    cost_per_m_output=0.0,
+                )
+            )
         self._models = models
         return models

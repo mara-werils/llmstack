@@ -18,6 +18,7 @@ class RateLimitTier(str, Enum):
 @dataclass
 class TierConfig:
     """Rate limit configuration per tier."""
+
     requests_per_minute: int
     requests_per_hour: int
     requests_per_day: int
@@ -29,23 +30,39 @@ class TierConfig:
 
 TIER_CONFIGS = {
     RateLimitTier.FREE: TierConfig(
-        requests_per_minute=10, requests_per_hour=100, requests_per_day=500,
-        burst_size=5, max_tokens_per_request=2048, daily_token_quota=50000,
+        requests_per_minute=10,
+        requests_per_hour=100,
+        requests_per_day=500,
+        burst_size=5,
+        max_tokens_per_request=2048,
+        daily_token_quota=50000,
         concurrent_requests=2,
     ),
     RateLimitTier.STANDARD: TierConfig(
-        requests_per_minute=30, requests_per_hour=500, requests_per_day=5000,
-        burst_size=15, max_tokens_per_request=4096, daily_token_quota=500000,
+        requests_per_minute=30,
+        requests_per_hour=500,
+        requests_per_day=5000,
+        burst_size=15,
+        max_tokens_per_request=4096,
+        daily_token_quota=500000,
         concurrent_requests=5,
     ),
     RateLimitTier.PRO: TierConfig(
-        requests_per_minute=100, requests_per_hour=2000, requests_per_day=20000,
-        burst_size=50, max_tokens_per_request=8192, daily_token_quota=2000000,
+        requests_per_minute=100,
+        requests_per_hour=2000,
+        requests_per_day=20000,
+        burst_size=50,
+        max_tokens_per_request=8192,
+        daily_token_quota=2000000,
         concurrent_requests=10,
     ),
     RateLimitTier.ENTERPRISE: TierConfig(
-        requests_per_minute=500, requests_per_hour=10000, requests_per_day=100000,
-        burst_size=200, max_tokens_per_request=32768, daily_token_quota=10000000,
+        requests_per_minute=500,
+        requests_per_hour=10000,
+        requests_per_day=100000,
+        burst_size=200,
+        max_tokens_per_request=32768,
+        daily_token_quota=10000000,
         concurrent_requests=50,
     ),
 }
@@ -54,6 +71,7 @@ TIER_CONFIGS = {
 @dataclass
 class RateLimitResult:
     """Result of a rate limit check."""
+
     allowed: bool
     limit: int
     remaining: int
@@ -65,6 +83,7 @@ class RateLimitResult:
 @dataclass
 class SlidingWindowCounter:
     """Sliding window rate counter."""
+
     window_seconds: float
     max_requests: int
     timestamps: list[float] = field(default_factory=list)
@@ -77,21 +96,29 @@ class SlidingWindowCounter:
         self.timestamps = [t for t in self.timestamps if t > cutoff]
 
         remaining = self.max_requests - len(self.timestamps)
-        reset_at = (self.timestamps[0] + self.window_seconds) if self.timestamps else now + self.window_seconds
+        reset_at = (
+            (self.timestamps[0] + self.window_seconds)
+            if self.timestamps
+            else now + self.window_seconds
+        )
 
         if len(self.timestamps) >= self.max_requests:
             retry_after = self.timestamps[0] + self.window_seconds - now
             return RateLimitResult(
-                allowed=False, limit=self.max_requests,
-                remaining=0, reset_at=reset_at,
+                allowed=False,
+                limit=self.max_requests,
+                remaining=0,
+                reset_at=reset_at,
                 retry_after=max(0, retry_after),
                 reason=f"Rate limit exceeded ({self.max_requests}/{self.window_seconds}s)",
             )
 
         self.timestamps.append(now)
         return RateLimitResult(
-            allowed=True, limit=self.max_requests,
-            remaining=remaining - 1, reset_at=reset_at,
+            allowed=True,
+            limit=self.max_requests,
+            remaining=remaining - 1,
+            reset_at=reset_at,
         )
 
 
@@ -132,8 +159,10 @@ class AdvancedRateLimiter:
         # Check concurrent requests
         if self._concurrent[key] >= config.concurrent_requests:
             return RateLimitResult(
-                allowed=False, limit=config.concurrent_requests,
-                remaining=0, reset_at=now + 1,
+                allowed=False,
+                limit=config.concurrent_requests,
+                remaining=0,
+                reset_at=now + 1,
                 retry_after=1,
                 reason=f"Max concurrent requests ({config.concurrent_requests}) exceeded",
             )
@@ -153,14 +182,17 @@ class AdvancedRateLimiter:
         if tokens > 0:
             if tokens > config.max_tokens_per_request:
                 return RateLimitResult(
-                    allowed=False, limit=config.max_tokens_per_request,
-                    remaining=0, reset_at=now,
+                    allowed=False,
+                    limit=config.max_tokens_per_request,
+                    remaining=0,
+                    reset_at=now,
                     reason=f"Token limit per request ({config.max_tokens_per_request}) exceeded",
                 )
 
             if self._token_usage[key] + tokens > config.daily_token_quota:
                 return RateLimitResult(
-                    allowed=False, limit=config.daily_token_quota,
+                    allowed=False,
+                    limit=config.daily_token_quota,
                     remaining=config.daily_token_quota - self._token_usage[key],
                     reset_at=self._token_reset.get(key, now + 86400),
                     reason="Daily token quota exceeded",
@@ -172,7 +204,8 @@ class AdvancedRateLimiter:
         return RateLimitResult(
             allowed=True,
             limit=config.requests_per_minute,
-            remaining=config.requests_per_minute - len(self._windows[composite_key]["minute"].timestamps),
+            remaining=config.requests_per_minute
+            - len(self._windows[composite_key]["minute"].timestamps),
             reset_at=now + 60,
         )
 

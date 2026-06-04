@@ -3,7 +3,9 @@
 import pytest
 
 from llmstack.gateway.priority_queue import (
-    RequestPriorityQueue, Priority, QueueFullError,
+    RequestPriorityQueue,
+    Priority,
+    QueueFullError,
     resolve_priority,
 )
 
@@ -33,8 +35,8 @@ class TestRequestPriorityQueue:
         assert third.payload["id"] == "low"
 
     def test_tier_based_priority(self, queue):
-        queue.enqueue({}, tier="free")       # LOW
-        queue.enqueue({}, tier="enterprise") # CRITICAL
+        queue.enqueue({}, tier="free")  # LOW
+        queue.enqueue({}, tier="enterprise")  # CRITICAL
 
         first = queue.dequeue()
         assert first.tier == "enterprise"

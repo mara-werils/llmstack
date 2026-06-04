@@ -50,10 +50,16 @@ def refactor(
     apply: bool = False,
 ) -> None:
     """Get AI-powered refactoring suggestions."""
-    asyncio.run(_refactor_async(
-        target=target, strategy=strategy, model=model,
-        ollama_url=ollama_url, output=output, apply=apply,
-    ))
+    asyncio.run(
+        _refactor_async(
+            target=target,
+            strategy=strategy,
+            model=model,
+            ollama_url=ollama_url,
+            output=output,
+            apply=apply,
+        )
+    )
 
 
 async def _refactor_async(
@@ -92,7 +98,9 @@ async def _refactor_async(
     strategy_desc = REFACTOR_STRATEGIES.get(strategy, REFACTOR_STRATEGIES["clean"])
 
     console.print()
-    console.print(f"[bold]llmstack refactor[/]  model=[cyan]{model}[/]  strategy=[dim]{strategy}[/]")
+    console.print(
+        f"[bold]llmstack refactor[/]  model=[cyan]{model}[/]  strategy=[dim]{strategy}[/]"
+    )
     console.print(f"  [dim]File: {target_path} ({len(content)} chars)[/]")
     console.print()
 
@@ -124,7 +132,8 @@ Output each suggestion as a JSON object on its own line, then a summary JSON obj
         timeout = httpx.Timeout(300, connect=10, read=300, write=30)
         async with httpx.AsyncClient(timeout=timeout) as client:
             async with client.stream(
-                "POST", f"{ollama_url}/api/chat",
+                "POST",
+                f"{ollama_url}/api/chat",
                 json={
                     "model": model,
                     "messages": [
@@ -207,13 +216,15 @@ Output each suggestion as a JSON object on its own line, then a summary JSON obj
         score = summary_data.get("code_health_score", 0)
         score_color = "green" if score >= 7 else "yellow" if score >= 4 else "red"
         console.print()
-        console.print(Panel(
-            f"[bold]Code Health Score:[/] [{score_color}]{score}/10[/]\n\n"
-            f"[bold]Top Priority:[/] {summary_data.get('top_priority', 'N/A')}\n"
-            f"[dim]Total suggestions: {summary_data.get('total', len(suggestions))}[/]",
-            title="Refactoring Summary",
-            border_style=score_color,
-        ))
+        console.print(
+            Panel(
+                f"[bold]Code Health Score:[/] [{score_color}]{score}/10[/]\n\n"
+                f"[bold]Top Priority:[/] {summary_data.get('top_priority', 'N/A')}\n"
+                f"[dim]Total suggestions: {summary_data.get('total', len(suggestions))}[/]",
+                title="Refactoring Summary",
+                border_style=score_color,
+            )
+        )
 
     if not suggestions and not summary_data:
         console.print()
@@ -221,7 +232,11 @@ Output each suggestion as a JSON object on its own line, then a summary JSON obj
 
     # Save output
     if output:
-        data = {"file": str(target_path), "strategy": strategy,
-                "suggestions": suggestions, "summary": summary_data}
+        data = {
+            "file": str(target_path),
+            "strategy": strategy,
+            "suggestions": suggestions,
+            "summary": summary_data,
+        }
         Path(output).write_text(json.dumps(data, indent=2))
         console.print(f"\n[green]Report saved to {output}[/]")

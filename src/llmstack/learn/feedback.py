@@ -45,14 +45,14 @@ class Feedback:
     provider: str = ""
 
     # Feedback content
-    correction: str = ""        # user's corrected/preferred response
-    edit_diff: str = ""         # what the user changed
-    preferred_over: str = ""    # in A/B: the response that lost
-    rating: int = 0             # 1-5 star rating (optional)
+    correction: str = ""  # user's corrected/preferred response
+    edit_diff: str = ""  # what the user changed
+    preferred_over: str = ""  # in A/B: the response that lost
+    rating: int = 0  # 1-5 star rating (optional)
     tags: list[str] = field(default_factory=list)
 
     # Context
-    command: str = ""           # which llmstack command (ask, chat, agent, etc.)
+    command: str = ""  # which llmstack command (ask, chat, agent, etc.)
     context: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

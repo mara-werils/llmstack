@@ -52,7 +52,9 @@ def finetune(
     )
 
     train_data, eval_data, stats = prepare_dataset(
-        data_path, config=ds_config, output_dir=output_dir / "data",
+        data_path,
+        config=ds_config,
+        output_dir=output_dir / "data",
     )
 
     if not train_data:
@@ -67,7 +69,9 @@ def finetune(
     data_table.add_row("Total examples", str(stats.total_examples))
     data_table.add_row("Train / Eval", f"{stats.train_examples} / {stats.eval_examples}")
     data_table.add_row("Skipped", str(stats.skipped))
-    data_table.add_row("Avg tokens (in/out)", f"{stats.avg_input_tokens} / {stats.avg_output_tokens}")
+    data_table.add_row(
+        "Avg tokens (in/out)", f"{stats.avg_input_tokens} / {stats.avg_output_tokens}"
+    )
     data_table.add_row("Total tokens", f"{stats.total_tokens:,}")
     console.print(data_table)
     console.print()
@@ -144,10 +148,13 @@ def finetune(
     console.print()
 
     if not result.success:
-        console.print(Panel(
-            f"[error]Training failed:[/]\n{result.error}",
-            title="Error", border_style="red",
-        ))
+        console.print(
+            Panel(
+                f"[error]Training failed:[/]\n{result.error}",
+                title="Error",
+                border_style="red",
+            )
+        )
         sys.exit(1)
 
     # Show results
@@ -181,7 +188,9 @@ def finetune(
             )
 
             if gguf_result.success:
-                console.print(f"  [success]GGUF exported: {gguf_result.gguf_path} ({gguf_result.size_mb:.0f} MB)[/]")
+                console.print(
+                    f"  [success]GGUF exported: {gguf_result.gguf_path} ({gguf_result.size_mb:.0f} MB)[/]"
+                )
 
                 if export_ollama:
                     ollama_result = create_ollama_model(
@@ -190,14 +199,18 @@ def finetune(
                         system_prompt=system_prompt,
                     )
                     if ollama_result.success:
-                        console.print(f"  [success]Ollama model created: {ollama_result.ollama_model}[/]")
+                        console.print(
+                            f"  [success]Ollama model created: {ollama_result.ollama_model}[/]"
+                        )
                         console.print(f"  Run: [info]ollama run {ollama_result.ollama_model}[/]")
                     else:
                         console.print(f"  [error]Ollama export failed: {ollama_result.error}[/]")
             else:
                 console.print(f"  [error]GGUF export failed: {gguf_result.error}[/]")
     else:
-        console.print("\n  [info]Tip: add --export-gguf or --export-ollama NAME to create a deployable model[/]")
+        console.print(
+            "\n  [info]Tip: add --export-gguf or --export-ollama NAME to create a deployable model[/]"
+        )
 
     # Save full result
     result_path = output_dir / "train_result.json"

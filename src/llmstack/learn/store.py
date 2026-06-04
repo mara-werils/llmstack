@@ -256,9 +256,7 @@ class FeedbackStore:
 
     def get_active_version(self) -> dict[str, Any] | None:
         """Get the currently active model version."""
-        row = self.conn.execute(
-            "SELECT * FROM model_versions WHERE is_active = 1"
-        ).fetchone()
+        row = self.conn.execute("SELECT * FROM model_versions WHERE is_active = 1").fetchone()
         return dict(row) if row else None
 
     def get_versions(self, limit: int = 20) -> list[dict[str, Any]]:
@@ -305,9 +303,7 @@ class FeedbackStore:
             "SELECT feedback_type, COUNT(*) as cnt FROM feedback GROUP BY feedback_type"
         ).fetchall()
         runs = self.conn.execute("SELECT COUNT(*) as cnt FROM train_runs").fetchone()
-        versions = self.conn.execute(
-            "SELECT COUNT(*) as cnt FROM model_versions"
-        ).fetchone()
+        versions = self.conn.execute("SELECT COUNT(*) as cnt FROM model_versions").fetchone()
 
         return {
             "total_feedback": total["cnt"] if total else 0,

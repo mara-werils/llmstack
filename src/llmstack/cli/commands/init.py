@@ -16,11 +16,15 @@ from llmstack.core.hardware import detect_hardware
 
 def init(
     preset: Optional[str] = typer.Option(
-        None, "--preset", "-p",
+        None,
+        "--preset",
+        "-p",
         help="Preset to use: chat, rag, agent",
     ),
     directory: Optional[Path] = typer.Option(
-        None, "--dir", "-d",
+        None,
+        "--dir",
+        "-d",
         help="Directory to create llmstack.yaml in",
     ),
 ) -> None:
@@ -28,7 +32,9 @@ def init(
     target = directory or Path.cwd()
 
     if (target / CONFIG_FILENAME).exists():
-        console.print(f"[warning]{CONFIG_FILENAME} already exists. Use --dir to specify another location.[/]")
+        console.print(
+            f"[warning]{CONFIG_FILENAME} already exists. Use --dir to specify another location.[/]"
+        )
         raise typer.Exit(1)
 
     # Detect hardware
@@ -46,7 +52,9 @@ def init(
         config = PRESETS[preset].model_copy(deep=True)
         console.print(f"\n[info]Using preset:[/] {preset}")
     elif preset:
-        console.print(f"[error]Unknown preset '{preset}'. Available: {', '.join(PRESETS.keys())}[/]")
+        console.print(
+            f"[error]Unknown preset '{preset}'. Available: {', '.join(PRESETS.keys())}[/]"
+        )
         raise typer.Exit(1)
     else:
         config = StackConfig()

@@ -25,6 +25,7 @@ from llmstack.core.hardware import detect_hardware
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _check_port(port: int) -> bool:
     """Return True if port is available (not in use)."""
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -62,6 +63,7 @@ def _check_redis() -> tuple[int, int]:
     redis_url = os.getenv("LLMSTACK_REDIS_URL", "redis://localhost:6379")
     try:
         import redis as _redis
+
         r = _redis.from_url(redis_url, socket_connect_timeout=2)
         r.ping()
         success(f"Redis is reachable at {redis_url}")
@@ -79,11 +81,13 @@ def _check_disk_space() -> tuple[int, int]:
     """Return (issues, warnings) for available disk space."""
     issues = warnings = 0
     usage = psutil.disk_usage(os.path.expanduser("~"))
-    free_gb = usage.free / (1024 ** 3)
-    total_gb = usage.total / (1024 ** 3)
+    free_gb = usage.free / (1024**3)
+    total_gb = usage.total / (1024**3)
     pct_free = 100 - usage.percent
     if free_gb >= 20:
-        success(f"Disk space: {free_gb:.1f} GB free / {total_gb:.0f} GB total ({pct_free:.0f}% free)")
+        success(
+            f"Disk space: {free_gb:.1f} GB free / {total_gb:.0f} GB total ({pct_free:.0f}% free)"
+        )
     elif free_gb >= 5:
         warn(f"Low disk space: {free_gb:.1f} GB free ({pct_free:.0f}% free). Models need space.")
         warnings += 1
@@ -163,13 +167,12 @@ def doctor() -> None:
 
     try:
         import docker
+
         client = docker.from_env()
         client.ping()
         success("Docker daemon is running")
         docker_info = client.info()
-        gpu_runtime = (
-            "nvidia" if "nvidia" in str(docker_info.get("Runtimes", {})) else "default"
-        )
+        gpu_runtime = "nvidia" if "nvidia" in str(docker_info.get("Runtimes", {})) else "default"
         info(
             f"Docker version: {docker_info.get('ServerVersion', 'unknown')} "
             f"(runtime: {gpu_runtime})"
@@ -189,10 +192,7 @@ def doctor() -> None:
             models = resp.json().get("models", [])
             if models:
                 model_names = [m["name"] for m in models[:5]]
-                info(
-                    f"Models: {', '.join(model_names)}"
-                    + (" ..." if len(models) > 5 else "")
-                )
+                info(f"Models: {', '.join(model_names)}" + (" ..." if len(models) > 5 else ""))
             else:
                 warn("No models pulled. Run: ollama pull llama3.2")
                 warnings += 1
@@ -232,6 +232,7 @@ def doctor() -> None:
     console.print("\n[accent]Configuration[/]")
     try:
         from llmstack.config.loader import load_config
+
         config = load_config()
         success(f"llmstack.yaml is valid (model: {config.models.chat.name})")
     except FileNotFoundError:
@@ -247,6 +248,7 @@ def doctor() -> None:
     for dep in ["typer", "rich", "httpx", "pydantic", "docker", "numpy", "psutil"]:
         try:
             from importlib.metadata import version
+
             ver = version(dep)
             success(f"{dep} {ver}")
         except Exception:
@@ -373,7 +375,6 @@ def doctor_fix() -> None:
         console.print(f"[bold green]Fixed {fixed} issue(s).[/]")
     else:
         console.print(
-            "[bold]No auto-fixable issues found."
-            " Run 'llmstack doctor' for full check.[/]"
+            "[bold]No auto-fixable issues found. Run 'llmstack doctor' for full check.[/]"
         )
     console.print()

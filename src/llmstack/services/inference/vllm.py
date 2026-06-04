@@ -22,10 +22,14 @@ class VllmService(ServiceBase):
         import docker
 
         cmd = [
-            "--model", self.model.name,
-            "--host", "0.0.0.0",
-            "--port", "8000",
-            "--max-model-len", str(self.model.context_length),
+            "--model",
+            self.model.name,
+            "--host",
+            "0.0.0.0",
+            "--port",
+            "8000",
+            "--max-model-len",
+            str(self.model.context_length),
         ]
 
         if self.model.quantization:
@@ -42,9 +46,7 @@ class VllmService(ServiceBase):
             "volumes": {
                 "llmstack_vllm_cache": {"bind": "/root/.cache/huggingface", "mode": "rw"},
             },
-            "device_requests": [
-                docker.types.DeviceRequest(count=-1, capabilities=[["gpu"]])
-            ],
+            "device_requests": [docker.types.DeviceRequest(count=-1, capabilities=[["gpu"]])],
             "shm_size": "4g",
         }
 

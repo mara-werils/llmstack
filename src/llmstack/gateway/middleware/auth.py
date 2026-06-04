@@ -28,12 +28,14 @@ class AuthMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         # Skip auth for health checks, docs, and UI
         skip_paths = (
-            "/healthz", "/metrics", "/docs", "/redoc", "/openapi.json", "/",
+            "/healthz",
+            "/metrics",
+            "/docs",
+            "/redoc",
+            "/openapi.json",
+            "/",
         )
-        if (
-            request.url.path in skip_paths
-            or request.url.path.startswith("/ui")
-        ):
+        if request.url.path in skip_paths or request.url.path.startswith("/ui"):
             return await call_next(request)
 
         if not self._key_map:
