@@ -31,6 +31,12 @@ class QuotaLimit:
     model: str | None = None  # None = all models
 
 
+    @property
+    def is_unlimited(self) -> bool:
+        """Return True when all resource limits are set to 0 (unlimited)."""
+        return self.max_requests == 0 and self.max_tokens == 0 and self.max_cost_usd == 0.0
+
+
 @dataclass
 class QuotaUsage:
     """Current usage for a quota."""
