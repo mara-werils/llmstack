@@ -225,6 +225,11 @@ class StreamMultiplexer:
         self._subscribers: list[asyncio.Queue] = []
         self._history: list[str] = []
 
+    @property
+    def subscriber_count(self) -> int:
+        """Return the number of active subscribers."""
+        return len(self._subscribers)
+
     def subscribe(self) -> asyncio.Queue:
         """Add a new subscriber."""
         queue: asyncio.Queue = asyncio.Queue()
