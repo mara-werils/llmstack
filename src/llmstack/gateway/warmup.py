@@ -13,6 +13,7 @@ from dataclasses import dataclass, field
 
 logger = logging.getLogger(__name__)
 
+
 @dataclass
 class WarmupConfig:
     """Configuration for the warmup process."""
