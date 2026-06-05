@@ -98,6 +98,14 @@ class BatchJob:
     def total_tokens(self) -> int:
         return sum(r.tokens_used for r in self.results)
 
+    @property
+    def duration_ms(self) -> float:
+        """Return elapsed time in ms. Uses current time if the job is still running."""
+        if not self.started_at:
+            return 0.0
+        end = self.completed_at if self.completed_at else time.time()
+        return (end - self.started_at) * 1000
+
     def to_dict(self) -> dict:
         return {
             "id": self.id,
