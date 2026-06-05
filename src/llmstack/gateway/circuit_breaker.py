@@ -162,6 +162,8 @@ class CircuitBreaker:
 
     def metrics(self) -> dict:
         """Return circuit breaker metrics."""
+        total = self._total_successes + self._total_failures
+        failure_rate = self._total_failures / total if total > 0 else 0.0
         return {
             "state": self._state.value,
             "failure_count": self._failure_count,
@@ -170,6 +172,7 @@ class CircuitBreaker:
             "total_successes": self._total_successes,
             "total_failures": self._total_failures,
             "total_rejections": self._total_rejections,
+            "failure_rate": round(failure_rate, 4),
             "time_in_state_s": round(time.monotonic() - self._last_state_change, 1),
         }
 
