@@ -39,6 +39,12 @@ class StreamMetrics:
         return statistics.mean(self.inter_token_latencies)
 
     @property
+    def p50_inter_token_ms(self) -> float:
+        if not self.inter_token_latencies:
+            return 0.0
+        return statistics.median(self.inter_token_latencies)
+
+    @property
     def p95_inter_token_ms(self) -> float:
         if len(self.inter_token_latencies) < 2:
             return self.avg_inter_token_ms
