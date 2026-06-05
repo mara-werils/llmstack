@@ -49,6 +49,11 @@ class ProviderHealthRecord:
     def uptime_pct(self) -> float:
         return round(self.success_rate * 100, 2)
 
+    @property
+    def is_available(self) -> bool:
+        """Return True when the provider is healthy or degraded (not fully down)."""
+        return self.status in (HealthStatus.HEALTHY, HealthStatus.DEGRADED)
+
     def to_dict(self) -> dict[str, Any]:
         return {
             "provider": self.provider,
