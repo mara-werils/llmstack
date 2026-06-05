@@ -261,11 +261,15 @@ class GuardrailEngine:
     def get_stats(self) -> dict:
         """Get guardrail statistics."""
         with self._lock:
+            category_counts: dict[str, int] = {}
+            for v in self._violations:
+                category_counts[v.category] = category_counts.get(v.category, 0) + 1
             return {
                 **self._stats,
                 "total_rules": len(self._rules),
                 "active_rules": sum(1 for r in self._rules.values() if r.enabled),
                 "total_violations": len(self._violations),
+                "violations_by_category": category_counts,
             }
 
     @staticmethod
