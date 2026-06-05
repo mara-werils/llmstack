@@ -21,6 +21,8 @@ class ChatCompletionRequest(BaseModel):
     top_p: float = Field(default=1.0, ge=0.0, le=1.0)
     tools: list[dict[str, Any]] | None = None
     tool_choice: str | dict[str, Any] | None = None
+    n: int = Field(default=1, ge=1, le=10)
+    user: str | None = None
 
 
 class EmbeddingRequest(BaseModel):
