@@ -214,6 +214,13 @@ class AdvancedRateLimiter:
             reset_at=now + 60,
         )
 
+    def reset_user(self, key: str) -> None:
+        """Clear all counters for a given API key (e.g. after account upgrade)."""
+        self._windows.pop(key, None)
+        self._token_usage.pop(key, None)
+        self._token_reset.pop(key, None)
+        self._concurrent[key] = 0
+
     def release(self, key: str) -> None:
         """Release a concurrent request slot."""
         if self._concurrent[key] > 0:
