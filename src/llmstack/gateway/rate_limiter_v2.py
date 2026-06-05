@@ -8,6 +8,11 @@ from dataclasses import dataclass, field
 from enum import Enum
 
 
+SECONDS_PER_MINUTE = 60
+SECONDS_PER_HOUR = 3600
+SECONDS_PER_DAY = 86400
+
+
 class RateLimitTier(str, Enum):
     FREE = "free"
     STANDARD = "standard"
@@ -151,9 +156,9 @@ class AdvancedRateLimiter:
         composite_key = f"{key}:{endpoint}"
         if "minute" not in self._windows[composite_key]:
             self._windows[composite_key] = {
-                "minute": SlidingWindowCounter(60, config.requests_per_minute + config.burst_size),
-                "hour": SlidingWindowCounter(3600, config.requests_per_hour),
-                "day": SlidingWindowCounter(86400, config.requests_per_day),
+                "minute": SlidingWindowCounter(SECONDS_PER_MINUTE, config.requests_per_minute + config.burst_size),
+                "hour": SlidingWindowCounter(SECONDS_PER_HOUR, config.requests_per_hour),
+                "day": SlidingWindowCounter(SECONDS_PER_DAY, config.requests_per_day),
             }
 
         # Check concurrent requests
@@ -177,7 +182,7 @@ class AdvancedRateLimiter:
         reset_time = self._token_reset.get(key, 0)
         if now > reset_time:
             self._token_usage[key] = 0
-            self._token_reset[key] = now + 86400  # Reset daily
+            self._token_reset[key] = now + SECONDS_PER_DAY  # Reset daily
 
         if tokens > 0:
             if tokens > config.max_tokens_per_request:
