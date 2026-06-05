@@ -54,6 +54,16 @@ class RecordedRequest:
         if not self.timestamp:
             self.timestamp = time.time()
 
+    @property
+    def total_tokens(self) -> int:
+        """Return combined input + output token count."""
+        return self.input_tokens + self.output_tokens
+
+    @property
+    def is_error(self) -> bool:
+        """Return True when the recorded request resulted in an error."""
+        return bool(self.error) or self.status_code >= 400
+
     def to_dict(self) -> dict:
         return {
             "id": self.id,
