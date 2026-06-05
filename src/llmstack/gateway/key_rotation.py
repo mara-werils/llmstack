@@ -35,6 +35,14 @@ class KeyInfo:
     def is_active(self) -> bool:
         return not self.is_expired
 
+    @property
+    def days_until_expiry(self) -> float | None:
+        """Return days remaining until expiry, or None if the key never expires."""
+        if self.expires_at is None:
+            return None
+        remaining = self.expires_at - time.time()
+        return max(0.0, remaining / 86400)
+
     def to_dict(self) -> dict[str, Any]:
         return {
             "key_hash": self.key_hash[:8] + "...",
