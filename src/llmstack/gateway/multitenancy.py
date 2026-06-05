@@ -122,6 +122,18 @@ class TenantManager:
             tenant.active = False
             return True
 
+    @property
+    def tenant_count(self) -> int:
+        """Total number of tenants (including inactive)."""
+        with self._lock:
+            return len(self._tenants)
+
+    @property
+    def active_count(self) -> int:
+        """Number of active tenants."""
+        with self._lock:
+            return sum(1 for t in self._tenants.values() if t.active)
+
     def list_tenants(self, active_only: bool = True) -> list[Tenant]:
         """List all tenants."""
         with self._lock:
