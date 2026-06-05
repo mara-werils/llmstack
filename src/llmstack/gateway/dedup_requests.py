@@ -78,6 +78,12 @@ class RequestDeduplicator:
             )
             self._evict_if_needed()
 
+    @property
+    def cache_size(self) -> int:
+        """Return the number of entries currently held in the dedup cache."""
+        with self._lock:
+            return len(self._cache)
+
     def generate_key(self, method: str, path: str, body: str = "") -> str:
         """Generate an idempotency key from request content."""
         content = f"{method}:{path}:{body}"
