@@ -206,6 +206,11 @@ class StreamBuffer:
 
         return None
 
+    @property
+    def is_empty(self) -> bool:
+        """Return True when the buffer has no pending content."""
+        return len(self.buffer) == 0
+
     def flush(self) -> str:
         """Force flush remaining buffer."""
         result = self.buffer
