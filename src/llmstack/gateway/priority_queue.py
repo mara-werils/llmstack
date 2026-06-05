@@ -133,6 +133,13 @@ class RequestPriorityQueue:
         """Return queue usage as a percentage of max capacity."""
         return (self.size / self._max_size) * 100.0 if self._max_size > 0 else 0.0
 
+    def clear(self) -> int:
+        """Remove all pending requests from the queue. Returns count removed."""
+        with self._lock:
+            count = len(self._heap)
+            self._heap.clear()
+            return count
+
     def get_stats(self) -> dict:
         """Get queue statistics."""
         with self._lock:
