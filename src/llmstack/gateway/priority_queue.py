@@ -128,6 +128,11 @@ class RequestPriorityQueue:
     def is_empty(self) -> bool:
         return self.size == 0
 
+    @property
+    def capacity_pct(self) -> float:
+        """Return queue usage as a percentage of max capacity."""
+        return (self.size / self._max_size) * 100.0 if self._max_size > 0 else 0.0
+
     def get_stats(self) -> dict:
         """Get queue statistics."""
         with self._lock:
