@@ -70,6 +70,13 @@ class WarmupReport:
     def failure_count(self) -> int:
         return sum(1 for r in self.results if not r.success)
 
+    @property
+    def success_rate(self) -> float:
+        """Return fraction of models that warmed up successfully (0.0–1.0)."""
+        if not self.results:
+            return 0.0
+        return self.success_count / len(self.results)
+
     def to_dict(self) -> dict:
         return {
             "total_models": len(self.results),
