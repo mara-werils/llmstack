@@ -18,6 +18,8 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
+MAX_FAILURE_THRESHOLD = 5  # Endpoint is considered unhealthy above this count
+
 
 class WebhookEvent(str, Enum):
     """Events that can trigger webhook notifications."""
@@ -55,12 +57,18 @@ class WebhookEndpoint:
         if not self.created_at:
             self.created_at = time.time()
 
+    @property
+    def is_healthy(self) -> bool:
+        """Return False when consecutive failures exceed the threshold."""
+        return self.failure_count < MAX_FAILURE_THRESHOLD
+
     def to_dict(self) -> dict:
         return {
             "id": self.id,
             "url": self.url,
             "events": [e.value for e in self.events],
             "active": self.active,
+            "healthy": self.is_healthy,
             "description": self.description,
             "created_at": self.created_at,
             "failure_count": self.failure_count,
