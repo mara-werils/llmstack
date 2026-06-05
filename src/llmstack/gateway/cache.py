@@ -181,6 +181,11 @@ class ResponseCache:
             return 0
 
     @property
+    def is_connected(self) -> bool:
+        """Return True if the cache has an active Redis connection."""
+        return self._connected
+
+    @property
     def stats(self) -> CacheStats:
         return self._stats
 
