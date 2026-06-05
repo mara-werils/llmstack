@@ -78,6 +78,16 @@ class CircuitBreaker:
         return self._state
 
     @property
+    def is_open(self) -> bool:
+        """Return True when the circuit is open (requests are being rejected)."""
+        return self._state == CircuitState.OPEN
+
+    @property
+    def is_healthy(self) -> bool:
+        """Return True when the circuit is closed (normal operation)."""
+        return self._state == CircuitState.CLOSED
+
+    @property
     def current_recovery_timeout(self) -> float:
         """Exponential backoff on recovery timeout."""
         timeout = self.base_recovery_timeout * (self.backoff_multiplier**self._consecutive_opens)
