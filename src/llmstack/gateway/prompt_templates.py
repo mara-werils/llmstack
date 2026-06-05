@@ -51,6 +51,17 @@ class PromptTemplate:
         if not self.updated_at:
             self.updated_at = self.created_at
 
+    @property
+    def variable_count(self) -> int:
+        """Return the number of variables in the current template version."""
+        current = self.get_current()
+        return len(current.variables) if current else 0
+
+    @property
+    def version_count(self) -> int:
+        """Return how many versions this template has."""
+        return len(self.versions)
+
     def get_current(self) -> TemplateVersion | None:
         """Return the current version of the template."""
         for v in self.versions:
