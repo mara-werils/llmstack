@@ -251,6 +251,13 @@ class GuardrailEngine:
         with self._lock:
             return list(reversed(self._violations[-limit:]))
 
+    def clear_violations(self) -> int:
+        """Clear all recorded violations. Returns the count that was cleared."""
+        with self._lock:
+            count = len(self._violations)
+            self._violations.clear()
+            return count
+
     def get_stats(self) -> dict:
         """Get guardrail statistics."""
         with self._lock:
