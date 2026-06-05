@@ -97,6 +97,14 @@ class RetryResult:
     def total_attempts(self) -> int:
         return len(self.attempts)
 
+    @property
+    def failed_attempts(self) -> int:
+        return sum(1 for a in self.attempts if not a.success)
+
+    @property
+    def last_attempt(self) -> RetryAttempt | None:
+        return self.attempts[-1] if self.attempts else None
+
     def to_dict(self) -> dict:
         return {
             "success": self.success,
