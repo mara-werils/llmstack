@@ -44,6 +44,18 @@ class PromptPrefixCache:
         self._total_hits = 0
         self._total_misses = 0
 
+    @property
+    def hit_rate(self) -> float:
+        """Return cache hit rate as a fraction between 0.0 and 1.0."""
+        total = self._total_hits + self._total_misses
+        return self._total_hits / total if total > 0 else 0.0
+
+    @property
+    def size(self) -> int:
+        """Return number of cached prefixes."""
+        with self._lock:
+            return len(self._cache)
+
     @staticmethod
     def compute_prefix_hash(messages: list[dict], prefix_length: int = -1) -> str:
         """Compute a hash for the prefix of a message sequence.
