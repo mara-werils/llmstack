@@ -68,6 +68,11 @@ class Conversation:
         if not self.updated_at:
             self.updated_at = self.created_at
 
+    @property
+    def age_days(self) -> float:
+        """Return how many days ago this conversation was created."""
+        return (time.time() - self.created_at) / 86400
+
     def to_dict(self) -> dict:
         return {
             "id": self.id,
