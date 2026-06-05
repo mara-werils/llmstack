@@ -10,8 +10,11 @@ by failing fast instead of timing out on every request.
 from __future__ import annotations
 
 import asyncio
+import logging
 import time
 from enum import Enum
+
+logger = logging.getLogger(__name__)
 
 
 class CircuitState(str, Enum):
@@ -159,6 +162,7 @@ class CircuitBreaker:
         self._half_open_calls = 0
         self._consecutive_opens = 0
         self._last_state_change = time.monotonic()
+        logger.info("Circuit breaker manually reset to CLOSED state")
 
     def metrics(self) -> dict:
         """Return circuit breaker metrics."""
