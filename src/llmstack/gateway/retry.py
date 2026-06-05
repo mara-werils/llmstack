@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import random
 import time
 from dataclasses import dataclass, field
 from typing import Any, Callable
@@ -111,8 +112,6 @@ def _compute_delay(attempt: int, config: RetryConfig) -> float:
     delay = config.initial_delay_ms * (config.exponential_base**attempt)
     delay = min(delay, config.max_delay_ms)
     if config.jitter:
-        import random
-
         delay *= random.uniform(0.5, 1.5)
     return delay
 
