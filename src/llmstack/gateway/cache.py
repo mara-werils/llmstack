@@ -55,6 +55,7 @@ class CacheStats:
         return {
             "hits": self.hits,
             "misses": self.misses,
+            "evictions": self.evictions,
             "hit_rate": round(self.hit_rate, 4),
             "avg_hit_latency_ms": round(self.avg_hit_latency_ms, 2),
         }
