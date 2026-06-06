@@ -109,6 +109,23 @@ class QualityTracker:
 
         self._alerts: deque[QualityAlert] = deque(maxlen=100)
 
+    @property
+    def total_alerts_count(self) -> int:
+        """Return total number of quality alerts fired."""
+        return len(self._alerts)
+
+    @property
+    def tracked_metrics(self) -> list[str]:
+        """Return the list of metrics currently being tracked."""
+        with self._lock:
+            return list(self._global.keys())
+
+    @property
+    def tracked_model_count(self) -> int:
+        """Return the number of models currently tracked."""
+        with self._lock:
+            return len(self._per_model)
+
     def record(
         self,
         scores: dict[str, float],
