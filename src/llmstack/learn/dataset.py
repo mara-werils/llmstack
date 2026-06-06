@@ -76,6 +76,21 @@ class GeneratedDataset:
     stats: dict[str, int] = field(default_factory=dict)
 
     @property
+    def sft_count(self) -> int:
+        """Return the number of SFT training examples."""
+        return len(self.sft_examples)
+
+    @property
+    def dpo_count(self) -> int:
+        """Return the number of DPO preference pairs."""
+        return len(self.dpo_examples)
+
+    @property
+    def is_empty(self) -> bool:
+        """Return True when no training examples have been generated."""
+        return not self.sft_examples and not self.dpo_examples
+
+    @property
     def total_examples(self) -> int:
         return len(self.sft_examples) + len(self.dpo_examples)
 
