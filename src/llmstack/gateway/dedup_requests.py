@@ -52,15 +52,25 @@ class RequestDeduplicator:
         self.config = config or DedupConfig()
         self._cache: dict[str, CachedResponse] = {}
         self._lock = threading.Lock()
+        self._hits = 0
+        self._misses = 0
+
+    @property
+    def hit_rate(self) -> float:
+        """Return the dedup cache hit rate as a fraction between 0.0 and 1.0."""
+        total = self._hits + self._misses
+        return self._hits / total if total > 0 else 0.0
 
     def get_cached(self, key: str) -> CachedResponse | None:
         """Check if a response is cached for this idempotency key."""
         with self._lock:
             cached = self._cache.get(key)
             if cached and (time.time() - cached.created_at) < self.config.ttl:
+                self._hits += 1
                 return cached
             if cached:
                 del self._cache[key]
+            self._misses += 1
             return None
 
     def cache_response(
