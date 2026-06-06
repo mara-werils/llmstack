@@ -47,6 +47,23 @@ class HealthMonitor:
         self._check_history: list[SystemHealth] = []
         self._max_history = 100
 
+    @property
+    def is_healthy(self) -> bool:
+        """Return True if the last health check was HEALTHY."""
+        if not self._check_history:
+            return True  # no checks yet, assume healthy
+        return self._check_history[-1].status == HealthStatus.HEALTHY
+
+    @property
+    def check_count(self) -> int:
+        """Return the total number of health checks performed."""
+        return len(self._check_history)
+
+    @property
+    def uptime_seconds(self) -> float:
+        """Return seconds since the monitor was initialized."""
+        return time.time() - self.start_time
+
     def register_alert(self, callback) -> None:
         """Register a callback for health alerts."""
         self._alert_callbacks.append(callback)
