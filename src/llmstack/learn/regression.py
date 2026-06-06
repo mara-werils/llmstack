@@ -109,6 +109,21 @@ class RegressionDetector:
     def alerts(self) -> list[RegressionAlert]:
         return self._alerts
 
+    @property
+    def is_regressing(self) -> bool:
+        """Return True if any recent alert has moderate or severe severity."""
+        cutoff = time.time() - 3600  # last hour
+        return any(
+            a.severity in (RegressionSeverity.MODERATE, RegressionSeverity.SEVERE)
+            and a.timestamp > cutoff
+            for a in self._alerts
+        )
+
+    @property
+    def alert_count(self) -> int:
+        """Return total number of regression alerts fired."""
+        return len(self._alerts)
+
     def check(self) -> list[RegressionAlert]:
         """Run regression check on the active model version.
 
