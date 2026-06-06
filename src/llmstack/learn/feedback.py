@@ -97,6 +97,20 @@ class Feedback:
         )
 
     @property
+    def is_implicit(self) -> bool:
+        """Return True for implicit feedback signals (copy, regenerate, abandon)."""
+        return self.feedback_type in (
+            FeedbackType.COPY,
+            FeedbackType.REGENERATE,
+            FeedbackType.ABANDON,
+        )
+
+    @property
+    def is_explicit(self) -> bool:
+        """Return True for explicit feedback (thumbs, correction, edit, preference)."""
+        return not self.is_implicit
+
+    @property
     def has_correction(self) -> bool:
         return self.feedback_type in (
             FeedbackType.CORRECTION,
