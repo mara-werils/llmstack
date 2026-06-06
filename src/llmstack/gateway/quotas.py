@@ -30,7 +30,6 @@ class QuotaLimit:
     period: QuotaPeriod = QuotaPeriod.DAILY
     model: str | None = None  # None = all models
 
-
     @property
     def is_unlimited(self) -> bool:
         """Return True when all resource limits are set to 0 (unlimited)."""

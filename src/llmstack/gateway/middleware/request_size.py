@@ -26,8 +26,7 @@ class RequestSizeMiddleware(BaseHTTPMiddleware):
         if content_length and int(content_length) > self.max_bytes:
             client_ip = request.client.host if request.client else "unknown"
             logger.warning(
-                "Rejected oversized request: path=%s client=%s "
-                "content_length=%s max_allowed=%d",
+                "Rejected oversized request: path=%s client=%s content_length=%s max_allowed=%d",
                 request.url.path,
                 client_ip,
                 content_length,

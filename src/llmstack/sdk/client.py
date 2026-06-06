@@ -105,10 +105,7 @@ class Client:
         )
 
     def __repr__(self) -> str:
-        return (
-            f"Client(base_url={self.base_url!r}, "
-            f"api_key={'***' if self.api_key else None!r})"
-        )
+        return f"Client(base_url={self.base_url!r}, api_key={'***' if self.api_key else None!r})"
 
     # -- context manager --------------------------------------------------
 
@@ -378,8 +375,7 @@ class AsyncClient:
 
     def __repr__(self) -> str:
         return (
-            f"AsyncClient(base_url={self.base_url!r}, "
-            f"api_key={'***' if self.api_key else None!r})"
+            f"AsyncClient(base_url={self.base_url!r}, api_key={'***' if self.api_key else None!r})"
         )
 
     # -- context manager --------------------------------------------------

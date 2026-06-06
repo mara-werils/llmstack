@@ -156,7 +156,9 @@ class AdvancedRateLimiter:
         composite_key = f"{key}:{endpoint}"
         if "minute" not in self._windows[composite_key]:
             self._windows[composite_key] = {
-                "minute": SlidingWindowCounter(SECONDS_PER_MINUTE, config.requests_per_minute + config.burst_size),
+                "minute": SlidingWindowCounter(
+                    SECONDS_PER_MINUTE, config.requests_per_minute + config.burst_size
+                ),
                 "hour": SlidingWindowCounter(SECONDS_PER_HOUR, config.requests_per_hour),
                 "day": SlidingWindowCounter(SECONDS_PER_DAY, config.requests_per_day),
             }

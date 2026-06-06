@@ -26,5 +26,7 @@ async def wait_healthy(url: str, timeout: int = 120, interval: float = 2.0) -> b
                 pass
             await asyncio.sleep(interval)
             elapsed += interval
-    logger.warning("Health check timed out for %s after %d attempts (%.0fs)", url, attempts, elapsed)
+    logger.warning(
+        "Health check timed out for %s after %d attempts (%.0fs)", url, attempts, elapsed
+    )
     return False
