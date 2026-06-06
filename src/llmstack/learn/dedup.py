@@ -66,6 +66,23 @@ class FeedbackDeduplicator:
 
     def __init__(self, config: DedupConfig | None = None):
         self.config = config or DedupConfig()
+        self._total_processed = 0
+        self._total_duplicates = 0
+
+    @property
+    def total_processed(self) -> int:
+        """Return total entries processed across all dedup runs."""
+        return self._total_processed
+
+    @property
+    def total_duplicates(self) -> int:
+        """Return total duplicates removed across all runs."""
+        return self._total_duplicates
+
+    @property
+    def overall_dedup_ratio(self) -> float:
+        """Return lifetime deduplication ratio."""
+        return self._total_duplicates / self._total_processed if self._total_processed > 0 else 0.0
 
     def deduplicate(self, entries: list[Feedback]) -> tuple[list[Feedback], DedupStats]:
         """Remove duplicate feedback entries.
@@ -105,6 +122,9 @@ class FeedbackDeduplicator:
         near_dups = len(phase1) - len(phase2)
         stats.duplicates_removed = exact_dups + near_dups
         stats.output_count = len(phase2)
+
+        self._total_processed += stats.total_input
+        self._total_duplicates += stats.duplicates_removed
 
         return phase2, stats
 
