@@ -29,6 +29,16 @@ class ResourceSnapshot:
     disk_used_gb: float
     disk_percent: float
 
+    @property
+    def memory_free_mb(self) -> int:
+        """Return free memory in megabytes."""
+        return self.memory_total_mb - self.memory_used_mb
+
+    @property
+    def disk_free_gb(self) -> float:
+        """Return free disk space in gigabytes."""
+        return self.disk_total_gb - self.disk_used_gb
+
     def to_dict(self) -> dict[str, Any]:
         return {
             "timestamp": self.timestamp,
