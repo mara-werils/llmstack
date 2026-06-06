@@ -123,6 +123,16 @@ class FeedbackCollector:
         """Record that the user copied the response (implicit positive)."""
         return self._submit(FeedbackType.COPY)
 
+    @property
+    def interaction_count(self) -> int:
+        """Return the number of interactions recorded in this session."""
+        return self._interaction_count
+
+    @property
+    def has_pending_interaction(self) -> bool:
+        """Return True when an interaction has been recorded but no feedback given."""
+        return bool(self._current_query)
+
     def should_prompt(self) -> bool:
         """Check if we should prompt for feedback based on interaction count."""
         if not self.config.enabled or not self.config.feedback.interactive_feedback:
