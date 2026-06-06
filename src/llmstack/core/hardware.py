@@ -21,6 +21,21 @@ class HardwareProfile:
     os: Literal["linux", "darwin", "windows"]
     docker_runtime: Literal["nvidia", "default"]
 
+    @property
+    def has_gpu(self) -> bool:
+        """Return True when any GPU (NVIDIA, AMD, or Apple Silicon) is available."""
+        return self.gpu_vendor != "none"
+
+    @property
+    def is_apple_silicon(self) -> bool:
+        """Return True when the host uses Apple Silicon."""
+        return self.gpu_vendor == "apple"
+
+    @property
+    def gpu_vram_gb(self) -> float:
+        """Return GPU VRAM in gigabytes."""
+        return self.gpu_vram_mb / 1024.0
+
 
 def _detect_nvidia() -> tuple[str | None, int]:
     """Return (gpu_name, vram_mb) via nvidia-smi, or (None, 0)."""
