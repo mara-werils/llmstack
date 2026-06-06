@@ -207,6 +207,11 @@ class StreamBuffer:
         return None
 
     @property
+    def pending_size(self) -> int:
+        """Return the number of characters waiting in the buffer."""
+        return len(self.buffer)
+
+    @property
     def is_empty(self) -> bool:
         """Return True when the buffer has no pending content."""
         return len(self.buffer) == 0
