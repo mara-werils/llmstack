@@ -106,6 +106,18 @@ class CostTracker:
         self._alerts: list[BudgetAlert] = []
         self._custom_pricing: dict[str, tuple[float, float]] = {}
 
+    @property
+    def total_cost_usd(self) -> float:
+        """Return the total accumulated cost across all entries."""
+        with self._lock:
+            return sum(e.cost_usd for e in self._entries)
+
+    @property
+    def total_requests(self) -> int:
+        """Return the total number of recorded requests."""
+        with self._lock:
+            return len(self._entries)
+
     def set_pricing(self, model: str, input_per_m: float, output_per_m: float) -> None:
         """Set custom pricing for a model (per 1M tokens)."""
         with self._lock:
