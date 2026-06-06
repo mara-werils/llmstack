@@ -47,6 +47,11 @@ class CacheStats:
         self.misses += 1
 
     @property
+    def total_requests(self) -> int:
+        """Return total cache lookups (hits + misses)."""
+        return self.hits + self.misses
+
+    @property
     def hit_rate(self) -> float:
         total = self.hits + self.misses
         return self.hits / total if total > 0 else 0.0
