@@ -81,6 +81,20 @@ class RouterStats:
                 )
             )
 
+    def reset(self) -> None:
+        """Reset all statistics counters."""
+        with self._lock:
+            self._model_counts.clear()
+            self._tier_counts.clear()
+            self._provider_counts.clear()
+            self._model_latencies.clear()
+            self._tier_latencies.clear()
+            self._total_requests = 0
+            self._largest_model_avoided = 0
+            self._history.clear()
+            self._total_cost_usd = 0.0
+            self._provider_costs.clear()
+
     def summary(self) -> dict:
         """Return a snapshot of routing statistics."""
         with self._lock:
