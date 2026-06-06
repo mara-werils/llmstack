@@ -91,6 +91,17 @@ class CircuitBreaker:
         return self._state == CircuitState.CLOSED
 
     @property
+    def success_rate(self) -> float:
+        """Return the overall success rate as a fraction between 0.0 and 1.0."""
+        total = self._total_successes + self._total_failures
+        return self._total_successes / total if total > 0 else 1.0
+
+    @property
+    def total_requests(self) -> int:
+        """Return total number of requests (successes + failures + rejections)."""
+        return self._total_successes + self._total_failures + self._total_rejections
+
+    @property
     def current_recovery_timeout(self) -> float:
         """Exponential backoff on recovery timeout."""
         timeout = self.base_recovery_timeout * (self.backoff_multiplier**self._consecutive_opens)
