@@ -173,6 +173,16 @@ class QuotaManager:
                     }
             return results
 
+    def reset_usage(self, api_key: str) -> int:
+        """Reset all usage counters for an API key. Returns count of entries cleared."""
+        with self._lock:
+            cleared = 0
+            keys_to_remove = [k for k in self._usage if k.startswith(f"{api_key}:")]
+            for key in keys_to_remove:
+                del self._usage[key]
+                cleared += 1
+            return cleared
+
     def get_limits(self) -> list[dict]:
         """Get all configured limits."""
         with self._lock:
