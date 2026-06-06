@@ -52,6 +52,15 @@ class StreamMetrics:
         idx = min(int(len(sorted_l) * 0.95), len(sorted_l) - 1)
         return sorted_l[idx]
 
+    @property
+    def p99_inter_token_ms(self) -> float:
+        """Return the 99th percentile inter-token latency in milliseconds."""
+        if len(self.inter_token_latencies) < 2:
+            return self.avg_inter_token_ms
+        sorted_l = sorted(self.inter_token_latencies)
+        idx = min(int(len(sorted_l) * 0.99), len(sorted_l) - 1)
+        return sorted_l[idx]
+
     def to_dict(self) -> dict:
         return {
             "request_id": self.request_id,
