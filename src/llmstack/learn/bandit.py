@@ -83,6 +83,19 @@ class ModelBandit:
         self.arms: dict[str, ArmStats] = {model: ArmStats(name=model) for model in models}
         self._category_arms: dict[str, dict[str, ArmStats]] = {}
 
+    @property
+    def best_arm(self) -> str | None:
+        """Return the model name with the highest mean reward, or None if no pulls."""
+        if not self.arms:
+            return None
+        best = max(self.arms.values(), key=lambda a: a.mean_reward)
+        return best.name if best.pulls > 0 else None
+
+    @property
+    def total_pulls(self) -> int:
+        """Return total pulls across all arms."""
+        return sum(a.pulls for a in self.arms.values())
+
     def select(self, category: str = "general") -> str:
         """Select a model for the given query category.
 
