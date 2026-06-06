@@ -129,6 +129,17 @@ class RequestPriorityQueue:
         return self.size == 0
 
     @property
+    def drop_rate(self) -> float:
+        """Return the fraction of requests rejected due to queue overflow."""
+        total = self._total_enqueued + self._total_rejected
+        return self._total_rejected / total if total > 0 else 0.0
+
+    @property
+    def throughput(self) -> int:
+        """Return the total number of processed requests."""
+        return self._total_processed
+
+    @property
     def capacity_pct(self) -> float:
         """Return queue usage as a percentage of max capacity."""
         return (self.size / self._max_size) * 100.0 if self._max_size > 0 else 0.0
