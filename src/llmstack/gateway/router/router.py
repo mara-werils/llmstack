@@ -72,6 +72,16 @@ class ModelRouter:
     # Public API
     # ------------------------------------------------------------------
 
+    @property
+    def model_count(self) -> int:
+        """Return the number of configured models."""
+        return len(self.models)
+
+    @property
+    def available_strategies(self) -> tuple[str, ...]:
+        """Return the tuple of supported routing strategies."""
+        return self.STRATEGIES
+
     def route(self, messages: list[dict]) -> RoutingDecision:
         """Analyse messages and pick the best model."""
         profile = self._classifier.classify(messages)
