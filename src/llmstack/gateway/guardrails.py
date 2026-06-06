@@ -108,6 +108,24 @@ class GuardrailEngine:
         self._violations: list[GuardrailViolation] = []
         self._stats = {"checked": 0, "blocked": 0, "flagged": 0, "redacted": 0}
 
+    @property
+    def rule_count(self) -> int:
+        """Return total number of registered guardrail rules."""
+        with self._lock:
+            return len(self._rules)
+
+    @property
+    def violation_count(self) -> int:
+        """Return total number of recorded violations."""
+        with self._lock:
+            return len(self._violations)
+
+    @property
+    def block_count(self) -> int:
+        """Return total number of requests blocked."""
+        with self._lock:
+            return self._stats["blocked"]
+
     def add_rule(self, rule: GuardrailRule) -> None:
         """Add or update a guardrail rule."""
         with self._lock:
