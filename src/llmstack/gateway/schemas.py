@@ -24,6 +24,21 @@ class ChatCompletionRequest(BaseModel):
     n: int = Field(default=1, ge=1, le=10)
     user: str | None = None
 
+    @property
+    def message_count(self) -> int:
+        """Return the number of messages in this request."""
+        return len(self.messages)
+
+    @property
+    def has_tools(self) -> bool:
+        """Return True when tools are attached to this request."""
+        return bool(self.tools)
+
+    @property
+    def has_system_prompt(self) -> bool:
+        """Return True when the first message is a system prompt."""
+        return bool(self.messages) and self.messages[0].role == "system"
+
 
 class EmbeddingRequest(BaseModel):
     input: str | list[str]
