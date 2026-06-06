@@ -62,6 +62,17 @@ class DriftDetector:
     def __init__(self, store: FeedbackStore, config: DriftConfig | None = None):
         self.store = store
         self.config = config or DriftConfig()
+        self._alert_history: list[DriftAlert] = []
+
+    @property
+    def alert_count(self) -> int:
+        """Return total number of drift alerts fired."""
+        return len(self._alert_history)
+
+    @property
+    def last_alert(self) -> DriftAlert | None:
+        """Return the most recent drift alert, or None."""
+        return self._alert_history[-1] if self._alert_history else None
 
     def check(self) -> list[DriftAlert]:
         """Run all drift checks and return alerts."""
@@ -80,6 +91,7 @@ class DriftDetector:
             return []
 
         # Exclude recent from baseline for fair comparison
+        # and store alerts for history tracking
         baseline = [fb for fb in baseline if fb.timestamp < recent_since]
 
         # Check query distribution drift
@@ -97,6 +109,7 @@ class DriftDetector:
         if feedback_alert:
             alerts.append(feedback_alert)
 
+        self._alert_history.extend(alerts)
         return alerts
 
     def _check_query_distribution(
