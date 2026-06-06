@@ -72,6 +72,20 @@ class WarmupReport:
         return sum(1 for r in self.results if not r.success)
 
     @property
+    def avg_latency_ms(self) -> float:
+        """Return average warmup latency across all models."""
+        if not self.results:
+            return 0.0
+        return sum(r.latency_ms for r in self.results) / len(self.results)
+
+    @property
+    def max_latency_ms(self) -> float:
+        """Return the slowest warmup latency."""
+        if not self.results:
+            return 0.0
+        return max(r.latency_ms for r in self.results)
+
+    @property
     def success_rate(self) -> float:
         """Return fraction of models that warmed up successfully (0.0–1.0)."""
         if not self.results:
