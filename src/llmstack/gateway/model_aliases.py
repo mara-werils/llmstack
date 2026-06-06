@@ -53,6 +53,15 @@ class ModelAliasResolver:
             self._aliases.update(DEFAULT_ALIASES)
         self._aliases.update(self.config.custom_aliases)
 
+    @property
+    def alias_count(self) -> int:
+        """Return the total number of configured aliases."""
+        return len(self._aliases)
+
+    def is_alias(self, model: str) -> bool:
+        """Return True if the model name is a known alias."""
+        return model.lower() in self._aliases
+
     def resolve(self, model: str) -> str:
         """Resolve a model name or alias to the actual model identifier.
 
