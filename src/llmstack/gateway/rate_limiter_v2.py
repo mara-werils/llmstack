@@ -214,6 +214,28 @@ class AdvancedRateLimiter:
             reset_at=now + 60,
         )
 
+    def is_rate_limited(self, key: str, endpoint: str = "default") -> bool:
+        """Return True if the key is currently rate-limited for the endpoint."""
+        tier = self.get_tier(key)
+        config = TIER_CONFIGS[tier]
+        now = time.time()
+        composite_key = f"{key}:{endpoint}"
+
+        if self._concurrent.get(key, 0) >= config.concurrent_requests:
+            return True
+
+        windows = self._windows.get(composite_key)
+        if not windows:
+            return False
+
+        for window in windows.values():
+            cutoff = now - window.window_seconds
+            active = [t for t in window.timestamps if t > cutoff]
+            if len(active) >= window.max_requests:
+                return True
+
+        return False
+
     def reset_user(self, key: str) -> None:
         """Clear all counters for a given API key (e.g. after account upgrade)."""
         self._windows.pop(key, None)
