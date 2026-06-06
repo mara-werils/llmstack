@@ -45,5 +45,8 @@ def resolve_quantization(model: ModelSpec, hw: HardwareProfile) -> str | None:
     if "13b" in model_lower or "14b" in model_lower:
         if hw.gpu_vram_mb < 16_000:
             return "q4_k_m"
+    if "7b" in model_lower or "8b" in model_lower:
+        if hw.gpu_vram_mb < 8_000:
+            return "q4_k_m"
 
     return None
