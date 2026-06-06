@@ -43,6 +43,7 @@ class PromptPrefixCache:
         self._min_prefix_length = min_prefix_length
         self._total_hits = 0
         self._total_misses = 0
+        self._total_evictions = 0
 
     @property
     def hit_rate(self) -> float:
@@ -137,6 +138,7 @@ class PromptPrefixCache:
             # Evict LRU if over capacity
             while len(self._cache) > self._max_entries:
                 self._cache.popitem(last=False)
+                self._total_evictions += 1
 
             return entry
 
@@ -168,6 +170,7 @@ class PromptPrefixCache:
                 "total_hits": self._total_hits,
                 "total_misses": self._total_misses,
                 "hit_rate": round(self._total_hits / total, 4) if total > 0 else 0.0,
+                "total_evictions": self._total_evictions,
                 "top_prefixes": [
                     {
                         "hash": e.hash,
