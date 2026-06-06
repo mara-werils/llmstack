@@ -102,6 +102,15 @@ class RetryResult:
         return sum(1 for a in self.attempts if not a.success)
 
     @property
+    def provider_switches(self) -> int:
+        """Return the number of provider switches during retry."""
+        switches = 0
+        for i in range(1, len(self.attempts)):
+            if self.attempts[i].provider != self.attempts[i - 1].provider:
+                switches += 1
+        return switches
+
+    @property
     def last_attempt(self) -> RetryAttempt | None:
         return self.attempts[-1] if self.attempts else None
 
