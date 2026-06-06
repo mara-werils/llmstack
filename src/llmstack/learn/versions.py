@@ -54,6 +54,15 @@ class ModelVersionManager:
         self.versions_dir = versions_dir or VERSIONS_DIR
         self.versions_dir.mkdir(parents=True, exist_ok=True)
 
+    @property
+    def version_count(self) -> int:
+        """Return the total number of registered model versions."""
+        return len(self.store.get_versions(limit=10000))
+
+    def has_versions(self) -> bool:
+        """Return True if at least one model version exists."""
+        return bool(self.store.get_versions(limit=1))
+
     def create_version(
         self,
         base_model: str,
