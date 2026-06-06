@@ -27,6 +27,32 @@ class QualityScore:
     informativeness: float = 0.0
     overall: float = 0.0
 
+    def passes_threshold(self, min_quality: float = 0.3) -> bool:
+        """Return True if the overall score meets the minimum quality threshold."""
+        return self.overall >= min_quality
+
+    @property
+    def best_dimension(self) -> str:
+        """Return the name of the highest-scoring dimension."""
+        dims = {
+            "completeness": self.completeness,
+            "coherence": self.coherence,
+            "relevance": self.relevance,
+            "informativeness": self.informativeness,
+        }
+        return max(dims, key=dims.get)  # type: ignore[arg-type]
+
+    @property
+    def worst_dimension(self) -> str:
+        """Return the name of the lowest-scoring dimension."""
+        dims = {
+            "completeness": self.completeness,
+            "coherence": self.coherence,
+            "relevance": self.relevance,
+            "informativeness": self.informativeness,
+        }
+        return min(dims, key=dims.get)  # type: ignore[arg-type]
+
     def to_dict(self) -> dict[str, float]:
         return {
             "completeness": round(self.completeness, 4),
