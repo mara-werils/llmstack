@@ -96,6 +96,15 @@ class WorkflowEngine:
         self.custom_workflows: dict[str, dict] = {}
         self._load_custom()
 
+    @property
+    def workflow_count(self) -> int:
+        """Return the total number of available workflows."""
+        return len(BUILTIN_WORKFLOWS) + len(self.custom_workflows)
+
+    def has_workflow(self, name: str) -> bool:
+        """Return True if a workflow with this name exists."""
+        return name in BUILTIN_WORKFLOWS or name in self.custom_workflows
+
     def _load_custom(self) -> None:
         """Load custom workflows from ~/.llmstack/workflows/."""
         workflows_dir = Path.home() / ".llmstack" / "workflows"
