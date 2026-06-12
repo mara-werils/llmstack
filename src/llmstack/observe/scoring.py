@@ -28,6 +28,16 @@ class QualityScore:
     repetition: float = 0.0  # 0-1: repetition level (lower is better)
     overall: float = 0.0  # 0-1: weighted aggregate
 
+    @property
+    def is_refusal(self) -> bool:
+        """Return True if the response is likely a refusal."""
+        return self.refusal >= 0.5
+
+    @property
+    def is_toxic(self) -> bool:
+        """Return True if the response was flagged as potentially harmful."""
+        return self.toxicity >= 0.5
+
     def to_dict(self) -> dict[str, float]:
         return {
             "coherence": round(self.coherence, 4),
