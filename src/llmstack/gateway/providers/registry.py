@@ -21,6 +21,16 @@ class FallbackChain:
     def __len__(self) -> int:
         return len(self.steps)
 
+    @property
+    def is_empty(self) -> bool:
+        """Return True if the chain has no steps."""
+        return not self.steps
+
+    @property
+    def primary(self) -> tuple[str, str] | None:
+        """Return the primary (provider, model) pair, if any."""
+        return self.steps[0] if self.steps else None
+
 
 class ProviderRegistry:
     """Central registry for all configured LLM providers.
