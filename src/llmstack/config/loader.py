@@ -25,6 +25,18 @@ def find_config(directory: Path | None = None) -> Path:
     return path
 
 
+def config_exists(directory: Path | None = None) -> bool:
+    """Return True if llmstack.yaml exists in the given or current directory."""
+    base = directory or Path.cwd()
+    return (base / CONFIG_FILENAME).exists()
+
+
+def has_local_override(directory: Path | None = None) -> bool:
+    """Return True if llmstack.local.yaml exists in the given or current directory."""
+    base = directory or Path.cwd()
+    return (base / LOCAL_CONFIG_FILENAME).exists()
+
+
 def _deep_merge(base: dict, override: dict) -> dict:
     """Recursively merge override dict into base dict."""
     result = base.copy()
