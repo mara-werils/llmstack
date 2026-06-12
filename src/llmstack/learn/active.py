@@ -68,6 +68,16 @@ class ActiveLearner:
         self._last_request_at = 0
         self._asked_queries: list[str] = []
 
+    @property
+    def requests_remaining(self) -> int:
+        """Return how many feedback requests are left this session."""
+        return max(0, self.config.max_requests_per_session - self._session_requests)
+
+    @property
+    def interaction_count(self) -> int:
+        """Return the number of interactions observed this session."""
+        return self._interaction_count
+
     def should_request_feedback(
         self,
         query: str,
