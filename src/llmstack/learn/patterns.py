@@ -99,6 +99,16 @@ class PatternLearner:
         self.patterns_path = patterns_path or PATTERNS_PATH
         self.profile = self._load()
 
+    @property
+    def pattern_count(self) -> int:
+        """Return the number of learned code patterns."""
+        return len(self.profile.patterns)
+
+    @property
+    def high_confidence_patterns(self) -> list[CodePattern]:
+        """Return patterns with confidence above 0.7."""
+        return [p for p in self.profile.patterns if p.confidence > 0.7]
+
     def learn_from_correction(self, original: str, correction: str) -> None:
         """Learn patterns from a code correction pair."""
         if not self._is_code_content(original) and not self._is_code_content(correction):
