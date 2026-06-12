@@ -36,6 +36,21 @@ class SnippetManager:
         self.db_path = Path(db_path)
         self._init_db()
 
+    @property
+    def snippet_count(self) -> int:
+        """Return the total number of stored snippets."""
+        with sqlite3.connect(self.db_path) as conn:
+            return conn.execute("SELECT COUNT(*) FROM snippets").fetchone()[0]
+
+    @property
+    def languages(self) -> list[str]:
+        """Return the distinct languages of stored snippets."""
+        with sqlite3.connect(self.db_path) as conn:
+            rows = conn.execute(
+                "SELECT DISTINCT language FROM snippets WHERE language != '' ORDER BY language"
+            ).fetchall()
+        return [row[0] for row in rows]
+
     def _init_db(self) -> None:
         with sqlite3.connect(self.db_path) as conn:
             conn.execute("""
