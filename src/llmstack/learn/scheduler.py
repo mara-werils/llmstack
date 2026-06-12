@@ -105,6 +105,16 @@ class TrainScheduler:
     def state(self) -> SchedulerState:
         return self._state
 
+    @property
+    def is_training(self) -> bool:
+        """Return True if a training run is currently in progress."""
+        return self._state.is_training
+
+    @property
+    def has_train_callback(self) -> bool:
+        """Return True if a training callback has been registered."""
+        return self._train_callback is not None
+
     def check(self) -> TriggerReason | None:
         """Check if training should be triggered.
 
