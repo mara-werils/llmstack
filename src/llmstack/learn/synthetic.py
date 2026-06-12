@@ -51,6 +51,25 @@ class SyntheticAugmenter:
         self.config = config or AugmentationConfig()
         self._rng = random.Random(self.config.seed)
 
+    @property
+    def enabled_strategies(self) -> list[str]:
+        """Return the names of enabled augmentation strategies."""
+        names: list[str] = []
+        if self.config.paraphrase:
+            names.append("paraphrase")
+        if self.config.word_swap:
+            names.append("word_swap")
+        if self.config.format_variation:
+            names.append("format_variation")
+        if self.config.instruction_variation:
+            names.append("instruction_variation")
+        return names
+
+    @property
+    def strategy_count(self) -> int:
+        """Return the number of enabled augmentation strategies."""
+        return len(self.enabled_strategies)
+
     def augment(
         self,
         examples: list[TrainingExample],
