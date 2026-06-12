@@ -35,6 +35,16 @@ class TrainHyperparams:
     logging_steps: int = 10
     eval_steps: int = 50
 
+    @property
+    def effective_batch_size(self) -> int:
+        """Return the effective batch size (batch size × gradient accumulation)."""
+        return self.batch_size * self.gradient_accumulation_steps
+
+    @property
+    def is_qlora(self) -> bool:
+        """Return True if 4-bit QLoRA quantization is enabled."""
+        return self.use_4bit
+
     def to_dict(self) -> dict:
         return {
             "lora_r": self.lora_r,
