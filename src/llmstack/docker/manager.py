@@ -28,6 +28,17 @@ class DockerManager:
             ) from exc
         self.network_name = network_name
 
+    @property
+    def managed_container_count(self) -> int:
+        """Return the number of llmstack-managed containers."""
+        return len(list(self._managed_containers()))
+
+    def is_service_running(self, service_name: str) -> bool:
+        """Return True if a managed container exists for the service."""
+        return any(
+            c.labels.get(self.LABEL_SERVICE) == service_name for c in self._managed_containers()
+        )
+
     def ensure_network(self) -> None:
         """Create the bridge network if it doesn't exist."""
         try:
