@@ -46,6 +46,20 @@ class CrossValidationResult:
     std_accuracy: float = 0.0
     mean_quality: float = 0.0
 
+    @property
+    def best_fold(self) -> FoldResult | None:
+        """Return the fold with the highest accuracy."""
+        if not self.fold_results:
+            return None
+        return max(self.fold_results, key=lambda f: f.accuracy)
+
+    @property
+    def worst_fold(self) -> FoldResult | None:
+        """Return the fold with the lowest accuracy."""
+        if not self.fold_results:
+            return None
+        return min(self.fold_results, key=lambda f: f.accuracy)
+
     def to_dict(self) -> dict[str, Any]:
         return {
             "num_folds": self.num_folds,
