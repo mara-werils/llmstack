@@ -21,6 +21,16 @@ class GitInfo:
     changed_files: list[str] = field(default_factory=list)
     diff_summary: str = ""
 
+    @property
+    def has_changes(self) -> bool:
+        """Return True if there are uncommitted changes."""
+        return bool(self.changed_files)
+
+    @property
+    def commit_count(self) -> int:
+        """Return the number of recent commits captured."""
+        return len(self.recent_commits)
+
     def to_context(self) -> str:
         """Format git info as context for the LLM prompt."""
         if not self.is_repo:
