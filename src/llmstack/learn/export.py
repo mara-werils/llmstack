@@ -38,6 +38,16 @@ class LearningExporter:
         self.preference_learner = preference_learner
         self.pattern_learner = pattern_learner
 
+    @property
+    def has_preference_learner(self) -> bool:
+        """Return True if a preference learner is attached."""
+        return self.preference_learner is not None
+
+    @property
+    def has_pattern_learner(self) -> bool:
+        """Return True if a pattern learner is attached."""
+        return self.pattern_learner is not None
+
     def export_feedback(
         self,
         output_path: Path,
