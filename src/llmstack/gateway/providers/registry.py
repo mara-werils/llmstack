@@ -43,6 +43,20 @@ class ProviderRegistry:
         self._providers[provider.name] = provider
         logger.info("Registered provider: %s", provider.name)
 
+    @property
+    def provider_count(self) -> int:
+        """Return the number of registered providers."""
+        return len(self._providers)
+
+    @property
+    def model_count(self) -> int:
+        """Return the number of known models across all providers."""
+        return len(self._all_models)
+
+    def has_provider(self, name: str) -> bool:
+        """Return True if a provider with this name is registered."""
+        return name in self._providers
+
     def get_provider(self, name: str) -> Provider | None:
         """Get a provider by name."""
         return self._providers.get(name)
