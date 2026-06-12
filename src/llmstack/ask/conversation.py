@@ -66,6 +66,19 @@ class ConversationEngine:
     def turn_count(self) -> int:
         return len([t for t in self._history if t.role == "user"])
 
+    @property
+    def has_history(self) -> bool:
+        """Return True if the conversation has any recorded turns."""
+        return bool(self._history)
+
+    @property
+    def last_sources(self) -> list[str]:
+        """Return sources cited in the most recent assistant turn."""
+        for turn in reversed(self._history):
+            if turn.role == "assistant":
+                return list(turn.sources)
+        return []
+
     def clear(self) -> None:
         """Clear conversation history."""
         self._history = []
