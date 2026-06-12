@@ -30,6 +30,16 @@ class ABTestResult:
     winner: str = ""
     confidence: str = ""  # "low", "medium", "high"
 
+    @property
+    def total_requests(self) -> int:
+        """Return the combined request count for both models."""
+        return self.requests_a + self.requests_b
+
+    @property
+    def quality_delta(self) -> float:
+        """Return the quality difference of model B over model A."""
+        return self.avg_quality_b - self.avg_quality_a
+
     def to_dict(self) -> dict:
         return {
             "test_name": self.test_name,
