@@ -82,6 +82,16 @@ class OptimizationResult:
     patterns_found: list[str] = field(default_factory=list)
     confidence: float = 0.0
 
+    @property
+    def was_optimized(self) -> bool:
+        """Return True if an optimized variant was produced."""
+        return self.optimized is not None
+
+    @property
+    def improvement_count(self) -> int:
+        """Return the number of suggested improvements."""
+        return len(self.improvements)
+
 
 class PromptOptimizer:
     """Optimizes prompts based on feedback patterns.
