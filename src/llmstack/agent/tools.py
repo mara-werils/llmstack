@@ -48,6 +48,16 @@ class Tool(ABC):
     async def execute(self, **kwargs) -> ToolResult:
         """Execute the tool with the given parameters."""
 
+    @property
+    def param_count(self) -> int:
+        """Return the number of declared parameters."""
+        return len(self.parameters)
+
+    @property
+    def required_params(self) -> list[str]:
+        """Return the names of required parameters."""
+        return [p.name for p in self.parameters if p.required]
+
     def schema(self) -> dict:
         """Return OpenAI-compatible function schema for this tool."""
         properties = {}
