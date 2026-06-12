@@ -47,6 +47,18 @@ class PluginRegistry:
         self.db_path = Path(db_path)
         self._init_db()
 
+    @property
+    def registered_count(self) -> int:
+        """Return the number of locally registered plugins."""
+        with sqlite3.connect(self.db_path) as conn:
+            return conn.execute("SELECT COUNT(*) FROM plugins").fetchone()[0]
+
+    def is_registered(self, name: str) -> bool:
+        """Return True if a plugin with this name is locally registered."""
+        with sqlite3.connect(self.db_path) as conn:
+            row = conn.execute("SELECT 1 FROM plugins WHERE name = ?", (name,)).fetchone()
+        return row is not None
+
     def _init_db(self) -> None:
         with sqlite3.connect(self.db_path) as conn:
             conn.execute("""
