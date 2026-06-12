@@ -75,6 +75,16 @@ class CurriculumScheduler:
         self.config = config or CurriculumConfig()
         self._stages: list[CurriculumStage] = []
 
+    @property
+    def stage_count(self) -> int:
+        """Return the number of curriculum stages."""
+        return len(self._stages)
+
+    @property
+    def total_examples(self) -> int:
+        """Return the total number of examples across all stages."""
+        return sum(stage.count for stage in self._stages)
+
     def score_difficulty(self, feedback: Feedback) -> float:
         """Score the difficulty of a training example (0.0 = easy, 1.0 = hard).
 
