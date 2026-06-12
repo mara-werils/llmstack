@@ -107,6 +107,16 @@ class PromptOptimizer:
         self._variants: dict[str, PromptVariant] = {}
         self._load_variants()
 
+    @property
+    def variant_count(self) -> int:
+        """Return the number of tracked prompt variants."""
+        return len(self._variants)
+
+    @property
+    def active_variants(self) -> list[PromptVariant]:
+        """Return the currently active prompt variants."""
+        return [v for v in self._variants.values() if v.is_active]
+
     def register_prompt(
         self,
         name: str,
