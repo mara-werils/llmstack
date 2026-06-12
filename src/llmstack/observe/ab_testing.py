@@ -108,6 +108,18 @@ class ABTestManager:
                 test.model_b: _ModelMetrics(),
             }
 
+    @property
+    def test_count(self) -> int:
+        """Return the number of registered A/B tests."""
+        with self._lock:
+            return len(self._tests)
+
+    @property
+    def active_test_count(self) -> int:
+        """Return the number of active A/B tests."""
+        with self._lock:
+            return sum(1 for t in self._tests.values() if t.active)
+
     def get_test(self, name: str) -> ABTest | None:
         with self._lock:
             return self._tests.get(name)
