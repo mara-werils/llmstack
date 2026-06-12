@@ -32,6 +32,16 @@ class BM25:
         self._avg_dl: float = 0.0
         self._n_docs: int = 0
 
+    @property
+    def doc_count(self) -> int:
+        """Return the number of indexed documents."""
+        return self._n_docs
+
+    @property
+    def vocabulary_size(self) -> int:
+        """Return the number of distinct terms in the index."""
+        return len(self._doc_freqs)
+
     def index(self, chunks: list[TextChunk]) -> None:
         """Build the BM25 index from chunks."""
         self._corpus = []
