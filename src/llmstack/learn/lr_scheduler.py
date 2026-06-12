@@ -65,6 +65,19 @@ class LearningRateScheduler:
         self.config = config or LRSchedulerConfig()
 
     @property
+    def has_warmup(self) -> bool:
+        """Return True if the schedule includes a warmup phase."""
+        return self.config.schedule in (
+            ScheduleType.LINEAR_WARMUP,
+            ScheduleType.COSINE_WITH_WARMUP,
+        )
+
+    @property
+    def final_lr(self) -> float:
+        """Return the learning rate at the last training step."""
+        return self.get_lr(self.config.total_steps - 1)
+
+    @property
     def warmup_steps_abs(self) -> int:
         """Get warmup steps as absolute count."""
         ws = self.config.warmup_steps
