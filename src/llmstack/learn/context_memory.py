@@ -93,6 +93,16 @@ class ContextMemory:
         self.memory_path = memory_path or CONTEXT_MEMORY_PATH
         self.profile = self._load()
 
+    @property
+    def signal_count(self) -> int:
+        """Return the number of tracked context signals."""
+        return len(self.profile.signals)
+
+    @property
+    def tracked_patterns(self) -> list[str]:
+        """Return the distinct query patterns seen so far."""
+        return sorted({s.query_pattern for s in self.profile.signals.values()})
+
     def record_context_use(
         self,
         query: str,
