@@ -41,6 +41,18 @@ class LengthPreference:
         self.samples = n
         self._update_tendency()
 
+    @property
+    def has_signal(self) -> bool:
+        """Return True if enough samples exist to infer a tendency."""
+        return self.samples >= 3
+
+    @property
+    def length_ratio(self) -> float:
+        """Return the ratio of preferred to rejected response length."""
+        if self.avg_rejected_length == 0:
+            return 1.0
+        return self.avg_preferred_length / self.avg_rejected_length
+
     def _update_tendency(self) -> None:
         if self.samples < 3:
             self.tendency = "neutral"
