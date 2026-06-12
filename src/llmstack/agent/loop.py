@@ -85,6 +85,16 @@ class AgentLoop:
         self._messages: list[dict] = []
         self._step = 0
 
+    @property
+    def current_step(self) -> int:
+        """Return the current step number of the agent run."""
+        return self._step
+
+    @property
+    def message_count(self) -> int:
+        """Return the number of messages in the conversation history."""
+        return len(self._messages)
+
     async def run(self, task: str) -> AsyncIterator[AgentEvent]:
         """Execute the agent task, yielding events as they occur."""
         system = self.config.system_prompt or _DEFAULT_SYSTEM
