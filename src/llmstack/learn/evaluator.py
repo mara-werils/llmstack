@@ -32,6 +32,16 @@ class EvalResult:
     overall_score: float = 0.0
     per_example: list[dict[str, Any]] = field(default_factory=list)
 
+    @property
+    def is_empty(self) -> bool:
+        """Return True if no examples were evaluated."""
+        return self.total_examples == 0
+
+    @property
+    def detail_count(self) -> int:
+        """Return the number of recorded per-example details."""
+        return len(self.per_example)
+
     def to_dict(self) -> dict[str, Any]:
         return {
             "model_version": self.model_version,
