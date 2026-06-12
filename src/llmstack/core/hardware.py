@@ -36,6 +36,16 @@ class HardwareProfile:
         """Return GPU VRAM in gigabytes."""
         return self.gpu_vram_mb / 1024.0
 
+    @property
+    def ram_gb(self) -> float:
+        """Return system RAM in gigabytes."""
+        return self.ram_mb / 1024.0
+
+    @property
+    def has_nvidia_runtime(self) -> bool:
+        """Return True when Docker has the NVIDIA runtime configured."""
+        return self.docker_runtime == "nvidia"
+
 
 def _detect_nvidia() -> tuple[str | None, int]:
     """Return (gpu_name, vram_mb) via nvidia-smi, or (None, 0)."""
