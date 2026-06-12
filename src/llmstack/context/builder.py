@@ -20,6 +20,16 @@ class ContextChunk:
     line_end: int
     tokens_estimate: int
 
+    @property
+    def line_count(self) -> int:
+        """Return the number of lines in this chunk."""
+        return self.line_end - self.line_start + 1
+
+    @property
+    def is_relevant(self) -> bool:
+        """Return True if the chunk passed the relevance threshold."""
+        return self.relevance > 0.1
+
 
 class ContextBuilder:
     """Build optimized context for LLM prompts from a codebase."""
