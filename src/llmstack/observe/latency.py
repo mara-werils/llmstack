@@ -45,6 +45,19 @@ class LatencyTracker:
             if len(self._samples) > self.config.max_samples:
                 self._samples = self._samples[-self.config.max_samples :]
 
+    @property
+    def sample_count(self) -> int:
+        """Return the number of samples within the current window."""
+        return len(self._get_window_values())
+
+    @property
+    def mean_latency(self) -> float:
+        """Return the mean latency within the current window."""
+        values = self._get_window_values()
+        if not values:
+            return 0.0
+        return sum(values) / len(values)
+
     def percentile(self, p: float) -> float:
         """Compute the p-th percentile of recorded latencies.
 
