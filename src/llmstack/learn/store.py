@@ -105,6 +105,16 @@ class FeedbackStore:
             self._conn.execute("PRAGMA busy_timeout=5000")
         return self._conn
 
+    @property
+    def is_connected(self) -> bool:
+        """Return True if a database connection is currently open."""
+        return self._conn is not None
+
+    @property
+    def db_size_bytes(self) -> int:
+        """Return the size of the database file in bytes."""
+        return self.db_path.stat().st_size if self.db_path.exists() else 0
+
     def _ensure_schema(self) -> None:
         """Create tables if they don't exist."""
         self.conn.executescript(_SCHEMA_SQL)
