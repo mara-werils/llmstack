@@ -30,8 +30,8 @@
 ---
 
 ```bash
-pip install llmstack-cli
-llmstack ask -i ./src/    # start chatting with your codebase
+brew install mara-werils/llmstack/llmstack   # or: pipx install llmstack-cli
+llmstack ask -i ./src/                         # start chatting with your codebase
 ```
 
 ## Ask Your Codebase Anything
@@ -121,16 +121,29 @@ llmstack ask "Explain the architecture" ./src/ --no-git
 ## Quick Start
 
 ```bash
-# Install
-pip install llmstack-cli
+# Install (pick one)
+brew install mara-werils/llmstack/llmstack   # macOS / Linux (Homebrew)
+pipx install llmstack-cli                     # isolated, no venv to manage
+uv tool install llmstack-cli                  # same, via uv
+pip install llmstack-cli                       # plain pip
 
 # Chat with your codebase (just needs Ollama)
 llmstack ask -i ./src/
 
 # Full LLM stack with smart routing
-llmstack init --preset router
+llmstack init            # interactive setup wizard
 llmstack up
 ```
+
+### Install options
+
+| Method | Command | Best for |
+|--------|---------|----------|
+| **Homebrew** | `brew install mara-werils/llmstack/llmstack` | macOS / Linux, auto-updates |
+| **pipx** | `pipx install llmstack-cli` | Isolated CLI, no venv juggling |
+| **uv** | `uv tool install llmstack-cli` | uv users |
+| **pip** | `pip install llmstack-cli` | Inside an existing environment |
+| **Docker** | `docker run -p 8000:8000 ghcr.io/mara-werils/llmstack:latest` | Running the gateway as a server |
 
 ---
 
