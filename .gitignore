@@ -21,3 +21,7 @@ llmstack.local.yaml
 .llmstack-index/
 finetune-output/
 *.gguf
+
+# Claude Code local artifacts and uv lockfile
+.claude/
+uv.lock
