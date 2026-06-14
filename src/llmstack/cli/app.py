@@ -78,12 +78,15 @@ def quickstart(
 def init(
     preset: str = typer.Option(None, "--preset", "-p", help="Preset: chat, rag, agent, secure"),
     directory: str = typer.Option(None, "--dir", "-d", help="Target directory"),
+    yes: bool = typer.Option(
+        False, "--yes", "-y", help="Skip the interactive wizard and use defaults"
+    ),
 ) -> None:
     """Create a new llmstack.yaml configuration file."""
     from pathlib import Path
     from llmstack.cli.commands.init import init as _init
 
-    _init(preset=preset, directory=Path(directory) if directory else None)
+    _init(preset=preset, directory=Path(directory) if directory else None, yes=yes)
 
 
 @app.command(name="config")
