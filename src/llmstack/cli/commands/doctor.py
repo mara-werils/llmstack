@@ -11,7 +11,6 @@ from __future__ import annotations
 import os
 import platform
 import shutil
-import socket
 import sys
 
 import httpx
@@ -19,6 +18,7 @@ import psutil
 
 from llmstack.cli.console import console, banner, success, failure, warn, info
 from llmstack.core.hardware import detect_hardware
+from llmstack.core.preflight import is_port_available, port_owner
 
 
 # ---------------------------------------------------------------------------
@@ -28,8 +28,7 @@ from llmstack.core.hardware import detect_hardware
 
 def _check_port(port: int) -> bool:
     """Return True if port is available (not in use)."""
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        return s.connect_ex(("127.0.0.1", port)) != 0
+    return is_port_available(port)
 
 
 def _check_url(url: str, timeout: int = 3) -> bool:
@@ -225,7 +224,9 @@ def doctor() -> None:
             if service == "Ollama" and _check_url(f"http://localhost:{port}"):
                 success(f"Port {port} ({service}) is in use by {service}")
             else:
-                warn(f"Port {port} ({service}) is in use by another process")
+                owner = port_owner(port)
+                held_by = owner or "another process"
+                warn(f"Port {port} ({service}) is in use by {held_by}")
                 warnings += 1
 
     # ── Configuration ─────────────────────────────────────────────────
