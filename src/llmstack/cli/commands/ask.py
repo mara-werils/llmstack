@@ -70,34 +70,37 @@ async def _ask_async(
     from llmstack.ask.embeddings import LocalEmbeddings
     from llmstack.ask.hybrid_search import HybridSearcher
     from llmstack.ask.index import PersistentIndex
+    from llmstack.ask.ollama import check_ollama, ensure_models, install_hint
 
     # ── Check Ollama ─────────────────────────────────────────────────────
     ollama_url = ollama_url.rstrip("/")
-    try:
-        async with httpx.AsyncClient(timeout=5) as client:
-            resp = await client.get(f"{ollama_url}/api/version")
-            if resp.status_code != 200:
-                console.print("[error]Ollama is not responding correctly.[/]")
-                raise typer.Exit(1)
-    except httpx.ConnectError:
+    status = await check_ollama(ollama_url)
+    if not status.reachable:
         console.print(
             Panel(
-                "[error]Cannot connect to Ollama.[/]\n\n"
-                "Make sure Ollama is running:\n  [bold cyan]ollama serve[/]\n\n"
-                f"Tried: {ollama_url}",
-                title="Connection Error",
+                install_hint(status, ollama_url),
+                title="Ollama unavailable",
                 border_style="red",
             )
         )
-        raise typer.Exit(1)
-    except httpx.HTTPError as exc:
-        console.print(f"[error]Error connecting to Ollama: {exc}[/]")
         raise typer.Exit(1)
 
     console.print()
     console.print(
         f"[bold]llmstack ask[/]  model=[cyan]{model}[/]  embeddings=[cyan]{embed_model}[/]"
     )
+
+    # ── Ensure required models are present (download up front, with progress) ──
+    # Surfacing a missing model here — before parsing and indexing — avoids a
+    # late 404 after the user has already waited through the whole pipeline.
+    try:
+        await ensure_models(ollama_url, [model, embed_model])
+    except httpx.HTTPError as exc:
+        console.print(f"[error]Failed to download a required model: {exc}[/]")
+        raise typer.Exit(1)
+    except RuntimeError as exc:
+        console.print(f"[error]Ollama could not pull a model: {exc}[/]")
+        raise typer.Exit(1)
 
     # ── Handle stdin ─────────────────────────────────────────────────────
     stdin_chunks: list[TextChunk] = []
