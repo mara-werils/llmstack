@@ -16,6 +16,10 @@ data/
 *.db
 .ruff_cache/
 .pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
 llmstack.yaml
 llmstack.local.yaml
 .llmstack-index/
