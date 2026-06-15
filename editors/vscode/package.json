@@ -1,0 +1,105 @@
+{
+  "name": "llmstack-vscode",
+  "displayName": "LLMStack — Local AI",
+  "description": "Local-first AI coding assistant. Talks to your own LLMStack gateway — code never leaves your machine.",
+  "version": "0.1.0",
+  "publisher": "llmstack",
+  "license": "Apache-2.0",
+  "icon": "media/icon.png",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Machine Learning",
+    "Programming Languages",
+    "Other"
+  ],
+  "keywords": [
+    "ai",
+    "local-ai",
+    "ollama",
+    "copilot",
+    "privacy",
+    "llm"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mara-werils/llmstack.git",
+    "directory": "editors/vscode"
+  },
+  "bugs": {
+    "url": "https://github.com/mara-werils/llmstack/issues"
+  },
+  "homepage": "https://github.com/mara-werils/llmstack",
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "llmstack.ask",
+        "title": "LLMStack: Ask about selection"
+      },
+      {
+        "command": "llmstack.explain",
+        "title": "LLMStack: Explain selected code"
+      },
+      {
+        "command": "llmstack.checkHealth",
+        "title": "LLMStack: Check gateway health"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "llmstack.explain",
+          "when": "editorHasSelection",
+          "group": "llmstack@1"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "llmstack.ask",
+        "key": "ctrl+alt+a",
+        "mac": "cmd+alt+a",
+        "when": "editorTextFocus"
+      }
+    ],
+    "configuration": {
+      "title": "LLMStack",
+      "properties": {
+        "llmstack.gatewayUrl": {
+          "type": "string",
+          "default": "http://localhost:8000",
+          "description": "Base URL of your local LLMStack gateway."
+        },
+        "llmstack.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "API key for the gateway (only needed if gateway.auth=api_key)."
+        },
+        "llmstack.model": {
+          "type": "string",
+          "default": "llama3.2",
+          "description": "Model name to use for completions."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "typecheck": "tsc --noEmit -p ./",
+    "package": "vsce package --no-dependencies",
+    "publish:ovsx": "ovsx publish --no-dependencies"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "^3.0.0",
+    "ovsx": "^0.9.0",
+    "typescript": "^5.4.0"
+  }
+}
