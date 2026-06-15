@@ -806,6 +806,17 @@ def env_check_cmd(
     _env_check(target=target, fix=fix)
 
 
+@app.command(name="verify-private")
+def verify_private_cmd(
+    target: str = typer.Argument(None, help="Directory containing llmstack.yaml"),
+    json_output: bool = typer.Option(False, "--json", help="Emit machine-readable JSON"),
+) -> None:
+    """Prove the stack runs 100% locally — audit config for any external egress."""
+    from llmstack.cli.commands.verify_private import verify_private as _verify_private
+
+    _verify_private(target=target, json_output=json_output)
+
+
 @app.command(name="git-stats")
 def git_stats_cmd(
     days: int = typer.Option(30, "--days", "-d", help="Number of days to analyze"),
