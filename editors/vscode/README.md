@@ -1,0 +1,58 @@
+# LLMStack for VS Code
+
+Local-first AI coding assistance, right inside your editor. The extension talks
+to **your own** [LLMStack](https://github.com/mara-werils/llmstack) gateway, so
+your code and prompts **never leave your machine**.
+
+> Works in VS Code, Cursor, Windsurf, and any OpenVSX-compatible editor.
+
+## Features
+
+- **Ask about selection** (`Cmd/Ctrl+Alt+A`) — ask anything; the current
+  selection is sent as context.
+- **Explain selected code** — right-click any selection → _LLMStack: Explain
+  selected code_.
+- **Gateway health** — a status-bar indicator shows whether your local gateway
+  is reachable.
+- **Streaming** — responses stream token-by-token into the LLMStack output
+  channel.
+
+## Requirements
+
+A running LLMStack gateway:
+
+```bash
+brew install mara-werils/llmstack/llmstack   # or: pipx install llmstack-cli
+llmstack init
+llmstack up
+```
+
+By default the extension connects to `http://localhost:8000`.
+
+## Settings
+
+| Setting | Default | Description |
+| --- | --- | --- |
+| `llmstack.gatewayUrl` | `http://localhost:8000` | Base URL of your gateway |
+| `llmstack.apiKey` | _(empty)_ | API key (only if `gateway.auth=api_key`) |
+| `llmstack.model` | `llama3.2` | Model used for completions |
+
+## Privacy
+
+Every request goes to the gateway URL you configure — by default a process on
+`localhost`. Run `llmstack verify-private` to audit that your stack keeps all
+data local.
+
+## Development
+
+```bash
+cd editors/vscode
+npm install
+npm run build          # compile to dist/
+npm run package        # produce a .vsix
+npm run publish:ovsx   # publish to OpenVSX (CI does this on release)
+```
+
+## License
+
+Apache-2.0
