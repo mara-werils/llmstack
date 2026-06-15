@@ -75,7 +75,7 @@
 - [x] Prompt prefix caching for shared system prompts
 - [x] Model warm-up on startup for instant first requests
 - [x] Request replay system for debugging and testing
-- [ ] TypeScript/JavaScript SDK
+- [x] TypeScript/JavaScript SDK (`@llmstack/client`)
 - [ ] REST API for stack management
 
 ## v0.8 — Adaptive Learning Pipeline (Shipped)
@@ -94,6 +94,20 @@
 - [x] Latency percentile tracking (p50, p95, p99)
 - [x] Error rate monitoring with automatic alerting
 - [x] System resource monitor (CPU, memory, disk)
+
+## v0.9 — Distribution & Privacy (In progress)
+
+> Strategy: win on the two proven levers of adoption — being **inside the IDE**
+> and a **frictionless, provably-private first run**. See `PRODUCT_STRATEGY.md`.
+
+- [x] Frictionless onboarding: `init` wizard, `up` pre-flight checks, auto model download
+- [x] Distribution: Homebrew tap, PyPI, GHCR (auto-published on release)
+- [x] **`llmstack verify-private`** — audit config for any external data egress
+- [x] VS Code / OpenVSX extension (Ask, Explain, gateway health) — `editors/vscode`
+- [x] Gateway test coverage backfill (replay, health, providers, proxy, cache, …)
+- [ ] Publish extension to OpenVSX + VS Marketplace
+- [ ] JetBrains plugin
+- [ ] Open benchmarks vs Cursor/Copilot on privacy + local latency
 
 ## v1.0 — Stable Release
 
