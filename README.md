@@ -116,6 +116,15 @@ llmstack ask "Explain the architecture" ./src/ --no-git
 
 **20+ file types:** Python, JavaScript, TypeScript, Go, Rust, Java, C/C++, Ruby, PHP, Swift, Kotlin, PDF, DOCX, Markdown, HTML, JSON, YAML, TOML, CSV, logs, and more.
 
+**Private by default** — everything runs on your machine. `llmstack verify-private` audits your config and fails loudly if anything (a cloud provider, a webhook, a network-capable agent tool, wide-open CORS) could send code or prompts off the box:
+
+```bash
+llmstack verify-private          # human-readable report, non-zero exit if not private
+llmstack verify-private --json   # machine-readable, for CI gates
+```
+
+**In your editor** — the [VS Code / OpenVSX extension](editors/vscode) brings Ask and Explain commands to VS Code, Cursor, and Windsurf, all routed through your local gateway.
+
 ---
 
 ## Quick Start
@@ -456,6 +465,7 @@ Auto hardware detection:
 | `llmstack export` | Generate docker-compose.yml |
 | `llmstack logs <service>` | Stream service logs |
 | `llmstack doctor` | Diagnose system issues |
+| `llmstack verify-private` | Audit config for any external data egress |
 
 ## API Endpoints
 
