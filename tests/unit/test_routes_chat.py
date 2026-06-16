@@ -158,10 +158,13 @@ class TestNonStreaming:
         assert resp.status_code == 200
         assert resp.headers["X-Cache"] == "HIT"
         assert resp.headers["X-Cache-Age"] == "42"
-        # The cache-hit branch is exercised; the body is already serialized by
-        # JSONResponse before the pop() cleanup, so the markers remain in the
-        # rendered payload — assert the response is still valid.
-        assert resp.json()["id"] == "cmpl-2"
+        # Internal cache markers are stripped before serialization; only the
+        # public payload is returned, with cache status conveyed via headers.
+        body = resp.json()
+        assert body["id"] == "cmpl-2"
+        assert "_cached" not in body
+        assert "_cached_at" not in body
+        assert "_cache_age_s" not in body
 
     def test_cost_header_emitted(self, monkeypatch):
         async def _proxy(payload, stream, provider_name):

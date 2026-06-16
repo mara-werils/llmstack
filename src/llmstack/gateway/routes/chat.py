@@ -263,13 +263,19 @@ async def chat_completions(request: Request):
                 cached=isinstance(result, dict) and result.get("_cached", False),
             )
 
-            # Indicate cache hit in response headers
-            response = JSONResponse(content=result)
-            if isinstance(result, dict) and result.get("_cached"):
-                response.headers["X-Cache"] = "HIT"
-                response.headers["X-Cache-Age"] = str(result.pop("_cache_age_s", 0))
+            # Strip internal cache markers from the body BEFORE serializing
+            # (JSONResponse renders content on construction), then surface the
+            # cache status via headers.
+            cached = isinstance(result, dict) and bool(result.get("_cached"))
+            cache_age = result.pop("_cache_age_s", 0) if isinstance(result, dict) else 0
+            if isinstance(result, dict):
                 result.pop("_cached", None)
                 result.pop("_cached_at", None)
+
+            response = JSONResponse(content=result)
+            if cached:
+                response.headers["X-Cache"] = "HIT"
+                response.headers["X-Cache-Age"] = str(cache_age)
             else:
                 response.headers["X-Cache"] = "MISS"
 
