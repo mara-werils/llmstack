@@ -6,6 +6,7 @@ import pytest
 
 from llmstack.core.resource_monitor import (
     ResourceMonitor,
+    ResourceSnapshot,
     ResourceThresholds,
 )
 
@@ -73,3 +74,51 @@ class TestResourceMonitor:
         for _ in range(10):
             mon.snapshot()
         assert len(mon._history) == 5
+
+    def test_check_health_cpu_warning_only(self, monkeypatch):
+        # High CPU but normal memory/disk usage -> warning from CPU branch alone.
+        monkeypatch.setattr("psutil.cpu_percent", lambda interval=0: 99.0)
+        mon = ResourceMonitor(ResourceThresholds(cpu_warning_pct=50.0))
+        health = mon.check_health()
+        assert health["status"] == "warning"
+        assert any("CPU" in w for w in health["warnings"])
+
+    def test_check_health_with_critical_thresholds(self):
+        thresholds = ResourceThresholds(
+            memory_warning_pct=0.5,
+            memory_critical_pct=0.5,
+            disk_warning_pct=0.5,
+            disk_critical_pct=0.5,
+        )
+        mon = ResourceMonitor(thresholds)
+        health = mon.check_health()
+        assert health["status"] == "critical"
+        assert any("CRITICAL" in w for w in health["warnings"])
+
+
+class TestResourceSnapshot:
+    def test_memory_free_mb(self):
+        snap = ResourceSnapshot(
+            timestamp=0,
+            cpu_percent=0,
+            memory_total_mb=1000,
+            memory_used_mb=400,
+            memory_percent=40.0,
+            disk_total_gb=100,
+            disk_used_gb=30,
+            disk_percent=30.0,
+        )
+        assert snap.memory_free_mb == 600
+
+    def test_disk_free_gb(self):
+        snap = ResourceSnapshot(
+            timestamp=0,
+            cpu_percent=0,
+            memory_total_mb=1000,
+            memory_used_mb=400,
+            memory_percent=40.0,
+            disk_total_gb=100,
+            disk_used_gb=30,
+            disk_percent=30.0,
+        )
+        assert snap.disk_free_gb == 70

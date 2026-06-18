@@ -129,3 +129,22 @@ class TestQuotaManager:
         assert len(limits) == 1
         assert limits[0]["api_key"] == "key1"
         assert limits[0]["period"] == "daily"
+
+    def test_reset_usage(self, manager):
+        manager.record_usage("key1", model="gpt-4o", tokens=100, cost_usd=0.01)
+        cleared = manager.reset_usage("key1")
+        assert cleared >= 1
+        assert manager.get_usage("key1") == {}
+
+    def test_reset_usage_no_entries(self, manager):
+        assert manager.reset_usage("never-used") == 0
+
+
+class TestQuotaLimit:
+    def test_is_unlimited_true_by_default(self):
+        assert QuotaLimit().is_unlimited is True
+
+    def test_is_unlimited_false_with_any_limit(self):
+        assert QuotaLimit(max_requests=10).is_unlimited is False
+        assert QuotaLimit(max_tokens=10).is_unlimited is False
+        assert QuotaLimit(max_cost_usd=1.0).is_unlimited is False

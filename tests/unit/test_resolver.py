@@ -75,3 +75,27 @@ def test_embedding_ollama_on_cpu():
     hw = _make_hw(gpu_vendor="none")
     spec = EmbeddingSpec(name="bge-m3", backend="auto")
     assert resolve_embedding_backend(spec, hw) == "ollama"
+
+
+def test_explicit_embedding_backend_honored():
+    hw = _make_hw(gpu_vendor="none")
+    spec = EmbeddingSpec(name="bge-m3", backend="tei")
+    assert resolve_embedding_backend(spec, hw) == "tei"
+
+
+def test_explicit_quantization_honored():
+    hw = _make_hw(gpu_vendor="nvidia", gpu_vram_mb=24576)
+    model = ModelSpec(name="llama3.1:70b", backend="auto", quantization="q8_0")
+    assert resolve_quantization(model, hw) == "q8_0"
+
+
+def test_auto_quantizes_13b_on_small_gpu():
+    hw = _make_hw(gpu_vendor="nvidia", gpu_vram_mb=8000)
+    model = ModelSpec(name="model-13b", backend="auto")
+    assert resolve_quantization(model, hw) == "q4_k_m"
+
+
+def test_auto_quantizes_8b_on_small_gpu():
+    hw = _make_hw(gpu_vendor="nvidia", gpu_vram_mb=4000)
+    model = ModelSpec(name="model-8b", backend="auto")
+    assert resolve_quantization(model, hw) == "q4_k_m"

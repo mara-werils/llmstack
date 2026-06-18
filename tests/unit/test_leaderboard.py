@@ -66,6 +66,20 @@ class TestModelMetrics:
         assert d["total_requests"] == 1
         assert "p50_latency_ms" in d
 
+    def test_empty_metrics_return_zero(self):
+        m = ModelMetrics(model="empty")
+        assert m.avg_latency_ms == 0.0
+        assert m.p50_latency_ms == 0.0
+        assert m.avg_quality == 0.0
+        assert m.avg_cost_per_request == 0.0
+        assert m.error_rate == 0.0
+        assert m.tokens_per_second == 0.0
+
+    def test_tokens_per_second_zero_when_no_tokens(self):
+        m = ModelMetrics(model="test")
+        m.record(latency_ms=100, tokens=0)
+        assert m.tokens_per_second == 0.0
+
 
 class TestLeaderboard:
     def test_rankings_by_quality(self, lb):

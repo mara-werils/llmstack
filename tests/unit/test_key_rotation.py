@@ -7,6 +7,7 @@ import time
 import pytest
 
 from llmstack.gateway.key_rotation import (
+    KeyInfo,
     KeyRotationManager,
     RotationConfig,
 )
@@ -90,3 +91,36 @@ class TestKeyRotationManager:
 
     def test_get_keys_empty_client(self, manager):
         assert manager.get_client_keys("nobody") == []
+
+    def test_days_until_expiry_none_for_permanent_key(self, manager):
+        ki = manager.register_key("c1", "key1")
+        assert ki.days_until_expiry is None
+
+    def test_days_until_expiry_for_expiring_key(self, manager):
+        ki = KeyInfo(key_hash="h", expires_at=time.time() + 86400 * 2)
+        assert 1.9 < ki.days_until_expiry < 2.1
+
+    def test_days_until_expiry_clamped_to_zero_when_past(self, manager):
+        ki = KeyInfo(key_hash="h", expires_at=time.time() - 1000)
+        assert ki.days_until_expiry == 0.0
+
+    def test_cleanup_removes_client_with_no_remaining_keys(self, manager):
+        config = RotationConfig(grace_period=0)
+        mgr = KeyRotationManager(config)
+        mgr.register_key("lone-client", "only-key")
+        time.sleep(0.01)
+        # Force expiry by setting expires_at in the past directly.
+        mgr._keys["lone-client"][0].expires_at = time.time() - 1
+        mgr.cleanup_expired()
+        assert "lone-client" not in mgr._keys
+
+    def test_enforce_limits_skips_when_all_keys_primary(self, manager):
+        config = RotationConfig(max_keys_per_client=1)
+        mgr = KeyRotationManager(config)
+        mgr._keys["c1"] = [
+            KeyInfo(key_hash="a", is_primary=True),
+            KeyInfo(key_hash="b", is_primary=True),
+        ]
+        mgr._enforce_limits("c1")
+        # Nothing removable (all primary) -> both keys remain despite exceeding the limit.
+        assert len(mgr._keys["c1"]) == 2

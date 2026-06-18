@@ -73,3 +73,16 @@ class TestRequestDeduplicator:
         cached = dedup.get_cached("k1")
         assert cached.status_code == 201
         assert cached.body == {"v": 2}
+
+    def test_hit_rate(self, dedup):
+        assert dedup.hit_rate == 0.0
+        dedup.cache_response("k1", 200, {})
+        dedup.get_cached("k1")  # hit
+        dedup.get_cached("k2")  # miss
+        assert dedup.hit_rate == 0.5
+
+    def test_cache_size(self, dedup):
+        assert dedup.cache_size == 0
+        dedup.cache_response("k1", 200, {})
+        dedup.cache_response("k2", 200, {})
+        assert dedup.cache_size == 2

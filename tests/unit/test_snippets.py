@@ -1,5 +1,7 @@
 """Tests for snippet manager."""
 
+from unittest.mock import patch
+
 import pytest
 
 from llmstack.snippets.manager import SnippetManager
@@ -8,6 +10,28 @@ from llmstack.snippets.manager import SnippetManager
 @pytest.fixture
 def manager(tmp_path):
     return SnippetManager(db_path=tmp_path / "test_snippets.db")
+
+
+def test_default_db_path_under_home_dir(tmp_path):
+    with patch("llmstack.snippets.manager.Path.home", return_value=tmp_path):
+        mgr = SnippetManager()
+    assert mgr.db_path == tmp_path / ".llmstack" / "data" / "snippets.db"
+    assert mgr.db_path.parent.is_dir()
+
+
+def test_snippet_count_property(manager):
+    assert manager.snippet_count == 0
+    manager.save(title="A", code="x = 1")
+    manager.save(title="B", code="y = 2")
+    assert manager.snippet_count == 2
+
+
+def test_languages_property(manager):
+    assert manager.languages == []
+    manager.save(title="A", code="x = 1", language="python")
+    manager.save(title="B", code="let y = 1", language="javascript")
+    manager.save(title="C", code="z = 1", language="python")
+    assert manager.languages == ["javascript", "python"]
 
 
 def test_save_and_get(manager):
