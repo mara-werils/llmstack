@@ -30,7 +30,7 @@ dependencies = [
     "pydantic>=2.13.4",
     "pyyaml>=6.0",
     "docker>=7.0",
-    "httpx>=0.27",
+    "httpx>=0.28.1",
     "psutil>=5.9",
     "numpy>=1.24",
 ]
@@ -39,7 +39,7 @@ dependencies = [
 # Document Q&A (llmstack ask)
 ask = ["numpy>=1.24", "pymupdf>=1.27.2.3", "python-docx>=1.2.0"]
 # API gateway server
-gateway = ["fastapi>=0.136.3", "uvicorn[standard]>=0.49.0", "starlette>=1.2.1", "redis>=5.0", "httpx[http2]>=0.27"]
+gateway = ["fastapi>=0.136.3", "uvicorn[standard]>=0.49.0", "starlette>=1.2.1", "redis>=5.0", "httpx[http2]>=0.28.1"]
 # Fine-tuning pipeline (llmstack finetune)
 finetune = [
     "transformers>=4.45",
@@ -58,21 +58,21 @@ dev = [
     "fastapi>=0.136.3",
     "starlette>=1.2.1",
     "redis>=5.0",
-    "httpx[http2]>=0.27",
+    "httpx[http2]>=0.28.1",
     "fakeredis>=2.21",
     "pre-commit>=4.6.0",
 ]
 # Documentation site (mkdocs)
 docs-build = ["mkdocs-material>=9.7.6", "mkdocs-minify-plugin"]
 # AI code review, security audit, file watcher
-review = ["httpx>=0.27"]
-security = ["httpx>=0.27"]
-watch = ["httpx>=0.27"]
+review = ["httpx>=0.28.1"]
+security = ["httpx>=0.28.1"]
+watch = ["httpx>=0.28.1"]
 # Everything except finetune (which needs a GPU)
 all = [
     "numpy>=1.24", "pymupdf>=1.27.2.3", "python-docx>=1.2.0",
     "fastapi>=0.136.3", "uvicorn[standard]>=0.49.0", "starlette>=1.2.1", "redis>=5.0",
-    "httpx[http2]>=0.27",
+    "httpx[http2]>=0.28.1",
     "transformers>=4.45", "peft>=0.13", "trl>=0.12",
     "datasets>=3.0", "bitsandbytes>=0.44", "accelerate>=1.13.0",
 ]
