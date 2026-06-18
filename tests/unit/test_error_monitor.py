@@ -94,3 +94,26 @@ class TestErrorRateMonitor:
         monitor.record_request(provider="openai", endpoint="/v1/chat")
         summary = monitor.get_summary()
         assert summary["total_errors"] == 0
+
+    def test_get_error_rate_no_data_returns_zero(self, monitor):
+        assert monitor.get_error_rate() == 0.0
+
+    def test_get_error_rate_computes_ratio(self, monitor):
+        monitor.record_request(provider="openai", endpoint="/v1/chat")
+        monitor.record_request(provider="openai", endpoint="/v1/chat")
+        monitor.record_error("timeout", provider="openai", endpoint="/v1/chat")
+        rate = monitor.get_error_rate(provider="openai")
+        assert 0.0 < rate <= 1.0
+
+    def test_get_error_rate_filters_by_provider(self, monitor):
+        monitor.record_request(provider="openai", endpoint="/v1/chat")
+        monitor.record_error("timeout", provider="anthropic", endpoint="/v1/chat")
+        rate = monitor.get_error_rate(provider="openai")
+        assert rate == 0.0
+
+    def test_max_events_truncated(self):
+        config = ErrorMonitorConfig(max_events=5)
+        mon = ErrorRateMonitor(config)
+        for i in range(10):
+            mon.record_error("timeout", provider="p1")
+        assert len(mon._events) == 5

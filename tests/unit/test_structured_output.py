@@ -1,10 +1,11 @@
 """Tests for structured output validation."""
 
 from llmstack.gateway.structured_output import (
+    ValidationResult,
+    build_schema_prompt,
     extract_json,
     validate_output,
     validate_type,
-    build_schema_prompt,
 )
 
 
@@ -80,6 +81,25 @@ class TestValidateType:
         errors = validate_type(["a", 1, "b"], schema)
         assert len(errors) == 1  # items[1] is invalid
 
+    def test_no_type_specified_returns_no_errors(self):
+        assert validate_type("anything", {}) == []
+
+    def test_string_max_length(self):
+        errors = validate_type("hello world", {"type": "string", "maxLength": 5})
+        assert len(errors) == 1
+
+    def test_string_pattern_mismatch(self):
+        errors = validate_type("abc", {"type": "string", "pattern": r"^\d+$"})
+        assert len(errors) == 1
+
+    def test_integer_maximum(self):
+        errors = validate_type(99, {"type": "integer", "maximum": 10})
+        assert len(errors) == 1
+
+    def test_array_max_items(self):
+        errors = validate_type([1, 2, 3], {"type": "array", "maxItems": 2})
+        assert len(errors) == 1
+
 
 class TestValidateOutput:
     def test_valid_output(self):
@@ -107,6 +127,15 @@ class TestValidateOutput:
         result = validate_output('```json\n{"n": 42}\n```', schema)
         assert result.valid is True
         assert result.data["n"] == 42
+
+    def test_malformed_json_content(self):
+        result = validate_output("{not: valid, json}", {"type": "object"})
+        assert result.valid is False
+        assert any("Invalid JSON" in e for e in result.errors)
+
+    def test_to_dict(self):
+        result = ValidationResult(valid=True, data={"a": 1}, errors=[])
+        assert result.to_dict() == {"valid": True, "data": {"a": 1}, "errors": []}
 
 
 class TestBuildSchemaPrompt:

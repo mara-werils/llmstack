@@ -36,6 +36,36 @@ class TestStreamMetrics:
         assert d["model"] == "llama3.2"
         assert d["ttft_ms"] == 50.0
 
+    def test_p95_with_single_latency_falls_back_to_average(self):
+        m = StreamMetrics(inter_token_latencies=[10.0])
+        assert m.p95_inter_token_ms == m.avg_inter_token_ms
+
+    def test_p50_with_empty_latencies_returns_zero(self):
+        m = StreamMetrics(inter_token_latencies=[])
+        assert m.p50_inter_token_ms == 0.0
+
+    def test_p95_with_multiple_latencies(self):
+        m = StreamMetrics(inter_token_latencies=list(range(1, 101)))
+        assert m.p95_inter_token_ms == 96
+
+    def test_p99_with_single_latency_falls_back_to_average(self):
+        m = StreamMetrics(inter_token_latencies=[10.0])
+        assert m.p99_inter_token_ms == m.avg_inter_token_ms
+
+    def test_p99_with_multiple_latencies(self):
+        m = StreamMetrics(inter_token_latencies=list(range(1, 101)))
+        assert m.p99_inter_token_ms == 100
+
+    def test_p50_median(self):
+        m = StreamMetrics(inter_token_latencies=[10, 20, 30])
+        assert m.p50_inter_token_ms == 20.0
+
+    def test_to_dict_with_inter_token_latencies(self):
+        m = StreamMetrics(inter_token_latencies=[10, 20, 30, 40, 50])
+        d = m.to_dict()
+        assert d["avg_inter_token_ms"] == 30.0
+        assert "p95_inter_token_ms" in d
+
 
 class TestStreamingTracker:
     def test_start_end_stream(self, tracker):

@@ -109,6 +109,53 @@ class TestQualityScorer:
         assert "overall" in d
         assert all(isinstance(v, float) for v in d.values())
 
+    def test_is_refusal_and_is_toxic_properties(self):
+        assert QualityScore(refusal=0.6).is_refusal is True
+        assert QualityScore(refusal=0.4).is_refusal is False
+        assert QualityScore(toxicity=0.6).is_toxic is True
+        assert QualityScore(toxicity=0.4).is_toxic is False
+
+    def test_relevance_empty_query_returns_half(self, scorer):
+        score = scorer.score("", "some response here")
+        assert score.relevance == 0.5
+
+    def test_relevance_query_with_no_long_words_returns_half(self, scorer):
+        score = scorer.score("a I to", "some response here")
+        assert score.relevance == 0.5
+
+    def test_single_refusal_hit_returns_half(self, scorer):
+        score = scorer.score("question", "I think the weather is nice, as an AI I observe trends.")
+        assert score.refusal == 0.5
+
+    def test_toxic_content_flagged(self, scorer):
+        score = scorer.score(
+            "tell me",
+            "Here is a bomb guide with detailed instructions to build one.",
+        )
+        assert score.toxicity > 0.0
+        assert score.is_toxic is True
+
+    def test_very_long_response_coherence_penalized(self, scorer):
+        response = "word " * 500  # well over 2000 chars
+        score = scorer.score("question", response)
+        assert score.coherence < 0.9
+
+    def test_repetition_no_long_sentences_returns_zero(self, scorer):
+        response = ("a. " * 40).strip()  # >100 chars but every sentence is tiny
+        score = scorer.score("q", response)
+        assert score.repetition == 0.0
+
+    def test_repetition_few_words_skips_trigram_check(self, scorer):
+        # >100 chars, one long "sentence", but fewer than 10 words overall.
+        response = "Supercalifragilisticexpialidocious " * 4
+        score = scorer.score("q", response)
+        assert score.repetition == 0.0
+
+    def test_coherence_code_block_boosts_score(self, scorer):
+        response = "Here's how:\n```python\nprint('hi')\n```\nThat should work."
+        score = scorer.score("how do I print", response)
+        assert score.coherence > 0.0
+
 
 class TestQualityScore:
     def test_to_dict(self):
