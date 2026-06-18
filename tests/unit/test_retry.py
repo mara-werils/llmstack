@@ -3,10 +3,12 @@
 import pytest
 
 from llmstack.gateway.retry import (
-    RetryConfig,
     FallbackChain,
-    retry_with_fallback,
+    RetryAttempt,
+    RetryConfig,
+    RetryResult,
     _compute_delay,
+    retry_with_fallback,
 )
 
 
@@ -46,6 +48,65 @@ class TestComputeDelay:
             jitter=False,
         )
         assert _compute_delay(5, config) == 5000
+
+    def test_jitter_varies_delay(self):
+        config = RetryConfig(initial_delay_ms=100, exponential_base=2.0, jitter=True)
+        delays = {_compute_delay(1, config) for _ in range(20)}
+        assert len(delays) > 1
+        assert all(100 <= d <= 300 for d in delays)
+
+
+class TestRetryAttemptAndResult:
+    def test_retry_attempt_to_dict_rounds_latency(self):
+        attempt = RetryAttempt(
+            attempt=1, provider="openai", status_code=200, latency_ms=12.3456, success=True
+        )
+        d = attempt.to_dict()
+        assert d["latency_ms"] == 12.3
+        assert d["provider"] == "openai"
+
+    def test_retry_attempt_timestamp_defaults_to_now(self):
+        attempt = RetryAttempt(attempt=1, provider="local")
+        assert attempt.timestamp > 0
+
+    def test_retry_result_failed_attempts(self):
+        result = RetryResult(
+            attempts=[
+                RetryAttempt(attempt=1, provider="a", success=False),
+                RetryAttempt(attempt=2, provider="a", success=True),
+            ]
+        )
+        assert result.failed_attempts == 1
+
+    def test_retry_result_provider_switches(self):
+        result = RetryResult(
+            attempts=[
+                RetryAttempt(attempt=1, provider="a"),
+                RetryAttempt(attempt=2, provider="a"),
+                RetryAttempt(attempt=3, provider="b"),
+            ]
+        )
+        assert result.provider_switches == 1
+
+    def test_retry_result_last_attempt(self):
+        result = RetryResult()
+        assert result.last_attempt is None
+        attempt = RetryAttempt(attempt=1, provider="a")
+        result.attempts.append(attempt)
+        assert result.last_attempt is attempt
+
+    def test_retry_result_to_dict(self):
+        result = RetryResult(
+            success=True,
+            total_latency_ms=42.567,
+            final_provider="openai",
+            attempts=[RetryAttempt(attempt=1, provider="openai", success=True)],
+        )
+        d = result.to_dict()
+        assert d["success"] is True
+        assert d["total_latency_ms"] == 42.6
+        assert d["final_provider"] == "openai"
+        assert len(d["attempts"]) == 1
 
 
 class TestRetryWithFallback:
@@ -130,3 +191,31 @@ class TestRetryWithFallback:
         assert len(result.attempts) == 2
         assert result.attempts[0].success is False
         assert result.attempts[1].success is True
+
+    @pytest.mark.asyncio
+    async def test_retryable_server_error_status_in_response_body(self):
+        call_count = 0
+
+        async def handler(payload, provider=""):
+            nonlocal call_count
+            call_count += 1
+            if call_count == 1:
+                return {"error": {"type": "server_error", "status_code": 503}}
+            return {"result": "ok"}
+
+        config = RetryConfig(max_retries=2, initial_delay_ms=1, jitter=False)
+        result = await retry_with_fallback(handler, {}, config=config)
+        assert result.success is True
+        assert result.attempts[0].status_code == 503
+        assert result.attempts[0].success is False
+
+    @pytest.mark.asyncio
+    async def test_non_retryable_status_code_stops_immediately(self):
+        async def handler(payload, provider=""):
+            return {"error": {"type": "server_error", "status_code": 400}}
+
+        config = RetryConfig(max_retries=3, initial_delay_ms=1, jitter=False)
+        result = await retry_with_fallback(handler, {}, config=config)
+        assert result.success is False
+        assert result.total_attempts == 1
+        assert result.attempts[0].status_code == 400
