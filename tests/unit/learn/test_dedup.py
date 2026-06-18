@@ -95,3 +95,20 @@ class TestFeedbackDeduplicator:
         result, stats = dedup.deduplicate(entries)
         # These are exact-hash different but near-dup check with threshold=1.0 won't merge
         assert len(result) == 2
+
+    def test_lifetime_counters(self, dedup):
+        assert dedup.total_processed == 0
+        assert dedup.total_duplicates == 0
+        assert dedup.overall_dedup_ratio == 0.0
+
+        dedup.deduplicate([_fb("q", "r")] * 5)
+
+        assert dedup.total_processed == 5
+        assert dedup.total_duplicates == 4
+        assert dedup.overall_dedup_ratio == pytest.approx(0.8)
+
+    def test_word_similarity_both_empty(self, dedup):
+        assert dedup._word_similarity("", "") == 1.0
+
+    def test_word_similarity_one_empty(self, dedup):
+        assert dedup._word_similarity("hello world", "") == 0.0

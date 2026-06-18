@@ -133,6 +133,28 @@ class TestTrainingOrder:
         assert ordered == []
 
 
+class TestSchedulerProperties:
+    def test_stage_count_and_total_examples(self, scheduler):
+        assert scheduler.stage_count == 0
+        assert scheduler.total_examples == 0
+        examples = [_make_feedback(f"Q{i}", f"A{i}") for i in range(10)]
+        scheduler.organize(examples)
+        assert scheduler.stage_count == 4
+        assert scheduler.total_examples == 10
+
+
+class TestDifficultyScoringEdgeCases:
+    def test_very_long_query_scores_highest_bucket(self, scheduler):
+        fb = _make_feedback("Q " * 200, "short answer")
+        score = scheduler.score_difficulty(fb)
+        assert score > 0.0
+
+    def test_very_long_response_scores_highest_bucket(self, scheduler):
+        fb = _make_feedback("short query", "A " * 1000)
+        score = scheduler.score_difficulty(fb)
+        assert score > 0.0
+
+
 class TestStageSummary:
     def test_summary_structure(self, scheduler):
         examples = [_make_feedback(f"Q{i}", f"A{i}" * (i + 1)) for i in range(10)]

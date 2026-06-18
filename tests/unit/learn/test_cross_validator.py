@@ -87,3 +87,28 @@ class TestCrossValidator:
     def test_min_k(self):
         cv = CrossValidator(k=1)  # Should be bumped to 2
         assert cv.k == 2
+
+    def test_best_and_worst_fold_none_when_empty(self, cv):
+        result = cv.evaluate([])
+        assert result.best_fold is None
+        assert result.worst_fold is None
+
+    def test_best_and_worst_fold(self, cv):
+        data = [_fb() for _ in range(9)]
+        result = cv.evaluate(data, quality_fn=lambda train, test: (len(train) / 10, 0.5))
+        accuracies = [f.accuracy for f in result.fold_results]
+        assert result.best_fold.accuracy == max(accuracies)
+        assert result.worst_fold.accuracy == min(accuracies)
+
+    def test_std_accuracy_zero_with_single_fold(self):
+        cv = CrossValidator(k=3)
+        cv.k = 1  # force a single fold, bypassing the normal >=2 clamp
+        data = [_fb() for _ in range(5)]
+        result = cv.evaluate(data)
+        assert result.std_accuracy == 0.0
+
+    def test_heuristic_evaluate_empty_train_or_test(self, cv):
+        accuracy, quality = cv._heuristic_evaluate([], [_fb()])
+        assert (accuracy, quality) == (0.0, 0.0)
+        accuracy, quality = cv._heuristic_evaluate([_fb()], [])
+        assert (accuracy, quality) == (0.0, 0.0)

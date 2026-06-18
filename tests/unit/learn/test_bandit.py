@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from unittest.mock import patch
+
 import pytest
 
 from llmstack.learn.bandit import BanditConfig, ModelBandit
@@ -93,3 +95,48 @@ class TestModelBandit:
         bandit.update("medium", reward=0.8)
         stats = bandit.get_stats()
         assert abs(stats["arms"]["medium"]["mean_reward"] - 0.7) < 0.01
+
+    def test_best_arm_none_when_no_pulls(self, bandit):
+        assert bandit.best_arm is None
+
+    def test_best_arm_none_when_empty(self):
+        bandit = ModelBandit(models=[])
+        assert bandit.best_arm is None
+
+    def test_best_arm_returns_highest_reward(self, bandit):
+        bandit.update("small", reward=0.2)
+        bandit.update("medium", reward=0.9)
+        assert bandit.best_arm == "medium"
+
+    def test_total_pulls(self, bandit):
+        assert bandit.total_pulls == 0
+        bandit.update("small", reward=0.5)
+        bandit.update("medium", reward=0.5)
+        assert bandit.total_pulls == 2
+
+    def test_unknown_strategy_falls_back_to_thompson(self):
+        bandit = ModelBandit(
+            models=["a", "b"],
+            config=BanditConfig(strategy="not-a-real-strategy", min_pulls_per_arm=0),
+        )
+        model = bandit.select()
+        assert model in ("a", "b")
+
+    def test_ucb1_select_with_zero_total_pulls(self, bandit):
+        arms = bandit._get_arms("fresh-category")
+        assert bandit._ucb1_select(arms) in arms
+
+    def test_ucb1_select_picks_unpulled_arm_when_others_pulled(self, bandit):
+        arms = bandit._get_arms("mixed")
+        arms["small"].pulls = 5
+        arms["small"].total_reward = 4.0
+        # "medium" and "large" remain unpulled -> selected immediately.
+        assert bandit._ucb1_select(arms) in ("medium", "large")
+
+    def test_epsilon_greedy_explores_when_random_below_epsilon(self, bandit):
+        arms = bandit._get_arms("explore")
+        with patch("llmstack.learn.bandit.random.random", return_value=0.0):
+            with patch("llmstack.learn.bandit.random.choice", return_value="large") as mock_choice:
+                result = bandit._epsilon_greedy_select(arms)
+        mock_choice.assert_called_once()
+        assert result == "large"

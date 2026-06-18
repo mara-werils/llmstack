@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+from unittest.mock import MagicMock
+
 import pytest
 
 from llmstack.learn.config import LearnConfig, StorageConfig
 from llmstack.learn.feedback import FeedbackType
-from llmstack.learn.pipeline import LearningPipeline
+from llmstack.learn.pipeline import LearningPipeline, get_pipeline
 
 
 @pytest.fixture
@@ -126,3 +128,45 @@ class TestLearningPipeline:
         # Verify evaluator can build eval set
         eval_set = pipeline.evaluator.build_eval_set()
         assert len(eval_set) > 0
+
+    def test_disabled_pipeline_short_circuits(self, pipeline):
+        pipeline.config.enabled = False
+        assert pipeline.check_training() is None
+        assert pipeline.check_regression() == []
+        assert pipeline.get_system_prompt_additions() == ""
+
+    def test_check_regression_disabled_via_quality_config(self, pipeline):
+        pipeline.config.quality.enabled = False
+        assert pipeline.check_regression() == []
+
+    def test_optimizer_property_lazy_init(self, pipeline):
+        opt = pipeline.optimizer
+        assert opt is pipeline.optimizer  # cached, same instance
+
+    def test_style_guide_included_in_system_prompt(self, pipeline):
+        mock_pattern_learner = MagicMock()
+        mock_pattern_learner.get_style_guide.return_value = "Use snake_case."
+        pipeline._pattern_learner = mock_pattern_learner
+
+        additions = pipeline.get_system_prompt_additions()
+        assert "Use snake_case." in additions
+
+    def test_check_training_triggers_when_scheduler_signals(self, pipeline):
+        mock_scheduler = MagicMock()
+        mock_scheduler.check.return_value = {"reason": "threshold_met"}
+        mock_scheduler.trigger.return_value = {"status": "training_started"}
+        pipeline._scheduler = mock_scheduler
+
+        result = pipeline.check_training()
+
+        mock_scheduler.trigger.assert_called_once_with({"reason": "threshold_met"})
+        assert result == {"status": "training_started"}
+
+    def test_get_pipeline_singleton(self):
+        import llmstack.learn.pipeline as pipeline_module
+
+        pipeline_module._pipeline_instance = None
+        first = get_pipeline()
+        second = get_pipeline()
+        assert first is second
+        pipeline_module._pipeline_instance = None

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import time
 
 import pytest
 
@@ -67,6 +68,17 @@ class TestFeedback:
             fb = Feedback(feedback_type=ft)
             assert fb.is_negative
             assert not fb.is_positive
+
+    def test_implicit_and_explicit(self):
+        for ft in (FeedbackType.COPY, FeedbackType.REGENERATE, FeedbackType.ABANDON):
+            fb = Feedback(feedback_type=ft)
+            assert fb.is_implicit is True
+            assert fb.is_explicit is False
+
+        for ft in (FeedbackType.THUMBS_UP, FeedbackType.CORRECTION, FeedbackType.PREFERENCE):
+            fb = Feedback(feedback_type=ft)
+            assert fb.is_implicit is False
+            assert fb.is_explicit is True
 
 
 class TestFeedbackStore:
@@ -169,3 +181,40 @@ class TestFeedbackStore:
         trend = store.get_quality_trend("1", "overall")
         assert len(trend) == 2
         assert trend[0]["value"] == 0.80  # most recent first
+
+    def test_is_connected_property(self, store):
+        # __init__ eagerly connects via _ensure_schema, so this is already True.
+        assert store.is_connected is True
+
+    def test_db_size_bytes(self, store):
+        assert store.db_size_bytes > 0
+
+    def test_db_size_bytes_missing_file(self, tmp_path):
+        s = FeedbackStore(db_path=tmp_path / "never_created.db")
+        # No write has happened yet, so the file may not exist on disk.
+        assert s.db_size_bytes >= 0
+        s.close()
+
+    def test_mark_feedback_used_empty_list_is_noop(self, store):
+        store.add_feedback(
+            Feedback(feedback_type=FeedbackType.THUMBS_UP, query="a", response="b")
+        )
+        store.mark_feedback_used([])  # should not raise
+        assert store.get_unused_feedback_count() == 1
+
+    def test_get_feedback_since_filter(self, store):
+        store.add_feedback(Feedback(feedback_type=FeedbackType.THUMBS_UP, query="a", response="b"))
+        results = store.get_feedback(since=0)
+        assert len(results) == 1
+        results = store.get_feedback(since=time.time() + 1000)
+        assert len(results) == 0
+
+    def test_add_train_run(self, store):
+        run_id = store.add_train_run(
+            model_version="2",
+            base_model="llama3.2",
+            feedback_count=10,
+            dataset_size=8,
+            final_loss=0.5,
+        )
+        assert run_id > 0

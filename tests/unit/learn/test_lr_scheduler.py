@@ -130,3 +130,61 @@ class TestLearningRateScheduler:
         sched = LearningRateScheduler(config)
         # After many decays, should not go below min_lr
         assert sched.get_lr(999) >= 1e-4
+
+    def test_has_warmup_property(self):
+        warmup_sched = LearningRateScheduler(LRSchedulerConfig(schedule=ScheduleType.LINEAR_WARMUP))
+        no_warmup_sched = LearningRateScheduler(LRSchedulerConfig(schedule=ScheduleType.CONSTANT))
+        assert warmup_sched.has_warmup is True
+        assert no_warmup_sched.has_warmup is False
+
+    def test_final_lr_property(self):
+        config = LRSchedulerConfig(schedule=ScheduleType.CONSTANT, initial_lr=1e-3, total_steps=100)
+        sched = LearningRateScheduler(config)
+        assert sched.final_lr == sched.get_lr(99)
+
+    def test_unknown_schedule_falls_back_to_initial_lr(self):
+        config = LRSchedulerConfig(schedule=ScheduleType.CONSTANT, initial_lr=7e-4)
+        sched = LearningRateScheduler(config)
+        sched.config.schedule = "not-a-real-schedule"
+        assert sched.get_lr(0) == 7e-4
+
+    def test_cosine_with_zero_total_steps(self):
+        config = LRSchedulerConfig(schedule=ScheduleType.COSINE, total_steps=0, initial_lr=5e-4)
+        sched = LearningRateScheduler(config)
+        assert sched.get_lr(0) == 5e-4
+
+    def test_cosine_with_warmup_no_remaining_steps(self):
+        config = LRSchedulerConfig(
+            schedule=ScheduleType.COSINE_WITH_WARMUP,
+            warmup_steps=100,
+            total_steps=100,
+            max_lr=9e-4,
+        )
+        sched = LearningRateScheduler(config)
+        assert sched.get_lr(100) == 9e-4
+
+    def test_linear_decay_zero_total_steps(self):
+        config = LRSchedulerConfig(schedule=ScheduleType.LINEAR_DECAY, total_steps=0, initial_lr=3e-4)
+        sched = LearningRateScheduler(config)
+        assert sched.get_lr(0) == 3e-4
+
+    def test_linear_decay_during_warmup(self):
+        config = LRSchedulerConfig(
+            schedule=ScheduleType.LINEAR_DECAY,
+            warmup_steps=100,
+            total_steps=1000,
+            min_lr=0.0,
+            max_lr=1e-3,
+        )
+        sched = LearningRateScheduler(config)
+        assert abs(sched.get_lr(50) - 5e-4) < 1e-6
+
+    def test_linear_decay_no_remaining_steps(self):
+        config = LRSchedulerConfig(
+            schedule=ScheduleType.LINEAR_DECAY,
+            warmup_steps=100,
+            total_steps=100,
+            max_lr=8e-4,
+        )
+        sched = LearningRateScheduler(config)
+        assert sched.get_lr(100) == 8e-4

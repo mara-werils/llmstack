@@ -132,6 +132,75 @@ class TestDatasetGenerator:
         # After dedup, should only have 1
         assert len(dataset.sft_examples) == 1
 
+    def test_edit_and_preference_feedback_included(self, store):
+        store.add_feedback(
+            Feedback(
+                feedback_type=FeedbackType.EDIT,
+                query="Write a greeting function",
+                response="def greet(): print('hi')",
+                correction="def greet(): print('Hello, World!')",
+            )
+        )
+        store.add_feedback(
+            Feedback(
+                feedback_type=FeedbackType.PREFERENCE,
+                query="Which response is better?",
+                response="The detailed and accurate response that was preferred overall",
+                correction="The detailed and accurate response wins here",
+                preferred_over="The vague and incomplete response loses here",
+            )
+        )
+        gen = DatasetGenerator(store=store)
+        dataset = gen.generate(strategy=DatasetStrategy.MIXED)
+
+        sft_sources = {ex.metadata.get("source") for ex in dataset.sft_examples}
+        dpo_sources = {ex.metadata.get("source") for ex in dataset.dpo_examples}
+        assert "edit" in sft_sources
+        assert "edit" in dpo_sources
+        assert "preference" in dpo_sources
+
+    def test_max_examples_caps_generation(self, store):
+        for i in range(10):
+            store.add_feedback(
+                Feedback(
+                    feedback_type=FeedbackType.CORRECTION,
+                    query=f"How do I do task {i}, a fairly long and unique question",
+                    response=f"bad_answer_{i} that is long enough to pass filters easily",
+                    correction=f"good_answer_{i} that is long enough to pass filters easily too",
+                )
+            )
+        gen = DatasetGenerator(store=store, dedup=False)
+        dataset = gen.generate(strategy=DatasetStrategy.MIXED, max_examples=2)
+        assert len(dataset.sft_examples) == 2
+        assert len(dataset.dpo_examples) == 2
+
+    def test_max_examples_caps_positive_strategy(self, store):
+        for i in range(10):
+            store.add_feedback(
+                Feedback(
+                    feedback_type=FeedbackType.THUMBS_UP,
+                    query=f"Explain concept {i}, a fairly long and unique question",
+                    response=f"This is a great explanation of concept {i} with plenty of detail",
+                )
+            )
+        gen = DatasetGenerator(store=store, dedup=False)
+        dataset = gen.generate(strategy=DatasetStrategy.POSITIVE, max_examples=2)
+        assert len(dataset.sft_examples) == 2
+
+    def test_dataset_properties(self):
+        from llmstack.learn.dataset import GeneratedDataset, TrainingExample
+
+        empty = GeneratedDataset()
+        assert empty.is_empty is True
+        assert empty.sft_count == 0
+        assert empty.dpo_count == 0
+
+        with_data = GeneratedDataset(
+            sft_examples=[TrainingExample(messages=[{"role": "user", "content": "hi"}])]
+        )
+        assert with_data.is_empty is False
+        assert with_data.sft_count == 1
+
     def test_save_dataset(self, store_with_feedback, tmp_path):
         gen = DatasetGenerator(store=store_with_feedback)
         dataset = gen.generate(strategy=DatasetStrategy.MIXED)
