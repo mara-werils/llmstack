@@ -85,3 +85,26 @@ class TestTenantManager:
         d = t.to_dict()
         assert d["name"] == "Test"
         assert "limits" in d
+
+    def test_get_tenant_found(self, manager):
+        t = manager.create_tenant(name="Test")
+        assert manager.get_tenant(t.id) is t
+
+    def test_get_tenant_not_found(self, manager):
+        assert manager.get_tenant("nonexistent") is None
+
+    def test_add_api_key_to_unknown_tenant_fails(self, manager):
+        assert manager.add_api_key("nonexistent", "sk-x") is False
+
+    def test_remove_unknown_api_key_fails(self, manager):
+        assert manager.remove_api_key("never-existed") is False
+
+    def test_deactivate_unknown_tenant_fails(self, manager):
+        assert manager.deactivate_tenant("nonexistent") is False
+
+    def test_tenant_count_and_active_count(self, manager):
+        t1 = manager.create_tenant(name="A")
+        manager.create_tenant(name="B")
+        manager.deactivate_tenant(t1.id)
+        assert manager.tenant_count == 2
+        assert manager.active_count == 1

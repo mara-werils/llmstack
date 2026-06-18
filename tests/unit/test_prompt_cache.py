@@ -93,3 +93,34 @@ class TestPromptPrefixCache:
         h2 = PromptPrefixCache.compute_prefix_hash(msgs)
         assert h1 == h2
         assert len(h1) == 16
+
+    def test_compute_prefix_hash_empty_messages(self):
+        assert PromptPrefixCache.compute_prefix_hash([]) == ""
+
+    def test_compute_prefix_hash_explicit_length(self):
+        msgs = [SYSTEM_MSG, USER_MSG, {"role": "assistant", "content": "hi"}]
+        h = PromptPrefixCache.compute_prefix_hash(msgs, prefix_length=1)
+        assert len(h) == 16
+
+    def test_hit_rate_and_size_properties(self, cache):
+        assert cache.hit_rate == 0.0
+        assert cache.size == 0
+        cache.store([SYSTEM_MSG, USER_MSG])
+        cache.lookup([SYSTEM_MSG, USER_MSG])
+        assert cache.hit_rate == 1.0
+        assert cache.size == 1
+
+    def test_store_empty_messages_returns_none(self, cache):
+        assert cache.store([]) is None
+
+    def test_store_short_prefix_returns_none(self, cache):
+        big_cache = PromptPrefixCache(max_entries=10, min_prefix_length=500)
+        result = big_cache.store([SYSTEM_MSG, USER_MSG])
+        assert result is None
+
+    def test_store_existing_prefix_returns_cached_entry(self, cache):
+        msgs = [SYSTEM_MSG, USER_MSG]
+        first = cache.store(msgs)
+        second = cache.store(msgs)
+        assert second.hash == first.hash
+        assert cache.size == 1

@@ -1,11 +1,15 @@
 """Tests for cost tracking and budget management."""
 
+import time
+
 import pytest
 
 from llmstack.gateway.cost_tracker import (
-    CostTracker,
     Budget,
+    BudgetAlert,
     BudgetPeriod,
+    CostEntry,
+    CostTracker,
     MODEL_PRICING,
 )
 
@@ -33,6 +37,10 @@ class TestCostCalculation:
         cost = tracker.calculate_cost("my-model", 1_000_000, 1_000_000)
         assert cost == 3.0
 
+    def test_prefix_matching_pricing(self, tracker):
+        cost = tracker.calculate_cost("gpt-4o-2024-08-06", input_tokens=1_000_000, output_tokens=0)
+        assert cost == 2.50
+
 
 class TestCostRecording:
     def test_record_entry(self, tracker):
@@ -57,6 +65,12 @@ class TestCostRecording:
         summary = tracker.get_summary()
         assert summary["total_cost_usd"] == 0
         assert summary["total_requests"] == 0
+
+    def test_total_cost_and_requests_properties(self, tracker):
+        tracker.record("gpt-4o", "openai", 1000, 500, cost_usd=0.02)
+        tracker.record("gpt-4o", "openai", 1000, 500, cost_usd=0.03)
+        assert tracker.total_cost_usd == pytest.approx(0.05)
+        assert tracker.total_requests == 2
 
 
 class TestBudgets:
@@ -107,6 +121,97 @@ class TestBudgets:
         assert daily == 0.01
         total = tracker.get_spend(BudgetPeriod.TOTAL)
         assert total == 0.01
+
+    def test_get_spend_excludes_entries_outside_period(self, tracker):
+        old_entry = CostEntry(
+            timestamp=time.time() - 90000,  # > 1 day old
+            model="gpt-4o",
+            provider="openai",
+            input_tokens=100,
+            output_tokens=50,
+            cost_usd=0.01,
+        )
+        tracker._entries.append(old_entry)
+        assert tracker.get_spend(BudgetPeriod.DAILY) == 0.0
+
+    def test_get_spend_filters_by_model_and_provider(self, tracker):
+        tracker.record("gpt-4o", "openai", 100, 50, cost_usd=0.01)
+        tracker.record("claude-sonnet-4-20250514", "anthropic", 100, 50, cost_usd=0.02)
+
+        assert tracker.get_spend(BudgetPeriod.TOTAL, model="gpt-4o") == 0.01
+        assert tracker.get_spend(BudgetPeriod.TOTAL, model="nonexistent") == 0.0
+        assert tracker.get_spend(BudgetPeriod.TOTAL, provider="anthropic") == 0.02
+        assert tracker.get_spend(BudgetPeriod.TOTAL, provider="nonexistent") == 0.0
+
+    def test_provider_specific_budget(self, tracker):
+        budget = Budget(
+            name="openai-budget",
+            limit_usd=1.0,
+            period=BudgetPeriod.TOTAL,
+            provider="openai",
+        )
+        tracker.add_budget(budget)
+        # Different provider should be skipped by the budget-level filter
+        tracker.record("claude-sonnet-4-20250514", "anthropic", 1000, 500, cost_usd=0.5)
+        assert tracker.get_alerts() == []
+
+    def test_budget_check_ignores_entries_outside_period(self, tracker):
+        old_entry = CostEntry(
+            timestamp=time.time() - 90000,  # > 1 day old
+            model="gpt-4o",
+            provider="openai",
+            input_tokens=1000,
+            output_tokens=500,
+            cost_usd=10.0,  # would blow the budget if counted
+        )
+        tracker._entries.append(old_entry)
+
+        budget = Budget(
+            name="daily-budget",
+            limit_usd=1.0,
+            period=BudgetPeriod.DAILY,
+            alert_at_percent=50.0,
+        )
+        tracker.add_budget(budget)
+
+        tracker.record("gpt-4o", "openai", 100, 50, cost_usd=0.01)
+
+        alerts = tracker.get_alerts()
+        assert not any(a.budget_name == "daily-budget" for a in alerts)
+
+    def test_budget_spend_ignores_non_matching_entries(self, tracker):
+        budget = Budget(
+            name="gpt4-budget",
+            limit_usd=0.01,
+            period=BudgetPeriod.TOTAL,
+            model="gpt-4o",
+            provider="openai",
+            alert_at_percent=50.0,
+        )
+        tracker.add_budget(budget)
+        # Non-matching entries (wrong model, wrong provider) recorded first.
+        tracker.record("llama3.2", "local", 1000, 500, cost_usd=0.0)
+        tracker.record("gpt-4o", "anthropic", 1000, 500, cost_usd=0.5)
+        # Matching entry triggers the alert based only on matching spend.
+        tracker.record("gpt-4o", "openai", 1000, 500, cost_usd=0.01)
+
+        alerts = tracker.get_alerts()
+        assert any(a.budget_name == "gpt4-budget" for a in alerts)
+
+
+class TestBudgetAlert:
+    def test_to_dict(self):
+        alert = BudgetAlert(
+            budget_name="test",
+            current_spend=0.012345,
+            limit_usd=1.0,
+            percent_used=1.2345,
+        )
+        d = alert.to_dict()
+        assert d["budget_name"] == "test"
+        assert d["current_spend"] == 0.012345
+        assert d["percent_used"] == 1.23
+        assert d["triggered_at"] > 0
 
 
 class TestModelPricing:

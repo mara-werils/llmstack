@@ -3,9 +3,10 @@
 import pytest
 
 from llmstack.gateway.priority_queue import (
-    RequestPriorityQueue,
     Priority,
+    PrioritizedRequest,
     QueueFullError,
+    RequestPriorityQueue,
     resolve_priority,
 )
 
@@ -81,6 +82,42 @@ class TestRequestPriorityQueue:
             pass
         stats = tiny.get_stats()
         assert stats["total_rejected"] == 1
+
+    def test_drop_rate(self):
+        tiny = RequestPriorityQueue(max_size=1)
+        tiny.enqueue({})
+        try:
+            tiny.enqueue({})
+        except QueueFullError:
+            pass
+        assert tiny.drop_rate == 0.5
+
+    def test_drop_rate_with_no_requests(self, queue):
+        assert queue.drop_rate == 0.0
+
+    def test_throughput(self, queue):
+        queue.enqueue({})
+        queue.enqueue({})
+        queue.dequeue()
+        assert queue.throughput == 1
+
+    def test_capacity_pct(self):
+        small = RequestPriorityQueue(max_size=4)
+        small.enqueue({})
+        assert small.capacity_pct == 25.0
+
+    def test_clear(self, queue):
+        queue.enqueue({})
+        queue.enqueue({})
+        removed = queue.clear()
+        assert removed == 2
+        assert queue.size == 0
+
+
+class TestPrioritizedRequest:
+    def test_auto_timestamp_when_falsy(self):
+        req = PrioritizedRequest(priority=10, timestamp=0)
+        assert req.timestamp > 0
 
 
 class TestResolvePriority:

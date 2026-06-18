@@ -480,6 +480,39 @@ class TestGuardrailEngine:
         assert len(v1) >= 1
         assert len(v2) >= 1
 
+    def test_rule_count_violation_count_block_count(self, engine):
+        engine.add_rule(GuardrailRule(name="blocker", keywords=["x"], action=GuardrailAction.BLOCK))
+        assert engine.rule_count == 1
+        assert engine.violation_count == 0
+        assert engine.block_count == 0
+        with pytest.raises(GuardrailBlockError):
+            engine.check("x", GuardrailTarget.INPUT)
+        assert engine.violation_count == 1
+        assert engine.block_count == 1
+
+    def test_clear_violations(self, engine):
+        engine.add_rule(GuardrailRule(name="flagger", keywords=["x"], action=GuardrailAction.FLAG))
+        engine.check("x", GuardrailTarget.INPUT)
+        assert engine.violation_count >= 1
+        cleared = engine.clear_violations()
+        assert cleared >= 1
+        assert engine.violation_count == 0
+
+    def test_invalid_regex_pattern_in_redact_handled(self, engine):
+        # A keyword match makes this a violation even though the pattern itself
+        # is invalid, so _redact() is actually invoked and must skip the bad regex.
+        engine.add_rule(
+            GuardrailRule(
+                name="bad-redact-regex",
+                keywords=["test"],
+                pattern=r"[invalid",
+                action=GuardrailAction.REDACT,
+            )
+        )
+        result, violations = engine.check("test text", GuardrailTarget.INPUT)
+        assert len(violations) == 1
+        assert "[REDACTED]" in result
+
     def test_request_id_in_violations(self, engine):
         engine.add_rule(
             GuardrailRule(
