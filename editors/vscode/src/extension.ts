@@ -15,6 +15,7 @@ import {
   checkHealth,
   streamChat,
 } from "./gatewayClient";
+import { registerInlineCompletionProvider } from "./inlineCompletion";
 
 let output: vscode.OutputChannel;
 let statusBar: vscode.StatusBarItem;
@@ -107,7 +108,18 @@ export function activate(context: vscode.ExtensionContext): void {
       await runPrompt("Explain what this code does and flag any bugs:", code);
     }),
     vscode.commands.registerCommand("llmstack.checkHealth", refreshHealth),
+    vscode.commands.registerCommand("llmstack.toggleInlineCompletion", async () => {
+      const cfg = vscode.workspace.getConfiguration("llmstack");
+      const next = !cfg.get<boolean>("inlineCompletion.enabled", false);
+      await cfg.update("inlineCompletion.enabled", next, vscode.ConfigurationTarget.Global);
+      vscode.window.setStatusBarMessage(
+        `LLMStack: inline completions ${next ? "enabled" : "disabled"}`,
+        3000,
+      );
+    }),
   );
+
+  registerInlineCompletionProvider(context, readConfig);
 
   void refreshHealth();
 }

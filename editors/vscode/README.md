@@ -16,6 +16,9 @@ your code and prompts **never leave your machine**.
   is reachable.
 - **Streaming** — responses stream token-by-token into the LLMStack output
   channel.
+- **Inline completions** (opt-in) — ghost-text code suggestions as you type,
+  powered by your local model. Toggle with _LLMStack: Toggle inline code
+  completion_ or `llmstack.inlineCompletion.enabled`.
 
 ## Requirements
 
@@ -36,6 +39,9 @@ By default the extension connects to `http://localhost:8000`.
 | `llmstack.gatewayUrl` | `http://localhost:8000` | Base URL of your gateway |
 | `llmstack.apiKey` | _(empty)_ | API key (only if `gateway.auth=api_key`) |
 | `llmstack.model` | `llama3.2` | Model used for completions |
+| `llmstack.inlineCompletion.enabled` | `false` | Show ghost-text completions as you type |
+| `llmstack.inlineCompletion.contextLines` | `50` | Lines of surrounding code sent as context |
+| `llmstack.inlineCompletion.maxTokens` | `200` | Max tokens generated per completion |
 
 ## Privacy
 

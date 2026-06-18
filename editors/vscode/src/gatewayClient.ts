@@ -88,6 +88,37 @@ export async function streamChat(
   }
 }
 
+/** Run a non-streaming chat completion and return the full response text. */
+export async function complete(
+  cfg: GatewayConfig,
+  messages: ChatMessage[],
+  signal?: AbortSignal,
+  options?: { temperature?: number; maxTokens?: number },
+): Promise<string> {
+  const resp = await fetch(`${cfg.baseUrl}/v1/chat/completions`, {
+    method: "POST",
+    headers: headers(cfg),
+    body: JSON.stringify({
+      model: cfg.model,
+      messages,
+      stream: false,
+      temperature: options?.temperature ?? 0.2,
+      max_tokens: options?.maxTokens ?? 256,
+    }),
+    signal,
+  });
+
+  if (!resp.ok) {
+    throw new GatewayError(resp.status, await safeText(resp));
+  }
+
+  const data = (await resp.json()) as {
+    choices?: { message?: { content?: string } }[];
+  };
+  const content = data?.choices?.[0]?.message?.content;
+  return typeof content === "string" ? content : "";
+}
+
 /** Return true when the gateway health endpoint reports OK. */
 export async function checkHealth(cfg: GatewayConfig): Promise<boolean> {
   try {

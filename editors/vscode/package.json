@@ -57,6 +57,10 @@
       {
         "command": "llmstack.checkHealth",
         "title": "LLMStack: Check gateway health"
+      },
+      {
+        "command": "llmstack.toggleInlineCompletion",
+        "title": "LLMStack: Toggle inline code completion"
       }
     ],
     "menus": {
@@ -93,6 +97,21 @@
           "type": "string",
           "default": "llama3.2",
           "description": "Model name to use for completions."
+        },
+        "llmstack.inlineCompletion.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show ghost-text code completions from your local gateway as you type (opt-in)."
+        },
+        "llmstack.inlineCompletion.contextLines": {
+          "type": "number",
+          "default": 50,
+          "description": "Number of lines of surrounding code to send as context for inline completions."
+        },
+        "llmstack.inlineCompletion.maxTokens": {
+          "type": "number",
+          "default": 200,
+          "description": "Maximum tokens to generate for a single inline completion."
         }
       }
     }
