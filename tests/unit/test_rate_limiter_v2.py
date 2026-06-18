@@ -110,3 +110,79 @@ def test_per_endpoint_limits():
     result2 = limiter.check("key1", endpoint="embeddings")
     assert result1.allowed
     assert result2.allowed
+
+
+def test_minute_window_limit_blocks_without_concurrency_limit():
+    limiter = AdvancedRateLimiter()
+    limiter.set_tier("key1", RateLimitTier.FREE)
+    # FREE: requests_per_minute=10, burst_size=5 -> minute window capacity 15.
+    # Release after every check so the concurrency limit (2) never triggers.
+    for _ in range(15):
+        result = limiter.check("key1")
+        assert result.allowed
+        limiter.release("key1")
+
+    result = limiter.check("key1")
+    assert not result.allowed
+    assert "rate limit exceeded" in result.reason.lower()
+
+
+def test_daily_token_quota_exceeded():
+    limiter = AdvancedRateLimiter()
+    limiter.set_tier("key1", RateLimitTier.FREE)
+    limiter._token_usage["key1"] = 49000
+    limiter._token_reset["key1"] = time.time() + 1000  # prevent auto-reset
+
+    result = limiter.check("key1", tokens=2000)
+
+    assert not result.allowed
+    assert "daily token quota" in result.reason.lower()
+
+
+def test_is_rate_limited_false_when_no_history():
+    limiter = AdvancedRateLimiter()
+    limiter.set_tier("key1", RateLimitTier.FREE)
+    assert limiter.is_rate_limited("key1") is False
+
+
+def test_is_rate_limited_true_for_concurrency():
+    limiter = AdvancedRateLimiter()
+    limiter.set_tier("key1", RateLimitTier.FREE)
+    limiter.check("key1")
+    limiter.check("key1")  # FREE allows 2 concurrent
+    assert limiter.is_rate_limited("key1") is True
+
+
+def test_is_rate_limited_true_for_window_exhaustion():
+    limiter = AdvancedRateLimiter()
+    limiter.set_tier("key1", RateLimitTier.FREE)
+    for _ in range(15):
+        limiter.check("key1")
+        limiter.release("key1")
+    assert limiter.is_rate_limited("key1") is True
+
+
+def test_is_rate_limited_false_when_under_limit():
+    limiter = AdvancedRateLimiter()
+    limiter.set_tier("key1", RateLimitTier.FREE)
+    limiter.check("key1")
+    limiter.release("key1")
+    assert limiter.is_rate_limited("key1") is False
+
+
+def test_reset_user_clears_counters():
+    limiter = AdvancedRateLimiter()
+    limiter.set_tier("key1", RateLimitTier.FREE)
+    limiter.check("key1", tokens=100)
+
+    limiter.reset_user("key1")
+
+    usage = limiter.get_usage("key1")
+    assert usage["token_usage"] == 0
+    assert usage["concurrent_active"] == 0
+
+
+def test_release_on_zero_concurrent_is_noop():
+    limiter = AdvancedRateLimiter()
+    limiter.release("never-checked-in")  # should not raise or go negative
+    assert limiter._concurrent["never-checked-in"] == 0
