@@ -424,3 +424,36 @@ class TestRouterStats:
         result = s.summary()
         assert result["total_requests"] == 0
         assert result["estimated_savings_pct"] == 0.0
+
+    def test_reset_clears_all_counters(self, stats):
+        p = QueryProfile(score=0.1, tier="simple", factors={})
+        d = RoutingDecision(model="llama3.2:1b", profile=p)
+        stats.record(d, latency_ms=10.0, cost_usd=0.01)
+
+        stats.reset()
+
+        s = stats.summary()
+        assert s["total_requests"] == 0
+        assert s["model_distribution"] == {}
+        assert s["recent_decisions"] == []
+        assert s["total_cost_usd"] == 0.0
+
+    def test_provider_and_cost_tracking(self, stats):
+        p = QueryProfile(score=0.1, tier="simple", factors={})
+        d = RoutingDecision(model="llama3.2:1b", profile=p, provider="openai")
+        stats.record(d, latency_ms=10.0, cost_usd=0.05)
+
+        s = stats.summary()
+        assert s["provider_distribution"]["openai"]["count"] == 1
+        assert s["cost_by_provider_usd"]["openai"] == 0.05
+        assert s["total_cost_usd"] == 0.05
+        assert s["recent_decisions"][0]["provider"] == "openai"
+        assert s["recent_decisions"][0]["cost_usd"] == 0.05
+
+    def test_record_defaults_provider_to_local_when_missing(self, stats):
+        p = QueryProfile(score=0.1, tier="simple", factors={})
+        d = RoutingDecision(model="llama3.2:1b", profile=p)
+        assert not hasattr(d, "provider") or d.provider == "local"
+        stats.record(d, latency_ms=10.0)
+        s = stats.summary()
+        assert s["provider_distribution"]["local"]["count"] == 1
