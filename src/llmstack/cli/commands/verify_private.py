@@ -7,6 +7,7 @@ Exits non-zero when the local-only guarantee is broken, so it can gate CI.
 
 from __future__ import annotations
 
+import asyncio
 import json as _json
 from pathlib import Path
 
@@ -20,8 +21,14 @@ _SEV_ICON = {CRITICAL: "✖", WARNING: "⚠", INFO: "ℹ"}
 def verify_private(
     target: str | None = None,
     json_output: bool = False,
+    live: bool = False,
 ) -> None:
-    """Verify that the configured stack keeps all data local."""
+    """Verify that the configured stack keeps all data local.
+
+    When ``live`` is set, also probes the running gateway (if reachable) so
+    that environment-variable overrides which diverge from llmstack.yaml at
+    runtime still get caught, not just what's on disk.
+    """
     from rich.panel import Panel
     from rich.table import Table
 
@@ -37,6 +44,12 @@ def verify_private(
 
     config = load_config(directory)
     report = audit_privacy(config)
+
+    if live:
+        from llmstack.core.privacy_live import probe_live_gateway
+
+        base_url = f"http://localhost:{config.gateway.port}"
+        report.findings.extend(asyncio.run(probe_live_gateway(base_url)))
 
     if json_output:
         console.print_json(_json.dumps(report.to_dict()))

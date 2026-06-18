@@ -23,6 +23,9 @@ INFO = "INFO"
 # Provider names that are inherently local (never leave the machine).
 _LOCAL_PROVIDERS = {"local", "ollama", "vllm", "llamacpp", "llama.cpp", "tgi", "lmstudio"}
 
+# Public alias for reuse by llmstack.core.privacy_live (live gateway probing).
+LOCAL_PROVIDERS = _LOCAL_PROVIDERS
+
 # Hostnames that resolve to this machine / the local Docker network.
 _LOCAL_HOSTS = {
     "localhost",

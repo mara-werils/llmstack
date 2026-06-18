@@ -103,7 +103,9 @@
 - [x] Frictionless onboarding: `init` wizard, `up` pre-flight checks, auto model download
 - [x] Distribution: Homebrew tap, PyPI, GHCR (auto-published on release)
 - [x] **`llmstack verify-private`** — audit config for any external data egress
-- [x] VS Code / OpenVSX extension (Ask, Explain, gateway health) — `editors/vscode`
+- [x] `verify-private --live` — also probes the running gateway, catching env-var
+      overrides that diverge from llmstack.yaml at runtime
+- [x] VS Code / OpenVSX extension (Ask, Explain, gateway health, opt-in inline completion) — `editors/vscode`
 - [x] Gateway test coverage backfill (replay, health, providers, proxy, cache, …)
 - [ ] Publish extension to OpenVSX + VS Marketplace
 - [ ] JetBrains plugin

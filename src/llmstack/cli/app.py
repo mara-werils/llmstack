@@ -810,11 +810,14 @@ def env_check_cmd(
 def verify_private_cmd(
     target: str = typer.Argument(None, help="Directory containing llmstack.yaml"),
     json_output: bool = typer.Option(False, "--json", help="Emit machine-readable JSON"),
+    live: bool = typer.Option(
+        False, "--live", help="Also probe the running gateway, not just llmstack.yaml"
+    ),
 ) -> None:
     """Prove the stack runs 100% locally — audit config for any external egress."""
     from llmstack.cli.commands.verify_private import verify_private as _verify_private
 
-    _verify_private(target=target, json_output=json_output)
+    _verify_private(target=target, json_output=json_output, live=live)
 
 
 @app.command(name="git-stats")

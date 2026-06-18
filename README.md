@@ -121,6 +121,7 @@ llmstack ask "Explain the architecture" ./src/ --no-git
 ```bash
 llmstack verify-private          # human-readable report, non-zero exit if not private
 llmstack verify-private --json   # machine-readable, for CI gates
+llmstack verify-private --live   # also probes the *running* gateway, not just llmstack.yaml
 ```
 
 **In your editor** — the [VS Code / OpenVSX extension](editors/vscode) brings Ask and Explain commands to VS Code, Cursor, and Windsurf, all routed through your local gateway.
