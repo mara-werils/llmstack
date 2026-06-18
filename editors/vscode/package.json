@@ -6,6 +6,11 @@
   "publisher": "llmstack",
   "license": "Apache-2.0",
   "icon": "media/icon.png",
+  "galleryBanner": {
+    "color": "#111827",
+    "theme": "dark"
+  },
+  "qna": "https://github.com/mara-werils/llmstack/issues",
   "engines": {
     "vscode": "^1.85.0"
   },
@@ -20,7 +25,11 @@
     "ollama",
     "copilot",
     "privacy",
-    "llm"
+    "llm",
+    "offline",
+    "code-completion",
+    "assistant",
+    "self-hosted"
   ],
   "repository": {
     "type": "git",
