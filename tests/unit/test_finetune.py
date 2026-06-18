@@ -8,7 +8,9 @@ eval scoring, export config, and config schema.
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -16,11 +18,13 @@ from llmstack.finetune.data import (
     ChatExample,
     DatasetConfig,
     DatasetStats,
+    _detect_columns,
+    _load_parquet,
+    _row_to_chat,
+    _write_jsonl,
     detect_format,
     load_raw_data,
     prepare_dataset,
-    _detect_columns,
-    _row_to_chat,
 )
 from llmstack.finetune.hyperparams import (
     auto_hyperparams,
@@ -335,6 +339,144 @@ class TestPrepareDataset:
         assert "total_examples" in d
         assert "source_format" in d
         assert d["source_format"] == "jsonl"
+
+    def test_skips_rows_that_fail_conversion(self, tmp_path):
+        f = tmp_path / "data.jsonl"
+        rows = [{"input": f"a long enough question number {i}", "output": f"a long enough answer {i}"} for i in range(8)]
+        rows.append({"other": "no usable columns here at all"})
+        f.write_text("\n".join(json.dumps(r) for r in rows))
+
+        train, eval_, stats = prepare_dataset(f)
+        assert stats.skipped >= 1
+
+    def test_max_length_filter(self, tmp_path):
+        f = tmp_path / "data.jsonl"
+        lines = [
+            json.dumps({"input": "a reasonably long question here", "output": "a reasonably long answer here"})
+            for _ in range(8)
+        ]
+        f.write_text("\n".join(lines))
+
+        config = DatasetConfig(max_length=10)
+        train, eval_, stats = prepare_dataset(f, config=config)
+        assert stats.skipped == 8
+
+    def test_writes_non_empty_jsonl_files(self, tmp_path):
+        f = tmp_path / "data.jsonl"
+        lines = [
+            json.dumps(
+                {
+                    "input": f"a long enough question number {i} for the min length filter",
+                    "output": f"a long enough answer number {i} for the min length filter",
+                }
+            )
+            for i in range(10)
+        ]
+        f.write_text("\n".join(lines))
+
+        out = tmp_path / "output"
+        train, eval_, stats = prepare_dataset(f, output_dir=out)
+
+        assert len(train) > 0
+        assert len(eval_) > 0
+        train_lines = (out / "train.jsonl").read_text().strip().splitlines()
+        eval_lines = (out / "eval.jsonl").read_text().strip().splitlines()
+        assert len(train_lines) == len(train)
+        assert len(eval_lines) == len(eval_)
+
+
+# ===================================================================
+# Column detection / row conversion edge cases
+# ===================================================================
+
+
+class TestColumnDetectionFallbackSingleColumn:
+    def test_single_string_column_used_as_input(self):
+        i, o = _detect_columns({"only_text": "hello", "count": 5})
+        assert i == "only_text"
+        assert o == ""
+
+
+class TestRowToChatMessagesEdgeCases:
+    def test_invalid_json_string_returns_none(self):
+        ex = _row_to_chat({"messages": "{not valid json"}, "messages", "", "")
+        assert ex is None
+
+    def test_empty_messages_list_returns_none(self):
+        ex = _row_to_chat({"messages": []}, "messages", "", "")
+        assert ex is None
+
+    def test_non_list_messages_returns_none(self):
+        ex = _row_to_chat({"messages": {"role": "user"}}, "messages", "", "")
+        assert ex is None
+
+
+# ===================================================================
+# Loader edge cases
+# ===================================================================
+
+
+class TestLoaderEdgeCases:
+    def test_jsonl_skips_invalid_lines(self, tmp_path):
+        f = tmp_path / "data.jsonl"
+        f.write_text('{"input": "ok", "output": "fine"}\nnot valid json\n')
+        rows, fmt = load_raw_data(f)
+        assert len(rows) == 1
+
+    def test_json_dict_without_known_wrapper_key(self, tmp_path):
+        f = tmp_path / "data.json"
+        f.write_text(json.dumps({"input": "single row", "output": "answer"}))
+        rows, fmt = load_raw_data(f)
+        assert rows == [{"input": "single row", "output": "answer"}]
+
+    def test_json_scalar_returns_empty(self, tmp_path):
+        f = tmp_path / "data.json"
+        f.write_text(json.dumps("just a string"))
+        rows, fmt = load_raw_data(f)
+        assert rows == []
+
+    def test_text_fallback_per_line(self, tmp_path):
+        f = tmp_path / "data.txt"
+        f.write_text("line one\nline two\nline three")
+        rows, fmt = load_raw_data(f)
+        assert fmt == "text"
+        assert len(rows) == 3
+        assert rows[0] == {"input": "line one", "output": ""}
+
+    def test_parquet_without_pyarrow_returns_empty(self, tmp_path):
+        f = tmp_path / "data.parquet"
+        f.write_bytes(b"fake parquet bytes")
+        with patch.dict(sys.modules, {"pyarrow": None, "pyarrow.parquet": None}):
+            rows, fmt = load_raw_data(f)
+        assert rows == []
+        assert fmt == "parquet"
+
+    def test_parquet_with_pyarrow_installed(self, tmp_path):
+        f = tmp_path / "data.parquet"
+        f.write_bytes(b"fake parquet bytes")
+
+        fake_table = MagicMock()
+        fake_table.to_pylist.return_value = [{"input": "q1", "output": "a1"}]
+        fake_pq = MagicMock(read_table=MagicMock(return_value=fake_table))
+        fake_pyarrow = MagicMock(parquet=fake_pq)
+
+        with patch.dict(sys.modules, {"pyarrow": fake_pyarrow, "pyarrow.parquet": fake_pq}):
+            rows = _load_parquet(f)
+
+        assert rows == [{"input": "q1", "output": "a1"}]
+
+
+class TestWriteJsonlDirectly:
+    def test_writes_each_example_as_a_line(self, tmp_path):
+        examples = [
+            ChatExample(messages=[{"role": "user", "content": "hi"}]),
+            ChatExample(messages=[{"role": "user", "content": "bye"}]),
+        ]
+        out = tmp_path / "out.jsonl"
+        _write_jsonl(out, examples)
+        lines = out.read_text().strip().splitlines()
+        assert len(lines) == 2
+        assert json.loads(lines[0])["messages"][0]["content"] == "hi"
 
 
 # ===================================================================
