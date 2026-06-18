@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from unittest.mock import MagicMock, mock_open, patch
+
 import httpx
 import pytest
 
@@ -157,11 +159,38 @@ class TestIndividualChecks:
         c = await monitor._check_redis("redis://127.0.0.1:1")
         assert c.status == HealthStatus.UNHEALTHY
 
+    async def test_redis_healthy(self, monitor):
+        fake_client = MagicMock()
+        fake_client.ping.return_value = True
+        fake_client.info.return_value = {"redis_version": "7.2.0"}
+        with patch("redis.from_url", return_value=fake_client):
+            c = await monitor._check_redis("redis://localhost:6379")
+        assert c.status == HealthStatus.HEALTHY
+        assert "7.2.0" in c.message
+
     async def test_disk_check_runs(self, monitor):
         c = await monitor._check_disk()
         assert c.name == "disk"
         assert c.status in {HealthStatus.HEALTHY, HealthStatus.DEGRADED, HealthStatus.UNHEALTHY}
         assert "free_gb" in c.details
+
+    async def test_disk_check_unhealthy_when_nearly_full(self, monitor):
+        fake_usage = MagicMock(total=100, used=96, free=4)
+        with patch("shutil.disk_usage", return_value=fake_usage):
+            c = await monitor._check_disk()
+        assert c.status == HealthStatus.UNHEALTHY
+
+    async def test_disk_check_degraded_when_mostly_full(self, monitor):
+        fake_usage = MagicMock(total=100, used=90, free=10)
+        with patch("shutil.disk_usage", return_value=fake_usage):
+            c = await monitor._check_disk()
+        assert c.status == HealthStatus.DEGRADED
+
+    async def test_disk_check_unknown_on_exception(self, monitor):
+        with patch("shutil.disk_usage", side_effect=OSError("no such disk")):
+            c = await monitor._check_disk()
+        assert c.status == HealthStatus.UNKNOWN
+        assert "no such disk" in c.message
 
     async def test_memory_check_runs(self, monitor):
         c = await monitor._check_memory()
@@ -173,6 +202,28 @@ class TestIndividualChecks:
         c = await monitor._check_memory()
         assert c.status == HealthStatus.UNKNOWN
         assert "Unsupported" in c.message
+
+    async def test_memory_linux_healthy(self, monitor, monkeypatch):
+        meminfo = "MemTotal:       16000000 kB\nMemAvailable:    8000000 kB\n"
+        monkeypatch.setattr("platform.system", lambda: "Linux")
+        with patch("builtins.open", mock_open(read_data=meminfo)):
+            c = await monitor._check_memory()
+        assert c.name == "memory"
+        assert c.status == HealthStatus.HEALTHY
+
+    async def test_memory_linux_unhealthy(self, monitor, monkeypatch):
+        meminfo = "MemTotal:       16000000 kB\nMemAvailable:    100000 kB\n"
+        monkeypatch.setattr("platform.system", lambda: "Linux")
+        with patch("builtins.open", mock_open(read_data=meminfo)):
+            c = await monitor._check_memory()
+        assert c.status == HealthStatus.UNHEALTHY
+
+    async def test_memory_check_handles_exception(self, monitor, monkeypatch):
+        monkeypatch.setattr("platform.system", lambda: "Darwin")
+        with patch("subprocess.run", side_effect=OSError("vm_stat missing")):
+            c = await monitor._check_memory()
+        assert c.status == HealthStatus.UNKNOWN
+        assert "vm_stat missing" in c.message
 
     async def test_skip_check(self, monitor):
         c = await monitor._skip_check("redis")
