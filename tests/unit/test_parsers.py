@@ -3,14 +3,16 @@
 from __future__ import annotations
 
 import json
+import sys
 import textwrap
 from pathlib import Path
-
+from unittest.mock import MagicMock, patch
 
 from llmstack.ask.parsers import (
+    _lines_to_chunks,
+    _walk,
     collect_files,
     parse_file,
-    _lines_to_chunks,
 )
 
 
@@ -316,3 +318,157 @@ class TestCollectFilesEdgeCases:
         files = collect_files(tmp_path)
         assert len(files) == 1
         assert "app.py" in files[0].name
+
+    def test_single_unsupported_file_returns_empty(self, tmp_path: Path) -> None:
+        f = tmp_path / "data.bin"
+        f.write_bytes(b"\x00\x01")
+        assert collect_files(f) == []
+
+    def test_single_supported_file_returns_it(self, tmp_path: Path) -> None:
+        f = tmp_path / "solo.py"
+        f.write_text("x = 1")
+        files = collect_files(f)
+        assert files == [f.resolve()]
+
+    def test_skips_hidden_files(self, tmp_path: Path) -> None:
+        (tmp_path / ".hidden.py").write_text("x = 1")
+        (tmp_path / "visible.py").write_text("y = 2")
+        files = collect_files(tmp_path)
+        assert len(files) == 1
+        assert "visible.py" in files[0].name
+
+    def test_walk_skips_directory_on_permission_error(self, tmp_path: Path) -> None:
+        (tmp_path / "ok.py").write_text("x = 1")
+        original_iterdir = Path.iterdir
+
+        def flaky_iterdir(self):
+            if self.name == "locked":
+                raise PermissionError("denied")
+            return original_iterdir(self)
+
+        locked = tmp_path / "locked"
+        locked.mkdir()
+        (locked / "secret.py").write_text("y = 2")
+
+        results: list[Path] = []
+        with patch.object(Path, "iterdir", flaky_iterdir):
+            _walk(tmp_path, results)
+
+        assert all("secret.py" not in str(p) for p in results)
+        assert any("ok.py" in str(p) for p in results)
+
+
+# ---------------------------------------------------------------------------
+# Fallback / unknown extension / empty-input branches
+# ---------------------------------------------------------------------------
+
+
+class TestUnknownExtensionFallback:
+    def test_unknown_extension_falls_back_to_plain_text(self, tmp_path: Path) -> None:
+        f = tmp_path / "notes.weird"
+        f.write_text("Some unrecognised content.")
+        chunks = parse_file(f)
+        assert len(chunks) == 1
+        assert "Some unrecognised content." in chunks[0].content
+
+
+class TestEmptyInputBranches:
+    def test_empty_code_file_returns_no_chunks(self, tmp_path: Path) -> None:
+        f = tmp_path / "empty.py"
+        f.write_text("")
+        assert parse_file(f) == []
+
+    def test_empty_csv_returns_no_chunks(self, tmp_path: Path) -> None:
+        f = tmp_path / "empty.csv"
+        f.write_text("")
+        assert parse_file(f) == []
+
+    def test_markup_with_only_script_tags_returns_no_chunks(self, tmp_path: Path) -> None:
+        f = tmp_path / "scriptonly.html"
+        f.write_text("<script>var x = 1;</script>")
+        assert parse_file(f) == []
+
+    def test_empty_log_returns_no_chunks(self, tmp_path: Path) -> None:
+        f = tmp_path / "empty.log"
+        f.write_text("")
+        assert parse_file(f) == []
+
+    def test_large_json_split_via_lines_to_chunks(self, tmp_path: Path) -> None:
+        f = tmp_path / "big.json"
+        data = {f"key_{i}": f"value_{i}" * 5 for i in range(150)}
+        f.write_text(json.dumps(data, indent=2))
+        chunks = parse_file(f)
+        assert len(chunks) > 1
+
+
+class TestPdfParsing:
+    def test_pdf_extracts_text_per_page(self, tmp_path: Path) -> None:
+        f = tmp_path / "doc.pdf"
+        f.write_bytes(b"%PDF-1.4 fake")
+
+        fake_page = MagicMock()
+        fake_page.get_text.return_value = "Page content"
+        fake_doc = MagicMock()
+        fake_doc.__len__.return_value = 1
+        fake_doc.__getitem__.return_value = fake_page
+        fake_fitz = MagicMock(open=MagicMock(return_value=fake_doc))
+
+        with patch.dict(sys.modules, {"fitz": fake_fitz}):
+            chunks = parse_file(f)
+
+        assert len(chunks) == 1
+        assert chunks[0].content == "Page content"
+        fake_doc.close.assert_called_once()
+
+    def test_pdf_open_error_returns_error_chunk(self, tmp_path: Path) -> None:
+        f = tmp_path / "doc.pdf"
+        f.write_bytes(b"%PDF-1.4 fake")
+
+        fake_fitz = MagicMock(open=MagicMock(side_effect=RuntimeError("corrupt")))
+
+        with patch.dict(sys.modules, {"fitz": fake_fitz}):
+            chunks = parse_file(f)
+
+        assert len(chunks) == 1
+        assert "Error reading PDF" in chunks[0].content
+
+
+class TestDocxParsing:
+    def test_docx_groups_paragraphs_into_blocks(self, tmp_path: Path) -> None:
+        f = tmp_path / "doc.docx"
+        f.write_bytes(b"PK\x03\x04 fake")
+
+        paragraphs = [MagicMock(text=f"Paragraph {i}") for i in range(12)]
+        fake_document = MagicMock(paragraphs=paragraphs)
+        fake_docx = MagicMock(Document=MagicMock(return_value=fake_document))
+
+        with patch.dict(sys.modules, {"docx": fake_docx}):
+            chunks = parse_file(f)
+
+        assert len(chunks) == 2  # 10 + remaining 2
+        assert "Paragraph 0" in chunks[0].content
+        assert "Paragraph 11" in chunks[1].content
+
+    def test_docx_no_paragraphs_returns_empty(self, tmp_path: Path) -> None:
+        f = tmp_path / "doc.docx"
+        f.write_bytes(b"PK\x03\x04 fake")
+
+        fake_document = MagicMock(paragraphs=[MagicMock(text="   ")])
+        fake_docx = MagicMock(Document=MagicMock(return_value=fake_document))
+
+        with patch.dict(sys.modules, {"docx": fake_docx}):
+            chunks = parse_file(f)
+
+        assert chunks == []
+
+    def test_docx_open_error_returns_error_chunk(self, tmp_path: Path) -> None:
+        f = tmp_path / "doc.docx"
+        f.write_bytes(b"PK\x03\x04 fake")
+
+        fake_docx = MagicMock(Document=MagicMock(side_effect=RuntimeError("corrupt")))
+
+        with patch.dict(sys.modules, {"docx": fake_docx}):
+            chunks = parse_file(f)
+
+        assert len(chunks) == 1
+        assert "Error reading DOCX" in chunks[0].content
