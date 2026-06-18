@@ -124,11 +124,88 @@ class TestLLMStackError:
 # ---------------------------------------------------------------------------
 
 
+class _FakeStreamResp:
+    def __init__(self, lines, status_code=200):
+        self.status_code = status_code
+        self._lines = lines
+        self.headers = {}
+        self.text = ""
+
+    def iter_lines(self):
+        return iter(self._lines)
+
+    async def aiter_lines(self):
+        for line in self._lines:
+            yield line
+
+    def json(self):
+        return {}
+
+
+class _FakeSyncStreamCtx:
+    def __init__(self, resp):
+        self._resp = resp
+
+    def __enter__(self):
+        return self._resp
+
+    def __exit__(self, *args):
+        return False
+
+
+class _FakeAsyncStreamCtx:
+    def __init__(self, resp):
+        self._resp = resp
+
+    async def __aenter__(self):
+        return self._resp
+
+    async def __aexit__(self, *args):
+        return False
+
+
 class TestSyncClient:
     def test_init_strips_url(self) -> None:
         c = Client(base_url="http://localhost:8000/")
         assert c.base_url == "http://localhost:8000"
         c.close()
+
+    def test_repr_hides_api_key(self) -> None:
+        c = Client(api_key="sk-secret")
+        assert "***" in repr(c)
+        assert "sk-secret" not in repr(c)
+        c.close()
+
+    def test_repr_no_api_key(self) -> None:
+        c = Client()
+        assert "None" in repr(c)
+        c.close()
+
+    def test_chat_streaming(self) -> None:
+        lines = [
+            'data: {"id":"1","choices":[{"index":0,"delta":{"content":"Hi"},'
+            '"finish_reason":null}]}',
+            "data: [DONE]",
+        ]
+        fake_resp = _FakeStreamResp(lines)
+        with Client() as c:
+            with patch.object(c._client, "stream", return_value=_FakeSyncStreamCtx(fake_resp)):
+                deltas = list(c.chat(messages=[{"role": "user", "content": "hi"}], stream=True))
+        assert len(deltas) == 1
+        assert deltas[0].delta_content == "Hi"
+
+    def test_rag_query_streaming(self) -> None:
+        lines = [
+            'data: {"token": "Hel", "done": false}',
+            'data: {"token": "lo", "done": true, "sources": ["a.py"]}',
+            "data: [DONE]",
+        ]
+        fake_resp = _FakeStreamResp(lines)
+        with Client() as c:
+            with patch.object(c._client, "stream", return_value=_FakeSyncStreamCtx(fake_resp)):
+                deltas = list(c.rag_query(question="what?", stream=True))
+        assert len(deltas) == 2
+        assert deltas[1].sources == ["a.py"]
 
     def test_context_manager(self) -> None:
         with Client() as c:
@@ -390,6 +467,20 @@ class TestAsyncClient:
                 assert resp.chunks_stored == 2
 
     @pytest.mark.asyncio
+    async def test_rag_ingest_with_metadata(self) -> None:
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = {"status": "ok", "chunks_stored": 1, "source": "f.py"}
+
+        async with AsyncClient() as c:
+            with patch.object(
+                c._client, "post", new_callable=AsyncMock, return_value=mock_resp
+            ) as mock_post:
+                await c.rag_ingest(text="code", source="f.py", metadata={"lang": "python"})
+                payload = mock_post.call_args[1]["json"]
+                assert payload["metadata"] == {"lang": "python"}
+
+    @pytest.mark.asyncio
     async def test_rag_query(self) -> None:
         mock_resp = MagicMock()
         mock_resp.status_code = 200
@@ -482,3 +573,38 @@ class TestAsyncClient:
             with patch.object(c._client, "post", new_callable=AsyncMock, return_value=mock_resp):
                 with pytest.raises(LLMStackError):
                     await c.chat(messages=[{"role": "user", "content": "hi"}])
+
+    def test_repr_hides_api_key(self) -> None:
+        c = AsyncClient(api_key="sk-secret")
+        assert "***" in repr(c)
+        assert "sk-secret" not in repr(c)
+
+    @pytest.mark.asyncio
+    async def test_chat_streaming(self) -> None:
+        lines = [
+            'data: {"id":"1","choices":[{"index":0,"delta":{"content":"Hi"},'
+            '"finish_reason":null}]}',
+            "data: [DONE]",
+        ]
+        fake_resp = _FakeStreamResp(lines)
+        async with AsyncClient() as c:
+            with patch.object(c._client, "stream", return_value=_FakeAsyncStreamCtx(fake_resp)):
+                result = await c.chat(messages=[{"role": "user", "content": "hi"}], stream=True)
+                deltas = [d async for d in result]
+        assert len(deltas) == 1
+        assert deltas[0].delta_content == "Hi"
+
+    @pytest.mark.asyncio
+    async def test_rag_query_streaming(self) -> None:
+        lines = [
+            'data: {"token": "Hel", "done": false}',
+            'data: {"token": "lo", "done": true, "sources": ["a.py"]}',
+            "data: [DONE]",
+        ]
+        fake_resp = _FakeStreamResp(lines)
+        async with AsyncClient() as c:
+            with patch.object(c._client, "stream", return_value=_FakeAsyncStreamCtx(fake_resp)):
+                result = await c.rag_query(question="what?", stream=True)
+                deltas = [d async for d in result]
+        assert len(deltas) == 2
+        assert deltas[1].sources == ["a.py"]
