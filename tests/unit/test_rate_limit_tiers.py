@@ -102,3 +102,76 @@ class TestTieredRateLimiter:
     def test_unknown_key_uses_standard(self, limiter):
         limits = limiter.get_limits("new-key")
         assert limits["tier"] == "standard"
+
+    def test_check_with_unconfigured_tier_allows(self, limiter):
+        limiter.set_key_tier("ghost-key", "nonexistent-tier")
+        allowed, reason = limiter.check("ghost-key")
+        assert allowed is True
+        assert reason == ""
+
+    def test_get_limits_with_unconfigured_tier(self, limiter):
+        limiter.set_key_tier("ghost-key", "nonexistent-tier")
+        limits = limiter.get_limits("ghost-key")
+        assert limits == {"tier": "unknown"}
+
+    def test_requests_per_hour_limit(self, limiter):
+        limiter.add_tier(
+            TierConfig(
+                name="hourly",
+                requests_per_minute=1000,
+                requests_per_hour=3,
+            )
+        )
+        limiter.set_key_tier("key1", "hourly")
+        for _ in range(3):
+            limiter.record_request("key1")
+
+        allowed, reason = limiter.check("key1")
+        assert allowed is False
+        assert "req/hour" in reason
+
+    def test_tokens_per_minute_limit(self, limiter):
+        limiter.add_tier(
+            TierConfig(
+                name="tokens",
+                requests_per_minute=1000,
+                tokens_per_minute=100,
+            )
+        )
+        limiter.set_key_tier("key1", "tokens")
+        limiter.record_request("key1")
+        limiter.record_completion("key1", tokens=150)
+
+        allowed, reason = limiter.check("key1")
+        assert allowed is False
+        assert "tok/min" in reason
+
+    def test_record_completion_records_tokens(self, limiter):
+        limiter.record_request("key1")
+        limiter.record_completion("key1", tokens=42)
+        usage = limiter._usage["key1"]
+        assert usage.tokens_used == [(usage.tokens_used[0][0], 42)]
+
+    def test_cleanup_removes_old_entries(self, limiter):
+        limiter.record_request("key1")
+        limiter.record_completion("key1", tokens=10)
+        usage = limiter._usage["key1"]
+        usage.timestamps[0] -= 10000  # force it to look old
+        usage.tokens_used[0] = (usage.tokens_used[0][0] - 10000, 10)
+
+        limiter.cleanup()
+
+        assert usage.timestamps == []
+        assert usage.tokens_used == []
+
+    def test_key_usage_cleanup_keeps_recent_entries(self):
+        from llmstack.gateway.middleware.rate_limit_tiers import KeyUsage
+
+        usage = KeyUsage()
+        usage.record_request()
+        usage.record_tokens(5)
+
+        usage.cleanup(max_age=7200)
+
+        assert len(usage.timestamps) == 1
+        assert len(usage.tokens_used) == 1
