@@ -81,13 +81,19 @@ class CrossValidator:
         self.k = max(2, k)
 
     def create_folds(self, data: list[Feedback]) -> list[list[Feedback]]:
-        """Split data into k roughly equal folds."""
+        """Split data into k roughly equal folds.
+
+        The effective fold count is capped at the number of data points so we
+        never emit empty folds, which would otherwise contribute meaningless
+        zero-score results to the aggregate metrics.
+        """
         if not data:
             return []
 
-        folds: list[list[Feedback]] = [[] for _ in range(self.k)]
+        k_eff = min(self.k, len(data))
+        folds: list[list[Feedback]] = [[] for _ in range(k_eff)]
         for i, item in enumerate(data):
-            folds[i % self.k].append(item)
+            folds[i % k_eff].append(item)
         return folds
 
     def evaluate(

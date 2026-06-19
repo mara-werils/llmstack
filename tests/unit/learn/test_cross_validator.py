@@ -38,6 +38,20 @@ class TestCrossValidator:
     def test_create_folds_empty(self, cv):
         assert cv.create_folds([]) == []
 
+    def test_create_folds_caps_at_data_size(self):
+        cv = CrossValidator(k=5)
+        data = [_fb() for _ in range(3)]
+        folds = cv.create_folds(data)
+        # Fewer items than k must not yield empty folds.
+        assert len(folds) == 3
+        assert all(len(f) >= 1 for f in folds)
+
+    def test_evaluate_no_empty_folds_below_k(self):
+        cv = CrossValidator(k=5)
+        result = cv.evaluate([_fb() for _ in range(3)])
+        assert result.num_folds == 3
+        assert all(f.test_size >= 1 for f in result.fold_results)
+
     def test_evaluate_returns_result(self, cv):
         data = [_fb() for _ in range(15)]
         result = cv.evaluate(data)
