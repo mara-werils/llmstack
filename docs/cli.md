@@ -21,12 +21,15 @@ llmstack ask <question> [path] [OPTIONS]
 
 | Option | Default | Description |
 |---|---|---|
-| `--model` | `llama3.2` | Chat model to use for generation |
+| `--model`, `-m` | `llama3.2` | Chat model to use for generation |
 | `--embed-model` | `nomic-embed-text` | Embedding model for semantic search |
-| `--top-k` | `5` | Number of most relevant chunks to include |
-| `--chunk-size` | `1000` | Chunk size in characters |
-| `--chunk-overlap` | `200` | Overlap between adjacent chunks in characters |
-| `--no-stream` | `false` | Disable streaming (print full answer at once) |
+| `--top-k`, `-k` | `5` | Number of most relevant chunks to include |
+| `--ollama-url` | `http://localhost:11434` | Ollama API URL |
+| `--sources` / `--no-sources` | `--sources` | Show or hide source citations |
+| `--interactive`, `-i` | `false` | Interactive conversation mode |
+| `--no-cache` | `false` | Disable persistent index, re-index from scratch |
+| `--git` / `--no-git` | `--git` | Include git context (branch, recent commits) |
+| `--repo`, `-r` | — | Additional repo paths for multi-repo support |
 
 **What It Does**
 
