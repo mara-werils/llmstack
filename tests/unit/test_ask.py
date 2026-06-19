@@ -5,11 +5,13 @@ from __future__ import annotations
 import json
 import textwrap
 from pathlib import Path
+from unittest.mock import AsyncMock, MagicMock
 
 import numpy as np
 import pytest
 
 from llmstack.ask.parsers import TextChunk, parse_file, collect_files
+from llmstack.ask.embeddings import LocalEmbeddings
 from llmstack.ask.engine import AskEngine, AskResult, SourceRef, _build_context, _build_sources
 
 
@@ -272,6 +274,28 @@ class TestPromptBuilding:
         assert sources[0].lines == "1-5"
         assert sources[0].relevance == 0.8912
         assert "hello world" in sources[0].preview
+
+
+class TestLocalEmbeddingsEmbed:
+    """Guard the embed() batch-alignment contract."""
+
+    async def test_count_mismatch_raises(self) -> None:
+        emb = LocalEmbeddings()
+        emb._ensure_model = AsyncMock()
+        resp = MagicMock(raise_for_status=MagicMock())
+        # Two inputs but only one vector returned -> would desync alignment.
+        resp.json = MagicMock(return_value={"embeddings": [[0.1, 0.2]]})
+        emb._client.post = AsyncMock(return_value=resp)
+        with pytest.raises(RuntimeError, match="vectors for"):
+            await emb.embed(["a", "b"])
+
+    async def test_empty_input_returns_empty_array(self) -> None:
+        emb = LocalEmbeddings()
+        emb._ensure_model = AsyncMock()
+        emb._client.post = AsyncMock()
+        result = await emb.embed([])
+        assert result.shape == (0, 0)
+        emb._client.post.assert_not_called()
 
 
 # ---------------------------------------------------------------------------

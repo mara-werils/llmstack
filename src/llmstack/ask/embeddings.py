@@ -67,8 +67,17 @@ class LocalEmbeddings:
             resp.raise_for_status()
             data = resp.json()
             embeddings = data.get("embeddings", [])
+            # A partial response would silently desync _chunks <-> _embeddings
+            # alignment used by search(), so fail loudly on a count mismatch.
+            if len(embeddings) != len(batch):
+                raise RuntimeError(
+                    f"embedding endpoint returned {len(embeddings)} vectors for "
+                    f"{len(batch)} inputs (model={self.model})"
+                )
             all_embeddings.extend(embeddings)
 
+        if not all_embeddings:
+            return np.zeros((0, 0), dtype=np.float32)
         return np.array(all_embeddings, dtype=np.float32)
 
     async def index(self, chunks: list[TextChunk]) -> None:
