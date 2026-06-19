@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import os
 from pathlib import Path
 
@@ -107,9 +108,16 @@ def load_config(directory: Path | None = None) -> StackConfig:
 
 
 def save_config(config: StackConfig, directory: Path | None = None) -> Path:
-    """Write a StackConfig to llmstack.yaml."""
+    """Write a StackConfig to llmstack.yaml.
+
+    When the config carries gateway API keys, the file is tightened to mode
+    0600 so the credential isn't left world-readable under the default umask.
+    """
     base = directory or Path.cwd()
     path = base / CONFIG_FILENAME
     data = config.model_dump(mode="json", exclude_defaults=False)
     path.write_text(yaml.dump(data, default_flow_style=False, sort_keys=False, allow_unicode=True))
+    if getattr(getattr(config, "gateway", None), "api_keys", None):
+        with contextlib.suppress(OSError):
+            os.chmod(path, 0o600)
     return path

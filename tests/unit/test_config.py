@@ -62,6 +62,17 @@ def test_save_and_load(tmp_path):
     assert loaded.gateway.port == 8000
 
 
+def test_save_config_with_api_keys_is_owner_only(tmp_path):
+    if os.name == "nt":
+        pytest.skip("POSIX file modes only")
+    import stat
+
+    config = StackConfig()
+    config.gateway.api_keys = ["sk-llmstack-secret"]
+    path = save_config(config, tmp_path)
+    assert stat.S_IMODE(path.stat().st_mode) == 0o600
+
+
 def test_load_missing_config(tmp_path):
     with pytest.raises(FileNotFoundError):
         load_config(tmp_path)
