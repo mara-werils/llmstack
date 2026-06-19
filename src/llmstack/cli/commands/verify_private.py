@@ -37,9 +37,7 @@ def verify_private(
     directory = Path(target) if target else Path.cwd()
 
     if not config_exists(directory):
-        console.print(
-            f"[red]No llmstack.yaml found in {directory}.[/] Run 'llmstack init' first."
-        )
+        console.print(f"[red]No llmstack.yaml found in {directory}.[/] Run 'llmstack init' first.")
         raise SystemExit(2)
 
     config = load_config(directory)
