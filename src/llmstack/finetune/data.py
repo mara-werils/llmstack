@@ -225,11 +225,14 @@ def _load_text(path: Path) -> list[dict]:
     blocks = text.split("\n\n")
 
     rows = []
-    for i in range(0, len(blocks), 2):
-        q = blocks[i].strip()
-        a = blocks[i + 1].strip() if i + 1 < len(blocks) else ""
-        if q:
-            rows.append({"input": q, "output": a})
+    # Only treat the file as blank-line-separated Q&A when there is more than
+    # one block; a single block falls through to the per-line fallback below.
+    if len(blocks) >= 2:
+        for i in range(0, len(blocks), 2):
+            q = blocks[i].strip()
+            a = blocks[i + 1].strip() if i + 1 < len(blocks) else ""
+            if q:
+                rows.append({"input": q, "output": a})
 
     # Fallback: each line as a separate input
     if not rows:
