@@ -571,6 +571,21 @@ class TestEstimateModelSize:
     def test_unsloth_format(self):
         assert estimate_model_size("unsloth/llama-3.2-1b-instruct-bnb-4bit") == 1.0
 
+    def test_version_digit_not_mistaken_for_size(self):
+        # "qwen2.5-32b" must read as 32B, not 2B via a naive "2b" substring.
+        assert estimate_model_size("qwen2.5-32b") == 32.0
+        assert estimate_model_size("qwen2.5-32b-instruct") == 32.0
+
+    def test_unlisted_sizes(self):
+        assert estimate_model_size("gemma2-27b") == 27.0
+        assert estimate_model_size("codestral-22b-v0.1") == 22.0
+        assert estimate_model_size("phi-3.5-mini-4b") == 4.0
+
+    def test_b_in_word_not_matched(self):
+        # "embed" / "bnb" / "base" carry a 'b' but no preceding param count.
+        assert estimate_model_size("mxbai-embed-large") == 7.0
+        assert estimate_model_size("bert-base-uncased") == 7.0
+
 
 # ===================================================================
 # TrainConfig and TrainResult tests

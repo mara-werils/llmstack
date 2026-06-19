@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 
 
@@ -149,33 +150,18 @@ def auto_hyperparams(
 
 
 def estimate_model_size(model_name: str) -> float:
-    """Estimate model size in billions from the model name."""
+    """Estimate model size in billions from the model name.
+
+    Matches a parameter count of the form ``<number>b`` where the digits are
+    immediately followed by ``b`` (and ``b`` is not part of a longer word such
+    as ``4bit``). This avoids the substring trap where ``qwen2.5-32b`` would
+    otherwise match the literal ``2b`` and be sized as 2B.
+    """
     name = model_name.lower()
 
-    size_patterns = [
-        ("405b", 405.0),
-        ("70b", 70.0),
-        ("34b", 34.0),
-        ("33b", 33.0),
-        ("30b", 30.0),
-        ("27b", 27.0),
-        ("14b", 14.0),
-        ("13b", 13.0),
-        ("8b", 8.0),
-        ("7b", 7.0),
-        ("3b", 3.0),
-        ("2b", 2.0),
-        ("1b", 1.0),
-        ("0.5b", 0.5),
-        (":1b", 1.0),
-        (":3b", 3.0),
-        (":8b", 8.0),
-        (":70b", 70.0),
-    ]
+    match = re.search(r"(\d+(?:\.\d+)?)b(?![a-z])", name)
+    if match:
+        return float(match.group(1))
 
-    for pattern, size in size_patterns:
-        if pattern in name:
-            return size
-
-    # Default guess
+    # Default guess when the name carries no parameter count.
     return 7.0
