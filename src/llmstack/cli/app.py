@@ -76,7 +76,7 @@ def quickstart(
 
 @app.command()
 def init(
-    preset: str = typer.Option(None, "--preset", "-p", help="Preset: chat, rag, agent, secure"),
+    preset: str = typer.Option(None, "--preset", "-p", help="Preset: chat, rag, agent"),
     directory: str = typer.Option(None, "--dir", "-d", help="Target directory"),
     yes: bool = typer.Option(
         False, "--yes", "-y", help="Skip the interactive wizard and use defaults"
