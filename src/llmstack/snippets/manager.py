@@ -77,8 +77,12 @@ class SnippetManager:
 
     def _generate_id(self) -> str:
         import hashlib
+        import secrets
 
-        return hashlib.sha256(str(time.time()).encode()).hexdigest()[:12]
+        # Mix in random bytes so saves within the same clock tick don't collide
+        # (a bare time.time() seed produced duplicate IDs on burst saves).
+        seed = f"{time.time()}-{secrets.token_hex(8)}"
+        return hashlib.sha256(seed.encode()).hexdigest()[:12]
 
     def save(
         self,

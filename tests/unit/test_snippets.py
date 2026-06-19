@@ -26,6 +26,13 @@ def test_snippet_count_property(manager):
     assert manager.snippet_count == 2
 
 
+def test_burst_saves_get_unique_ids(manager):
+    # Saves within the same clock tick must not collide / overwrite.
+    ids = {manager.save(title=f"s{i}", code=f"x = {i}").id for i in range(50)}
+    assert len(ids) == 50
+    assert manager.snippet_count == 50
+
+
 def test_languages_property(manager):
     assert manager.languages == []
     manager.save(title="A", code="x = 1", language="python")
