@@ -30,8 +30,10 @@ def config_validate() -> None:
 
     except FileNotFoundError as exc:
         failure(str(exc))
+        raise SystemExit(1) from exc
     except SystemExit as exc:
         failure(f"Validation failed: {exc}")
+        raise SystemExit(1) from exc
 
 
 def config_show(output_format: str = "yaml") -> None:
@@ -68,3 +70,4 @@ def config_path() -> None:
         console.print(f"[path]{path}[/]")
     except FileNotFoundError as exc:
         failure(str(exc))
+        raise SystemExit(1) from exc
