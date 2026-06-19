@@ -7,6 +7,7 @@ and early warnings when resources are running low.
 from __future__ import annotations
 
 import logging
+import os
 import time
 from dataclasses import dataclass
 from typing import Any
@@ -78,7 +79,9 @@ class ResourceMonitor:
     def snapshot(self) -> ResourceSnapshot:
         """Take a snapshot of current system resources."""
         mem = psutil.virtual_memory()
-        disk = psutil.disk_usage("/")
+        # Use the filesystem root portably ("/" on POSIX, "C:\\" on Windows)
+        # rather than hardcoding "/", which raises on Windows.
+        disk = psutil.disk_usage(os.path.abspath(os.sep))
 
         snap = ResourceSnapshot(
             timestamp=time.time(),
