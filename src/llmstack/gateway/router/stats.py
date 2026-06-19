@@ -55,6 +55,8 @@ class RouterStats:
     ) -> None:
         """Record a completed routing decision."""
         provider = getattr(decision, "provider", "local")
+        # Guard against a buggy provider cost calc driving totals negative.
+        cost_usd = max(0.0, cost_usd)
         with self._lock:
             self._total_requests += 1
             self._model_counts[decision.model] += 1

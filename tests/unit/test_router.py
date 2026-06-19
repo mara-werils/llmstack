@@ -382,6 +382,14 @@ class TestRouterStats:
         assert "llama3.2:1b" in s["model_distribution"]
         assert "simple" in s["tier_distribution"]
 
+    def test_negative_cost_clamped_to_zero(self, stats):
+        profile = QueryProfile(score=0.2, tier="simple", factors={})
+        decision = RoutingDecision(model="llama3.2:1b", profile=profile)
+        stats.record(decision, latency_ms=10.0, cost_usd=-5.0)
+        s = stats.summary()
+        assert s["total_cost_usd"] == 0.0
+        assert all(c >= 0.0 for c in s["cost_by_provider_usd"].values())
+
     def test_savings_tracking(self, stats):
         # Two requests to small model (avoided large)
         for _ in range(2):
