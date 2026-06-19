@@ -24,7 +24,7 @@
 ---
 
 <p align="center">
-  <img src="assets/demo.gif" alt="llmstack ask demo" width="700">
+  <img src="demo.gif" alt="llmstack ask demo" width="700">
 </p>
 
 ---
@@ -453,7 +453,7 @@ Auto hardware detection:
 |---------|-------------|
 | `llmstack ask <question> [path]` | Ask questions about local files (persistent index, hybrid search) |
 | `llmstack ask -i [path]` | Interactive conversation with your codebase |
-| `llmstack init [--preset]` | Create config (presets: chat, rag, router, agent) |
+| `llmstack init [--preset]` | Create config (presets: chat, rag, agent) |
 | `llmstack up` | Start all services |
 | `llmstack down` | Stop all services |
 | `llmstack status` | Health check |
