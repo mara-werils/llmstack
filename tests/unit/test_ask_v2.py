@@ -35,6 +35,29 @@ class TestPersistentIndex:
         assert idx.exists()
         idx.close()
 
+    def test_foreign_keys_enabled(self, project):
+        idx = PersistentIndex(project)
+        conn = idx._ensure_db()
+        assert conn.execute("PRAGMA foreign_keys").fetchone()[0] == 1
+        idx.close()
+
+    def test_delete_file_cascades_to_chunks(self, project):
+        idx = PersistentIndex(project)
+        conn = idx._ensure_db()
+        conn.execute("INSERT INTO files (path, hash, mtime) VALUES ('x.py', 'h', 1.0)")
+        conn.execute(
+            "INSERT INTO chunks (file_path, content, start_line, end_line, chunk_index) "
+            "VALUES ('x.py', 'c', 1, 1, 0)"
+        )
+        conn.commit()
+        conn.execute("DELETE FROM files WHERE path='x.py'")
+        conn.commit()
+        remaining = conn.execute(
+            "SELECT COUNT(*) FROM chunks WHERE file_path='x.py'"
+        ).fetchone()[0]
+        assert remaining == 0
+        idx.close()
+
     def test_diff_all_new(self, project):
         idx = PersistentIndex(project)
         files = [project / "a.py", project / "b.py"]

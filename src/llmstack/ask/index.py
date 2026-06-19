@@ -88,6 +88,9 @@ class PersistentIndex:
         self._index_dir.mkdir(parents=True, exist_ok=True)
         self._conn = sqlite3.connect(str(self._db_path))
         self._conn.execute("PRAGMA journal_mode=WAL")
+        # Enable FK enforcement so the chunks->files ON DELETE CASCADE below
+        # actually fires (SQLite defaults foreign_keys to OFF per-connection).
+        self._conn.execute("PRAGMA foreign_keys=ON")
 
         self._conn.executescript("""
             CREATE TABLE IF NOT EXISTS meta (
