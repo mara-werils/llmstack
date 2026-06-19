@@ -220,6 +220,23 @@ class TestComputeMetricsQuality:
         assert m.quality_improvement == pytest.approx(-0.4)
         assert m.quality_trend == "declining"
 
+    def test_zero_quality_version_excluded_from_improvement(self, analytics, version_mgr):
+        # A leading untrained placeholder (quality 0.0) must not inflate the
+        # improvement against the first *real* score.
+        version_mgr.create_version(
+            base_model="base", adapter_path="", quality_score=0.0, activate=False
+        )
+        version_mgr.create_version(
+            base_model="base", adapter_path="", quality_score=0.5, activate=False
+        )
+        version_mgr.create_version(
+            base_model="base", adapter_path="", quality_score=0.8, activate=True
+        )
+        m = analytics.compute_metrics()
+        # 0.8 (latest) - 0.5 (first scored) = 0.3, not 0.8 against the 0.0 row.
+        assert m.quality_improvement == pytest.approx(0.3)
+        assert m.best_quality == pytest.approx(0.8)
+
     def test_quality_stable_trend(self, analytics, version_mgr):
         # Nearly identical scores -> within 0.01 -> stays stable
         version_mgr.create_version(

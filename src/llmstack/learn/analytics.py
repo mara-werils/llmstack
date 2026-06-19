@@ -124,15 +124,20 @@ class LearningAnalytics:
         if versions:
             active = next((v for v in versions if v.is_active), None)
             metrics.current_quality = active.quality_score if active else 0.0
-            metrics.best_quality = max(v.quality_score for v in versions)
 
-            if len(versions) >= 2:
-                first_quality = versions[-1].quality_score
-                latest_quality = versions[0].quality_score
+            # Ignore untrained/placeholder versions (quality 0.0) so they don't
+            # skew best/first/improvement — consistent with get_quality_timeline.
+            scored = [v for v in versions if v.quality_score > 0]
+            if scored:
+                metrics.best_quality = max(v.quality_score for v in scored)
+
+            if len(scored) >= 2:
+                first_quality = scored[-1].quality_score
+                latest_quality = scored[0].quality_score
                 metrics.quality_improvement = latest_quality - first_quality
 
-                # Trend from last 5 versions
-                recent = versions[:5]
+                # Trend from last 5 scored versions
+                recent = scored[:5]
                 if len(recent) >= 2:
                     recent_scores = [v.quality_score for v in recent]
                     if recent_scores[0] > recent_scores[-1] + 0.01:
