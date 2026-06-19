@@ -298,7 +298,11 @@ class PreferenceLearner:
             prefs.last_updated = data.get("last_updated", 0)
             prefs.total_signals = data.get("total_signals", 0)
             return prefs
-        except (json.JSONDecodeError, KeyError):
+        except (json.JSONDecodeError, KeyError, TypeError, ValueError, AttributeError) as exc:
+            # A corrupt/partially-written profile (bad JSON, or valid JSON of
+            # the wrong shape) shouldn't crash callers or vanish silently —
+            # log and start fresh.
+            logger.warning("Discarding unreadable preferences profile: %s", exc)
             return UserPreferences()
 
     def _save(self) -> None:

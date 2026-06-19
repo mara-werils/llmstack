@@ -261,6 +261,18 @@ class TestLoad:
         assert learner.preferences.total_signals == 0
         assert learner.preferences.length.samples == 0
 
+    def test_load_wrong_shape_json_returns_defaults(self, store, tmp_path, caplog):
+        # Valid JSON of the wrong shape (a list, not an object) must fall back
+        # to defaults and emit a warning instead of crashing.
+        import json
+
+        path = tmp_path / "prefs.json"
+        path.write_text(json.dumps([1, 2, 3]))
+        with caplog.at_level("WARNING"):
+            learner = PreferenceLearner(store=store, preferences_path=path)
+        assert learner.preferences.total_signals == 0
+        assert "unreadable preferences" in caplog.text.lower()
+
     def test_load_missing_file_returns_defaults(self, store, tmp_path):
         learner = PreferenceLearner(store=store, preferences_path=tmp_path / "does_not_exist.json")
         assert isinstance(learner.preferences, UserPreferences)
