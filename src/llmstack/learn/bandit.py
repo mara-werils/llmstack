@@ -103,10 +103,14 @@ class ModelBandit:
         """
         arms = self._get_arms(category)
 
-        # Ensure minimum exploration
-        for name, arm in arms.items():
-            if arm.pulls < self.config.min_pulls_per_arm:
-                return name
+        # Ensure minimum exploration: pick the least-pulled under-explored arm
+        # so exploration is balanced across arms rather than front-loaded onto
+        # whichever arm happens to come first in insertion order.
+        under_explored = [
+            name for name, arm in arms.items() if arm.pulls < self.config.min_pulls_per_arm
+        ]
+        if under_explored:
+            return min(under_explored, key=lambda n: arms[n].pulls)
 
         if self.config.strategy == "thompson":
             return self._thompson_select(arms)

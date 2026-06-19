@@ -27,6 +27,17 @@ class TestModelBandit:
             seen.add(model)
         assert len(seen) == 3
 
+    def test_min_exploration_is_balanced(self):
+        bandit = ModelBandit(
+            models=["a", "b", "c"],
+            config=BanditConfig(min_pulls_per_arm=2),
+        )
+        # Pull "a" once; "b"/"c" still have zero pulls. The exploration phase
+        # must prefer a least-pulled arm, not return "a" again just because it
+        # comes first in insertion order.
+        bandit.update("a", reward=0.5)
+        assert bandit.select() in ("b", "c")
+
     def test_update_tracks_stats(self, bandit):
         bandit.update("small", reward=0.8)
         bandit.update("small", reward=0.9)
