@@ -25,13 +25,18 @@ def apikey_generate(prefix: str = "llmsk", length: int = 48) -> None:
 
 
 def apikey_validate(key: str) -> None:
-    """Validate an API key format."""
+    """Validate an API key format.
+
+    Exits non-zero on an empty (2) or malformed (1) key so the check can be
+    scripted in CI.
+    """
     if not key:
         console.print("[red]No key provided[/]")
-        return
+        raise SystemExit(2)
 
     if key.startswith("llmsk_") and len(key) >= 20:
         success(f"Key format is valid (prefix: llmsk_, length: {len(key)})")
     else:
         console.print("[yellow]Warning: Key does not follow recommended format (llmsk_...)[/]")
         info("Generate a new key with: llmstack apikey generate")
+        raise SystemExit(1)
