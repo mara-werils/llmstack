@@ -48,7 +48,7 @@ def models(
 
                 console.print(table)
     except (httpx.ConnectError, httpx.TimeoutException):
-        console.print("[muted]  Ollama not reachable at {ollama_url}[/]")
+        console.print(f"[muted]  Ollama not reachable at {ollama_url}[/]")
 
     # Try gateway if available
     gw_url = gateway_url
