@@ -281,6 +281,10 @@ def doctor() -> None:
         console.print(f"[bold red]{issues} issue(s) and {warnings} warning(s) found.[/]")
     console.print()
 
+    # Exit non-zero on blocking issues so 'doctor' can gate CI / scripts.
+    if issues:
+        raise SystemExit(1)
+
 
 def doctor_fix() -> None:
     """Auto-fix common issues detected by doctor."""
