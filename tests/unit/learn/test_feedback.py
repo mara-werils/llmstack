@@ -196,9 +196,7 @@ class TestFeedbackStore:
         s.close()
 
     def test_mark_feedback_used_empty_list_is_noop(self, store):
-        store.add_feedback(
-            Feedback(feedback_type=FeedbackType.THUMBS_UP, query="a", response="b")
-        )
+        store.add_feedback(Feedback(feedback_type=FeedbackType.THUMBS_UP, query="a", response="b"))
         store.mark_feedback_used([])  # should not raise
         assert store.get_unused_feedback_count() == 1
 

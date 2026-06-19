@@ -158,7 +158,9 @@ class TestRegressionDetector:
         assert detector.alerts == []
         assert detector.alert_count == 0
 
-        version_mgr.create_version(base_model="test", adapter_path="", quality_score=0.8, activate=True)
+        version_mgr.create_version(
+            base_model="test", adapter_path="", quality_score=0.8, activate=True
+        )
         for _ in range(10):
             store.add_quality_snapshot("1", "overall", 0.5)
         detector.check()
@@ -167,7 +169,9 @@ class TestRegressionDetector:
         assert detector.alert_count > 0
 
     def test_is_regressing_true_after_severe_alert(self, detector, version_mgr, store):
-        version_mgr.create_version(base_model="test", adapter_path="", quality_score=0.8, activate=True)
+        version_mgr.create_version(
+            base_model="test", adapter_path="", quality_score=0.8, activate=True
+        )
         for _ in range(10):
             store.add_quality_snapshot("1", "overall", 0.5)
         detector.check()
@@ -187,24 +191,34 @@ class TestRegressionDetector:
         assert health == {"status": "no_active_model", "metrics": {}}
 
     def test_baseline_zero_skips_check(self, detector, version_mgr, store):
-        version_mgr.create_version(base_model="test", adapter_path="", quality_score=0.0, activate=True)
+        version_mgr.create_version(
+            base_model="test", adapter_path="", quality_score=0.0, activate=True
+        )
         for _ in range(10):
             store.add_quality_snapshot("1", "overall", 0.5)
         alerts = detector.check()
         assert alerts == []
 
     def test_mild_severity_detected(self, detector, version_mgr, store):
-        version_mgr.create_version(base_model="test", adapter_path="", quality_score=1.0, activate=True)
+        version_mgr.create_version(
+            base_model="test", adapter_path="", quality_score=1.0, activate=True
+        )
         for _ in range(10):
-            store.add_quality_snapshot("1", "overall", 0.95)  # 5% drop, identical values -> high confidence
+            store.add_quality_snapshot(
+                "1", "overall", 0.95
+            )  # 5% drop, identical values -> high confidence
         alerts = detector.check()
         mild = [a for a in alerts if a.severity == RegressionSeverity.MILD]
         assert len(mild) > 0
 
     def test_moderate_severity_detected(self, detector, version_mgr, store):
-        version_mgr.create_version(base_model="test", adapter_path="", quality_score=1.0, activate=True)
+        version_mgr.create_version(
+            base_model="test", adapter_path="", quality_score=1.0, activate=True
+        )
         for _ in range(10):
-            store.add_quality_snapshot("1", "overall", 0.90)  # 10% drop, identical values -> high confidence
+            store.add_quality_snapshot(
+                "1", "overall", 0.90
+            )  # 10% drop, identical values -> high confidence
         alerts = detector.check()
         moderate = [a for a in alerts if a.severity == RegressionSeverity.MODERATE]
         assert len(moderate) > 0
@@ -231,15 +245,11 @@ class TestComputeConfidence:
     def test_zero_standard_error_branch_mean_below_baseline(self, detector):
         # First math.sqrt() call computes std (forced to 0); second computes sqrt(n)
         # for the se denominator, which must stay real or se's division blows up.
-        with patch(
-            "llmstack.learn.regression.math.sqrt", side_effect=[0.0, math.sqrt(3)]
-        ):
+        with patch("llmstack.learn.regression.math.sqrt", side_effect=[0.0, math.sqrt(3)]):
             confidence = detector._compute_confidence([0.1, 0.2, 0.3], baseline=0.8)
         assert confidence == 1.0
 
     def test_zero_standard_error_branch_mean_above_baseline(self, detector):
-        with patch(
-            "llmstack.learn.regression.math.sqrt", side_effect=[0.0, math.sqrt(3)]
-        ):
+        with patch("llmstack.learn.regression.math.sqrt", side_effect=[0.0, math.sqrt(3)]):
             confidence = detector._compute_confidence([0.9, 0.95, 1.0], baseline=0.5)
         assert confidence == 0.0

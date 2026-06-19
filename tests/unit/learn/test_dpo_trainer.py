@@ -181,9 +181,7 @@ class TestDPOTrainerInit:
 
 class TestTrain:
     def test_missing_dependencies_returns_error(self, monkeypatch, examples):
-        monkeypatch.setattr(
-            dpo_mod, "_check_dpo_dependencies", lambda: (False, "missing")
-        )
+        monkeypatch.setattr(dpo_mod, "_check_dpo_dependencies", lambda: (False, "missing"))
         trainer = DPOTrainer()
         result = trainer.train(examples)
         assert result.success is False
@@ -191,18 +189,14 @@ class TestTrain:
         assert "pip install trl peft transformers" in result.error
 
     def test_empty_examples_returns_error(self, monkeypatch):
-        monkeypatch.setattr(
-            dpo_mod, "_check_dpo_dependencies", lambda: (True, "trl + peft")
-        )
+        monkeypatch.setattr(dpo_mod, "_check_dpo_dependencies", lambda: (True, "trl + peft"))
         trainer = DPOTrainer()
         result = trainer.train([])
         assert result.success is False
         assert result.error == "No training examples provided"
 
     def test_successful_run_writes_metadata(self, monkeypatch, tmp_path, examples):
-        monkeypatch.setattr(
-            dpo_mod, "_check_dpo_dependencies", lambda: (True, "trl + peft")
-        )
+        monkeypatch.setattr(dpo_mod, "_check_dpo_dependencies", lambda: (True, "trl + peft"))
         cfg = DPOConfig(output_dir=str(tmp_path / "dpo_out"))
         trainer = DPOTrainer(config=cfg)
 
@@ -244,9 +238,7 @@ class TestTrain:
         assert data["reward_margin"] == 0.6
 
     def test_run_dpo_exception_is_caught(self, monkeypatch, tmp_path, examples):
-        monkeypatch.setattr(
-            dpo_mod, "_check_dpo_dependencies", lambda: (True, "trl + peft")
-        )
+        monkeypatch.setattr(dpo_mod, "_check_dpo_dependencies", lambda: (True, "trl + peft"))
         cfg = DPOConfig(output_dir=str(tmp_path / "dpo_err"))
         trainer = DPOTrainer(config=cfg)
 
@@ -263,15 +255,11 @@ class TestTrain:
         assert not (tmp_path / "dpo_err" / "dpo_result.json").exists()
 
     def test_creates_nested_output_dir(self, monkeypatch, tmp_path, examples):
-        monkeypatch.setattr(
-            dpo_mod, "_check_dpo_dependencies", lambda: (True, "trl + peft")
-        )
+        monkeypatch.setattr(dpo_mod, "_check_dpo_dependencies", lambda: (True, "trl + peft"))
         nested = tmp_path / "a" / "b" / "c"
         cfg = DPOConfig(output_dir=str(nested))
         trainer = DPOTrainer(config=cfg)
-        monkeypatch.setattr(
-            trainer, "_run_dpo", lambda exs, out: DPOTrainResult(success=True)
-        )
+        monkeypatch.setattr(trainer, "_run_dpo", lambda exs, out: DPOTrainResult(success=True))
         trainer.train(examples)
         assert nested.is_dir()
 
@@ -360,9 +348,7 @@ class TestRunDPO:
         class TRLDPOTrainer:
             def __init__(self, **kwargs):
                 captured["trainer_kwargs"] = kwargs
-                self.state = types.SimpleNamespace(
-                    log_history=log_history, global_step=global_step
-                )
+                self.state = types.SimpleNamespace(log_history=log_history, global_step=global_step)
 
             def train(self):
                 captured["trained"] = True
@@ -435,9 +421,7 @@ class TestRunDPO:
         assert ta["max_length"] == cfg.max_length
 
     def test_run_dpo_without_4bit_skips_bnb(self, monkeypatch, tmp_path, examples):
-        captured, model, _ = self._install_stubs(
-            monkeypatch, log_history=[], global_step=0
-        )
+        captured, model, _ = self._install_stubs(monkeypatch, log_history=[], global_step=0)
         cfg = DPOConfig(output_dir=str(tmp_path / "out2"), use_4bit=False)
         trainer = DPOTrainer(config=cfg)
         out_dir = tmp_path / "out2"
@@ -456,18 +440,12 @@ class TestRunDPO:
         assert result.reward_margin == 0.0
         assert result.total_steps == 0
 
-    def test_run_dpo_existing_pad_token_preserved(
-        self, monkeypatch, tmp_path, examples
-    ):
+    def test_run_dpo_existing_pad_token_preserved(self, monkeypatch, tmp_path, examples):
         import sys
 
-        captured, _, tokenizer = self._install_stubs(
-            monkeypatch, log_history=[], global_step=1
-        )
+        captured, _, tokenizer = self._install_stubs(monkeypatch, log_history=[], global_step=1)
         # Give the tokenizer an existing pad token before running.
-        sys.modules["transformers"].AutoTokenizer.from_pretrained(
-            "x"
-        ).pad_token = "<pad>"
+        sys.modules["transformers"].AutoTokenizer.from_pretrained("x").pad_token = "<pad>"
 
         cfg = DPOConfig(output_dir=str(tmp_path / "out3"))
         trainer = DPOTrainer(config=cfg)

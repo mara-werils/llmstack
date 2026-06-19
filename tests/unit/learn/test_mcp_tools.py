@@ -44,9 +44,7 @@ class TestLearnToolsSchema:
             assert "properties" in schema
 
     def test_feedback_schema_enum_and_required(self):
-        feedback_tool = next(
-            t for t in mcp_tools.LEARN_TOOLS if t["name"] == "llmstack_feedback"
-        )
+        feedback_tool = next(t for t in mcp_tools.LEARN_TOOLS if t["name"] == "llmstack_feedback")
         props = feedback_tool["inputSchema"]["properties"]
         assert set(props) == {"feedback_type", "query", "response", "correction"}
         assert props["feedback_type"]["enum"] == [
@@ -95,9 +93,7 @@ class TestHandleLearnToolDispatch:
 
 class TestHandleFeedback:
     def test_invalid_feedback_type(self, tmp_store):
-        result = mcp_tools.handle_learn_tool(
-            "llmstack_feedback", {"feedback_type": "bogus"}
-        )
+        result = mcp_tools.handle_learn_tool("llmstack_feedback", {"feedback_type": "bogus"})
         assert result == {"error": "Invalid feedback_type"}
 
     def test_thumbs_up_recorded(self, tmp_store):

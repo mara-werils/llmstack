@@ -101,9 +101,7 @@ class TestValidation:
         assert resp.json()["error"]["type"] == "validation_error"
 
     def test_bad_role_returns_422(self, monkeypatch):
-        monkeypatch.setattr(
-            chat_route, "proxy_chat_completion", lambda *a, **k: None
-        )
+        monkeypatch.setattr(chat_route, "proxy_chat_completion", lambda *a, **k: None)
         client = _make_client()
         resp = client.post(
             "/v1/chat/completions",
@@ -128,8 +126,7 @@ class TestNonStreaming:
             return {
                 "id": "cmpl-1",
                 "choices": [
-                    {"message": {"role": "assistant", "content": "hi"},
-                     "finish_reason": "stop"}
+                    {"message": {"role": "assistant", "content": "hi"}, "finish_reason": "stop"}
                 ],
                 "usage": {"prompt_tokens": 3, "completion_tokens": 1},
             }
@@ -217,8 +214,10 @@ class TestRouting:
         _install_router(monkeypatch, router)
 
         async def _proxy(payload, stream, provider_name):
-            return {"id": "r2",
-                    "choices": [{"message": {"content": "ok"}, "finish_reason": "stop"}]}
+            return {
+                "id": "r2",
+                "choices": [{"message": {"content": "ok"}, "finish_reason": "stop"}],
+            }
 
         monkeypatch.setattr(chat_route, "proxy_chat_completion", _proxy)
         client = _make_client()
@@ -232,17 +231,17 @@ class TestRouting:
         router = _FakeRouter(models=("fast", "smart"))
         _install_router(monkeypatch, router)
         # An unknown model triggers _resolve_provider_for_model
-        monkeypatch.setattr(
-            chat_route, "_resolve_provider_for_model", lambda m: "openai"
-        )
+        monkeypatch.setattr(chat_route, "_resolve_provider_for_model", lambda m: "openai")
 
         captured = {}
 
         async def _proxy(payload, stream, provider_name):
             captured["provider"] = provider_name
             captured["model"] = payload["model"]
-            return {"id": "r3",
-                    "choices": [{"message": {"content": "ok"}, "finish_reason": "stop"}]}
+            return {
+                "id": "r3",
+                "choices": [{"message": {"content": "ok"}, "finish_reason": "stop"}],
+            }
 
         monkeypatch.setattr(chat_route, "proxy_chat_completion", _proxy)
         client = _make_client()
@@ -269,8 +268,10 @@ class TestRouting:
         monkeypatch.setattr(builtins, "__import__", _boom)
 
         async def _proxy(payload, stream, provider_name):
-            return {"id": "r4",
-                    "choices": [{"message": {"content": "ok"}, "finish_reason": "stop"}]}
+            return {
+                "id": "r4",
+                "choices": [{"message": {"content": "ok"}, "finish_reason": "stop"}],
+            }
 
         monkeypatch.setattr(chat_route, "proxy_chat_completion", _proxy)
         client = _make_client()
@@ -436,9 +437,7 @@ class TestErrors:
 
         monkeypatch.setattr(chat_route, "proxy_chat_completion", _proxy)
         client = _make_client()
-        resp = client.post(
-            "/v1/chat/completions", json=_body(model="gpt", stream=True)
-        )
+        resp = client.post("/v1/chat/completions", json=_body(model="gpt", stream=True))
         assert resp.status_code == 503
 
 

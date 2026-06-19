@@ -176,9 +176,7 @@ class TestPostGenerate:
         hooks.post_generate("q", "r", quality_score=0.8)
         assert hooks._interaction_count == 1
 
-    def test_records_quality_when_detector_and_active(
-        self, store, preference_learner
-    ):
+    def test_records_quality_when_detector_and_active(self, store, preference_learner):
         detector = MagicMock()
         active = MagicMock()
         active.version = "v2"
@@ -205,9 +203,7 @@ class TestPostGenerate:
         h.post_generate("q", "r", quality_score=0.0)
         detector.record_quality.assert_not_called()
 
-    def test_no_quality_record_when_no_active_version(
-        self, store, preference_learner
-    ):
+    def test_no_quality_record_when_no_active_version(self, store, preference_learner):
         detector = MagicMock()
         detector.version_mgr.get_active.return_value = None
         h = LearningHooks(

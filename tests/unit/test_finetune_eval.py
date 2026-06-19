@@ -113,7 +113,9 @@ class _FakeAsyncClient:
 @pytest.mark.asyncio
 async def test_generate_success():
     with patch("llmstack.finetune.eval.httpx.AsyncClient", _FakeAsyncClient):
-        text, latency_ms = await _generate("http://ollama", "model-a", [{"role": "user", "content": "hi"}])
+        text, latency_ms = await _generate(
+            "http://ollama", "model-a", [{"role": "user", "content": "hi"}]
+        )
     assert text == "hi there"
     assert latency_ms >= 0
 
@@ -125,7 +127,9 @@ async def test_generate_handles_exception():
             raise ConnectionError("down")
 
     with patch("llmstack.finetune.eval.httpx.AsyncClient", RaisingClient):
-        text, latency_ms = await _generate("http://ollama", "model-a", [{"role": "user", "content": "hi"}])
+        text, latency_ms = await _generate(
+            "http://ollama", "model-a", [{"role": "user", "content": "hi"}]
+        )
     assert text == ""
     assert latency_ms >= 0
 
@@ -174,7 +178,12 @@ async def test_evaluate_model_full_flow_with_missing_assistant_message():
 @pytest.mark.asyncio
 async def test_evaluate_model_respects_max_examples():
     examples = [
-        ChatExample(messages=[{"role": "user", "content": f"q{i}"}, {"role": "assistant", "content": f"a{i}"}])
+        ChatExample(
+            messages=[
+                {"role": "user", "content": f"q{i}"},
+                {"role": "assistant", "content": f"a{i}"},
+            ]
+        )
         for i in range(5)
     ]
 

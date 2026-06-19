@@ -49,8 +49,7 @@ class _StreamCtx:
 
 
 class _FakeClient:
-    def __init__(self, *, post=None, get=None, post_exc=None, stream_chunks=None,
-                 stream_resp=None):
+    def __init__(self, *, post=None, get=None, post_exc=None, stream_chunks=None, stream_resp=None):
         self._post = post
         self._get = get
         self._post_exc = post_exc

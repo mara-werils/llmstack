@@ -205,9 +205,7 @@ class TestPreferencesConfig:
         assert cfg.min_signals == 5
 
     def test_to_dict(self):
-        cfg = PreferencesConfig(
-            enabled=False, inject_into_prompts=False, min_signals=1
-        )
+        cfg = PreferencesConfig(enabled=False, inject_into_prompts=False, min_signals=1)
         assert cfg.to_dict() == {
             "enabled": False,
             "inject_into_prompts": False,

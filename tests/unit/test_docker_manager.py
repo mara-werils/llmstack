@@ -174,7 +174,10 @@ def test_stop_service_not_found_is_noop(manager, mock_client):
 
 
 def test_stop_all(manager, mock_client):
-    containers = [_make_container("llmstack-ollama", "ollama"), _make_container("llmstack-redis", "redis")]
+    containers = [
+        _make_container("llmstack-ollama", "ollama"),
+        _make_container("llmstack-redis", "redis"),
+    ]
     mock_client.containers.list.return_value = containers
     net = MagicMock()
     mock_client.networks.get.return_value = net

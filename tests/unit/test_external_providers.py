@@ -164,9 +164,7 @@ class TestGeminiTranslation:
         assert gc["stopSequences"] == ["END"]
 
     def test_stop_list_preserved(self):
-        _, body = _openai_to_gemini(
-            {"messages": [], "stop": ["a", "b"]}, "k"
-        )
+        _, body = _openai_to_gemini({"messages": [], "stop": ["a", "b"]}, "k")
         assert body["generationConfig"]["stopSequences"] == ["a", "b"]
 
     def test_no_generation_config_when_empty(self):
@@ -183,9 +181,7 @@ GEMINI_OK = {
 class TestGoogleProvider:
     async def test_chat_extracts_text_and_normalizes(self, monkeypatch):
         _patch(monkeypatch, post=_Resp(GEMINI_OK))
-        resp = await GoogleProvider(api_key="k").chat(
-            {"model": "gemini-2.5-flash", "messages": []}
-        )
+        resp = await GoogleProvider(api_key="k").chat({"model": "gemini-2.5-flash", "messages": []})
         assert resp.content == "hello world"
         assert resp.raw["object"] == "chat.completion"
         # gemini-2.5-flash = 0.15/M in, 0.60/M out, 1M each
@@ -206,9 +202,12 @@ class TestGoogleProvider:
         event = {"candidates": [{"content": {"parts": [{"text": "hi"}]}}]}
         lines = [f"data: {json.dumps(event)}", "ignore me", "data: not-json"]
         _patch(monkeypatch, stream=_StreamCtx(lines=lines))
-        out = [c async for c in GoogleProvider(api_key="k").chat_stream(
-            {"model": "gemini-2.5-flash", "messages": [{"role": "system", "content": "s"}]}
-        )]
+        out = [
+            c
+            async for c in GoogleProvider(api_key="k").chat_stream(
+                {"model": "gemini-2.5-flash", "messages": [{"role": "system", "content": "s"}]}
+            )
+        ]
         body = b"".join(out).decode()
         assert "hi" in body
         assert body.endswith("data: [DONE]\n\n")

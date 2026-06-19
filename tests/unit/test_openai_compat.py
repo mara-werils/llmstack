@@ -64,6 +64,7 @@ OK = {
 
 # --- construction / base_url / models -------------------------------------
 
+
 def test_groq_base_url_and_name():
     p = GroqProvider(api_key="k")
     assert p.name == "groq"
@@ -103,6 +104,7 @@ async def test_mistral_lists_its_models():
 
 # --- chat() overrides resp.provider (covers lines 66-68/124-126/175-177) ---
 
+
 async def test_groq_chat_overrides_provider(monkeypatch):
     _patch(monkeypatch, post=_Resp(OK))
     resp = await GroqProvider(api_key="k").chat({"model": "llama-3.3-70b-versatile"})
@@ -125,6 +127,7 @@ async def test_mistral_chat_overrides_provider(monkeypatch):
 
 
 # --- error propagation through the subclass chat() ------------------------
+
 
 @pytest.mark.parametrize(
     "cls",

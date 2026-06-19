@@ -81,9 +81,7 @@ async def test_ollama_post_start_pulls_plain_model():
 
 
 async def test_ollama_post_start_pulls_quantized_model():
-    svc = OllamaService(
-        ModelSpec(name="llama3.2", quantization="q4_k_m"), _cpu_hw()
-    )
+    svc = OllamaService(ModelSpec(name="llama3.2", quantization="q4_k_m"), _cpu_hw())
 
     resp = MagicMock()
     resp.raise_for_status = MagicMock()
@@ -161,18 +159,14 @@ def _make_ep(name_attr: bool = True, load_raises: bool = False):
 
 def test_registry_loads_plugin_entry_point():
     ep = _make_ep()
-    with patch(
-        "llmstack.services.registry.entry_points", return_value=[ep]
-    ):
+    with patch("llmstack.services.registry.entry_points", return_value=[ep]):
         reg = ServiceRegistry()
     assert "plugin-svc" in reg.all_names()
 
 
 def test_registry_skips_plugin_without_name_attr():
     ep = _make_ep(name_attr=False)
-    with patch(
-        "llmstack.services.registry.entry_points", return_value=[ep]
-    ):
+    with patch("llmstack.services.registry.entry_points", return_value=[ep]):
         reg = ServiceRegistry()
     # builtins still present, plugin (no .name) silently skipped
     assert "ollama" in reg.all_names()
@@ -180,9 +174,7 @@ def test_registry_skips_plugin_without_name_attr():
 
 def test_registry_swallows_plugin_load_errors():
     ep = _make_ep(load_raises=True)
-    with patch(
-        "llmstack.services.registry.entry_points", return_value=[ep]
-    ):
+    with patch("llmstack.services.registry.entry_points", return_value=[ep]):
         reg = ServiceRegistry()  # must not raise
     assert "ollama" in reg.all_names()
 

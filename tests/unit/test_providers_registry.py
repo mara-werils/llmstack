@@ -374,9 +374,7 @@ class TestChatWithFallback:
 
     async def test_generic_exception_triggers_fallback(self):
         # non-ProviderError exception path (lines 182-189)
-        r, primary, fallback = _chain_registry(
-            primary_fail=True, error_cls=RuntimeError
-        )
+        r, primary, fallback = _chain_registry(primary_fail=True, error_cls=RuntimeError)
         result = await r.chat_with_fallback(
             {"model": "mock-small", "messages": [{"role": "user", "content": "hi"}]}
         )
@@ -483,9 +481,7 @@ class TestStreamWithFallback:
         assert fallback.stream_calls == 0
 
     async def test_stream_generic_exception_triggers_fallback(self):
-        r, primary, fallback = _chain_registry(
-            primary_fail=True, error_cls=RuntimeError
-        )
+        r, primary, fallback = _chain_registry(primary_fail=True, error_cls=RuntimeError)
         chunks = await _collect(
             r.stream_with_fallback(
                 {"model": "mock-small", "messages": [{"role": "user", "content": "hi"}]}

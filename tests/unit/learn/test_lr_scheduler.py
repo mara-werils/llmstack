@@ -164,7 +164,9 @@ class TestLearningRateScheduler:
         assert sched.get_lr(100) == 9e-4
 
     def test_linear_decay_zero_total_steps(self):
-        config = LRSchedulerConfig(schedule=ScheduleType.LINEAR_DECAY, total_steps=0, initial_lr=3e-4)
+        config = LRSchedulerConfig(
+            schedule=ScheduleType.LINEAR_DECAY, total_steps=0, initial_lr=3e-4
+        )
         sched = LearningRateScheduler(config)
         assert sched.get_lr(0) == 3e-4
 

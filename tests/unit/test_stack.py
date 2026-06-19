@@ -53,7 +53,15 @@ def test_build_services_ollama_backend(patched_stack):
         services = stack._build_services()
 
     categories = [s.category for s in services]
-    assert categories == ["vectordb", "cache", "inference", "embeddings", "gateway", "observe", "observe"]
+    assert categories == [
+        "vectordb",
+        "cache",
+        "inference",
+        "embeddings",
+        "gateway",
+        "observe",
+        "observe",
+    ]
 
 
 def test_build_services_vllm_backend(patched_stack):

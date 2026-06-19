@@ -86,7 +86,13 @@ def test_relevance_scoring(project):
 
 def test_context_chunk_properties():
     chunk = ContextChunk(
-        file="a.py", content="x", relevance=0.05, reason="r", line_start=5, line_end=10, tokens_estimate=1
+        file="a.py",
+        content="x",
+        relevance=0.05,
+        reason="r",
+        line_start=5,
+        line_end=10,
+        tokens_estimate=1,
     )
     assert chunk.line_count == 6
     assert chunk.is_relevant is False
@@ -142,10 +148,22 @@ def test_find_best_section_picks_highest_scoring_window(tmp_path):
 def test_fit_budget_truncates_when_remaining_room(tmp_path):
     builder = ContextBuilder(tmp_path, max_tokens=160)
     chunk1 = ContextChunk(
-        file="a.py", content="x" * 200, relevance=0.9, reason="r", line_start=1, line_end=10, tokens_estimate=50
+        file="a.py",
+        content="x" * 200,
+        relevance=0.9,
+        reason="r",
+        line_start=1,
+        line_end=10,
+        tokens_estimate=50,
     )
     chunk2 = ContextChunk(
-        file="b.py", content="y" * 2000, relevance=0.5, reason="r", line_start=1, line_end=10, tokens_estimate=500
+        file="b.py",
+        content="y" * 2000,
+        relevance=0.5,
+        reason="r",
+        line_start=1,
+        line_end=10,
+        tokens_estimate=500,
     )
     result = builder._fit_budget([chunk1, chunk2])
     assert result == [chunk1, chunk2]
@@ -210,7 +228,9 @@ def test_git_context_handles_subprocess_exception(tmp_path, monkeypatch):
 def test_git_context_skips_blank_filename_entries(tmp_path, monkeypatch):
     (tmp_path / "main.py").write_text("server code\n")
 
-    fake_result = subprocess.CompletedProcess(args=[], returncode=0, stdout="main.py\n\nmissing.py\n", stderr="")
+    fake_result = subprocess.CompletedProcess(
+        args=[], returncode=0, stdout="main.py\n\nmissing.py\n", stderr=""
+    )
     monkeypatch.setattr(subprocess, "run", lambda *a, **k: fake_result)
 
     builder = ContextBuilder(tmp_path, max_tokens=5000)

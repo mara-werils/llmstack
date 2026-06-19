@@ -52,9 +52,7 @@ class TestDataclasses:
         assert b.args == {}
 
     def test_step_explicit_values(self):
-        step = WorkflowStep(
-            name="s", command="c", args={"target": "."}, continue_on_error=False
-        )
+        step = WorkflowStep(name="s", command="c", args={"target": "."}, continue_on_error=False)
         assert step.args == {"target": "."}
         assert step.continue_on_error is False
 

@@ -286,6 +286,7 @@ class TestWithMockTransport:
         transport = httpx.MockTransport(handler)
 
         c = _make_client()
+
         # Patch httpx.post to route through a client backed by MockTransport.
         def fake_post(url, **kwargs):
             with httpx.Client(transport=transport) as client:

@@ -174,9 +174,7 @@ class TestExportDatasetHF:
 
 
 class TestExportPreferences:
-    def test_export_with_both_learners(
-        self, store, preference_learner, pattern_learner, tmp_path
-    ):
+    def test_export_with_both_learners(self, store, preference_learner, pattern_learner, tmp_path):
         exporter = LearningExporter(
             store=store,
             preference_learner=preference_learner,

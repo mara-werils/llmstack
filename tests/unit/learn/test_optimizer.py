@@ -51,9 +51,7 @@ class TestPromptVariant:
         assert v.satisfaction_rate == 0.5
 
     def test_satisfaction_rate_with_data(self):
-        v = PromptVariant(
-            id="a", name="n", template="t", positive_feedback=3, negative_feedback=1
-        )
+        v = PromptVariant(id="a", name="n", template="t", positive_feedback=3, negative_feedback=1)
         assert v.satisfaction_rate == 0.75
 
     def test_correction_rate_no_uses(self):
@@ -269,8 +267,7 @@ class TestAnalyzePatterns:
         optimizer.register_prompt("n", "t")
         # >3 corrections that add code fences absent from the response.
         store.get_feedback.return_value = [
-            _correction(response="plain text", correction="```python\nx=1\n```")
-            for _ in range(4)
+            _correction(response="plain text", correction="```python\nx=1\n```") for _ in range(4)
         ]
         patterns = optimizer.analyze_patterns("n")
         assert any("format code" in p for p in patterns)
@@ -279,8 +276,7 @@ class TestAnalyzePatterns:
         optimizer.register_prompt("n", "t")
         # >3 corrections that remove hedging language from the response.
         store.get_feedback.return_value = [
-            _correction(response="I think it works", correction="It works")
-            for _ in range(4)
+            _correction(response="I think it works", correction="It works") for _ in range(4)
         ]
         patterns = optimizer.analyze_patterns("n")
         assert any("hedging" in p for p in patterns)
@@ -289,8 +285,7 @@ class TestAnalyzePatterns:
         optimizer.register_prompt("n", "t")
         # >3 corrections that add many list items vs response.
         store.get_feedback.return_value = [
-            _correction(response="flat", correction="\n- a\n- b\n- c")
-            for _ in range(4)
+            _correction(response="flat", correction="\n- a\n- b\n- c") for _ in range(4)
         ]
         patterns = optimizer.analyze_patterns("n")
         assert any("structure" in p for p in patterns)
@@ -299,8 +294,7 @@ class TestAnalyzePatterns:
         optimizer.register_prompt("n", "t")
         # Headers added beats the list-item branch.
         store.get_feedback.return_value = [
-            _correction(response="flat", correction="\n# Heading\ncontent")
-            for _ in range(4)
+            _correction(response="flat", correction="\n# Heading\ncontent") for _ in range(4)
         ]
         patterns = optimizer.analyze_patterns("n")
         assert any("structure" in p for p in patterns)
@@ -349,8 +343,7 @@ class TestSuggestImprovements:
     def test_suggestions_for_hedging(self, optimizer, store):
         optimizer.register_prompt("n", "t")
         store.get_feedback.return_value = [
-            _correction(response="maybe it works", correction="it works")
-            for _ in range(4)
+            _correction(response="maybe it works", correction="it works") for _ in range(4)
         ]
         suggestions = optimizer.suggest_improvements("n")
         assert any("direct" in s.lower() for s in suggestions)
@@ -358,8 +351,7 @@ class TestSuggestImprovements:
     def test_suggestions_for_structure(self, optimizer, store):
         optimizer.register_prompt("n", "t")
         store.get_feedback.return_value = [
-            _correction(response="flat", correction="\n- a\n- b\n- c")
-            for _ in range(4)
+            _correction(response="flat", correction="\n- a\n- b\n- c") for _ in range(4)
         ]
         suggestions = optimizer.suggest_improvements("n")
         assert any("bullet" in s.lower() for s in suggestions)

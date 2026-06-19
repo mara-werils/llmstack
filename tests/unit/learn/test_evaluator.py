@@ -136,9 +136,7 @@ class TestBuildEvalSet:
         assert evaluator.build_eval_set() == []
 
     def test_includes_valid_corrections(self, store, evaluator):
-        store.add_feedback(
-            _correction("what is 2+2?", "The answer is four, exactly four.")
-        )
+        store.add_feedback(_correction("what is 2+2?", "The answer is four, exactly four."))
         eval_set = evaluator.build_eval_set()
         assert len(eval_set) == 1
         entry = eval_set[0]
@@ -236,9 +234,7 @@ class TestEvaluateResponses:
             {"query": "q1", "reference": "hello world", "original": "o"},
             {"query": "q2", "reference": "foo bar", "original": "o"},
         ]
-        result = evaluator.evaluate_responses(
-            eval_set, ["hello world", "totally different"], "v1"
-        )
+        result = evaluator.evaluate_responses(eval_set, ["hello world", "totally different"], "v1")
         assert result.total_examples == 2
         # one exact match out of two
         assert result.exact_match_rate == 0.5
@@ -297,9 +293,7 @@ class TestCompareVersions:
         assert result["significant"] is False
 
     def test_not_significant_small_improvement(self, evaluator):
-        eval_set = [
-            {"query": "q", "reference": "alpha beta gamma delta epsilon", "original": "o"}
-        ]
+        eval_set = [{"query": "q", "reference": "alpha beta gamma delta epsilon", "original": "o"}]
         result = evaluator.compare_versions(
             eval_set,
             responses_a=["alpha beta gamma delta epsilon"],

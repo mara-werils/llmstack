@@ -96,12 +96,8 @@ class TestPatternLearnerProperties:
         assert learner.high_confidence_patterns == []
 
     def test_pattern_count_and_high_confidence(self, learner):
-        learner.profile.patterns.append(
-            CodePattern(name="a", description="d", confidence=0.9)
-        )
-        learner.profile.patterns.append(
-            CodePattern(name="b", description="d", confidence=0.3)
-        )
+        learner.profile.patterns.append(CodePattern(name="a", description="d", confidence=0.9))
+        learner.profile.patterns.append(CodePattern(name="b", description="d", confidence=0.3))
         assert learner.pattern_count == 2
         hc = learner.high_confidence_patterns
         assert len(hc) == 1
@@ -115,9 +111,7 @@ class TestLearnFromCorrection:
         assert learner.pattern_count == 0
 
     def test_code_content_increments_counter(self, learner):
-        learner.learn_from_correction(
-            "def foo(): pass", "def foo():\n    return 1"
-        )
+        learner.learn_from_correction("def foo(): pass", "def foo():\n    return 1")
         assert learner.profile.total_code_corrections == 1
         assert learner.profile.last_updated > 0
 
@@ -190,12 +184,7 @@ class TestLearnFromCorrection:
 
     def test_learn_imports_from_preference(self, learner):
         original = "def f(): pass"
-        correction = (
-            "from a import x\n"
-            "from b import y\n"
-            "from c import z\n"
-            "def f(): pass"
-        )
+        correction = "from a import x\nfrom b import y\nfrom c import z\ndef f(): pass"
         learner.learn_from_correction(original, correction)
         names = {p.name for p in learner.profile.patterns}
         assert "from_imports" in names
@@ -347,9 +336,7 @@ class TestPersistence:
             learner1.learn_from_correction("def f(): pass", "def f(): pass\n")
 
         learner2 = PatternLearner(store=store, patterns_path=path)
-        pat = next(
-            p for p in learner2.profile.patterns if p.name == "trailing_newline"
-        )
+        pat = next(p for p in learner2.profile.patterns if p.name == "trailing_newline")
         assert pat.occurrences == 3
 
     def test_load_corrupt_json_returns_empty(self, store, tmp_path):

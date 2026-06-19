@@ -279,13 +279,9 @@ class TestFeedbackPattern:
         config = DriftConfig(min_baseline_samples=5, min_recent_samples=2)
         det = DriftDetector(store=store, config=config)
         for _ in range(20):
-            _add_feedback(
-                store, feedback_type=FeedbackType.THUMBS_UP, age_seconds=200000
-            )
+            _add_feedback(store, feedback_type=FeedbackType.THUMBS_UP, age_seconds=200000)
         for _ in range(10):
-            _add_feedback(
-                store, feedback_type=FeedbackType.THUMBS_DOWN, age_seconds=10
-            )
+            _add_feedback(store, feedback_type=FeedbackType.THUMBS_DOWN, age_seconds=10)
         alerts = det.check()
         fb_alerts = [a for a in alerts if a.drift_type == "feedback_pattern"]
         assert len(fb_alerts) == 1

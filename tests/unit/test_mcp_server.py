@@ -254,9 +254,7 @@ class TestToolsCall:
 class TestToolChat:
     async def test_chat_success_builds_request(self, monkeypatch):
         capture: dict = {}
-        _patch_httpx(
-            monkeypatch, post=_Resp({"message": {"content": "answer"}}), capture=capture
-        )
+        _patch_httpx(monkeypatch, post=_Resp({"message": {"content": "answer"}}), capture=capture)
         srv = MCPServer(tools=_registry(), ollama_url="http://host:1234", model="def-model")
         result = await srv._tool_chat({"message": "hello", "system": "be nice"})
         assert result["content"][0]["text"] == "answer"

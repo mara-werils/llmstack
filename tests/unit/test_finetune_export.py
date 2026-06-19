@@ -19,7 +19,11 @@ from llmstack.finetune.export import (
 
 def test_export_result_to_dict_rounds_size():
     result = ExportResult(
-        success=True, gguf_path="/a/b.gguf", ollama_model="m", size_mb=12.3456, quantization="q4_k_m"
+        success=True,
+        gguf_path="/a/b.gguf",
+        ollama_model="m",
+        size_mb=12.3456,
+        quantization="q4_k_m",
     )
     assert result.to_dict() == {
         "success": True,
@@ -41,10 +45,13 @@ def test_export_gguf_uses_unsloth_when_successful(tmp_path):
     adapter_dir = tmp_path / "adapter"
     adapter_dir.mkdir()
 
-    with patch(
-        "llmstack.finetune.export._export_via_unsloth",
-        return_value=ExportResult(success=True, gguf_path="x.gguf"),
-    ) as mock_unsloth, patch("llmstack.finetune.export._export_via_llamacpp") as mock_llamacpp:
+    with (
+        patch(
+            "llmstack.finetune.export._export_via_unsloth",
+            return_value=ExportResult(success=True, gguf_path="x.gguf"),
+        ) as mock_unsloth,
+        patch("llmstack.finetune.export._export_via_llamacpp") as mock_llamacpp,
+    ):
         result = export_gguf(str(adapter_dir), "base-model")
 
     assert result.success is True
@@ -230,7 +237,9 @@ def test_merge_adapter_calls_save_pretrained(tmp_path):
 
     fake_merged = MagicMock()
     fake_peft_model = MagicMock()
-    fake_peft_model.from_pretrained.return_value = MagicMock(merge_and_unload=MagicMock(return_value=fake_merged))
+    fake_peft_model.from_pretrained.return_value = MagicMock(
+        merge_and_unload=MagicMock(return_value=fake_merged)
+    )
 
     fake_tokenizer = MagicMock()
     fake_auto_tokenizer = MagicMock()

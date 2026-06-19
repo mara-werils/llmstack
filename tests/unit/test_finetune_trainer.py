@@ -59,7 +59,9 @@ class PlainTokenizer:
 
 def _train_data():
     return [
-        ChatExample(messages=[{"role": "user", "content": "hi"}, {"role": "assistant", "content": "hello"}]),
+        ChatExample(
+            messages=[{"role": "user", "content": "hi"}, {"role": "assistant", "content": "hello"}]
+        ),
         ChatExample(messages=[{"role": "user", "content": "bye"}]),
     ]
 
@@ -83,7 +85,9 @@ def test_train_result_to_dict_rounds_and_summarizes_history():
 
 
 def test_check_dependencies_none_available():
-    with patch.dict(sys.modules, {"unsloth": None, "peft": None, "trl": None, "transformers": None}):
+    with patch.dict(
+        sys.modules, {"unsloth": None, "peft": None, "trl": None, "transformers": None}
+    ):
         has_unsloth, has_peft, message = _check_dependencies()
     assert (has_unsloth, has_peft, message) == (False, False, "none")
 
@@ -128,7 +132,9 @@ def test_train_no_backends_available(tmp_path):
 def test_train_unsloth_backend_writes_metadata(tmp_path):
     out_dir = tmp_path / "out"
     trainer = Trainer(TrainConfig(output_dir=str(out_dir)))
-    fake_result = TrainResult(success=True, output_dir=str(out_dir), adapter_path=str(out_dir / "adapter"))
+    fake_result = TrainResult(
+        success=True, output_dir=str(out_dir), adapter_path=str(out_dir / "adapter")
+    )
 
     with (
         patch(

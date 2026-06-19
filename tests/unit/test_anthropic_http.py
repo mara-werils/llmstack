@@ -79,8 +79,11 @@ def _status_error(code: int) -> httpx.HTTPStatusError:
 MESSAGES_OK = {
     "id": "msg_1",
     "model": "claude-sonnet-4-20250514",
-    "content": [{"type": "text", "text": "hi "}, {"type": "thinking", "text": "ignore"},
-                {"type": "text", "text": "there"}],
+    "content": [
+        {"type": "text", "text": "hi "},
+        {"type": "thinking", "text": "ignore"},
+        {"type": "text", "text": "there"},
+    ],
     "usage": {"input_tokens": 1_000_000, "output_tokens": 1_000_000},
     "stop_reason": "max_tokens",
 }
@@ -93,10 +96,12 @@ class TestTranslationEdges:
 
     def test_consecutive_same_role_merged(self):
         body = _openai_to_anthropic(
-            {"messages": [
-                {"role": "user", "content": "a"},
-                {"role": "user", "content": "b"},
-            ]}
+            {
+                "messages": [
+                    {"role": "user", "content": "a"},
+                    {"role": "user", "content": "b"},
+                ]
+            }
         )
         assert len(body["messages"]) == 1
         assert body["messages"][0]["content"] == "a\nb"
@@ -154,9 +159,14 @@ class TestChatStream:
             f"data: {json.dumps(stop)}",
         ]
         _patch(monkeypatch, stream=_StreamCtx(lines=lines))
-        out = b"".join([
-            c async for c in AnthropicProvider(api_key="k").chat_stream({"model": "m", "messages": []})
-        ]).decode()
+        out = b"".join(
+            [
+                c
+                async for c in AnthropicProvider(api_key="k").chat_stream(
+                    {"model": "m", "messages": []}
+                )
+            ]
+        ).decode()
         assert "yo" in out
         assert out.endswith("data: [DONE]\n\n")
 

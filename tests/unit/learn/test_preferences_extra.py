@@ -262,9 +262,7 @@ class TestLoad:
         assert learner.preferences.length.samples == 0
 
     def test_load_missing_file_returns_defaults(self, store, tmp_path):
-        learner = PreferenceLearner(
-            store=store, preferences_path=tmp_path / "does_not_exist.json"
-        )
+        learner = PreferenceLearner(store=store, preferences_path=tmp_path / "does_not_exist.json")
         assert isinstance(learner.preferences, UserPreferences)
         assert learner.preferences.total_signals == 0
 

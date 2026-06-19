@@ -23,12 +23,10 @@ def make_dataset(sft=2, dpo=1, feedback_ids=None):
     """Build a GeneratedDataset with the requested number of examples."""
     ds = GeneratedDataset()
     ds.sft_examples = [
-        TrainingExample(messages=[{"role": "user", "content": f"q{i}"}])
-        for i in range(sft)
+        TrainingExample(messages=[{"role": "user", "content": f"q{i}"}]) for i in range(sft)
     ]
     ds.dpo_examples = [
-        DPOExample(prompt=f"p{i}", chosen=f"c{i}", rejected=f"r{i}")
-        for i in range(dpo)
+        DPOExample(prompt=f"p{i}", chosen=f"c{i}", rejected=f"r{i}") for i in range(dpo)
     ]
     ds.feedback_ids = feedback_ids if feedback_ids is not None else ["f1", "f2"]
     return ds
@@ -219,9 +217,7 @@ class TestTrigger:
 
     def test_trigger_error_when_callback_unsuccessful(self, scheduler, tmp_path):
         scheduler.config.output_dir = str(tmp_path)
-        scheduler.set_train_callback(
-            lambda ds: {"success": False, "error": "boom"}
-        )
+        scheduler.set_train_callback(lambda ds: {"success": False, "error": "boom"})
         result = scheduler.trigger()
         assert result["error"] == "boom"
         assert result["dataset_size"] > 0
@@ -233,9 +229,7 @@ class TestTrigger:
         result = scheduler.trigger()
         assert result["error"] == "Unknown training error"
 
-    def test_trigger_success_full_flow(
-        self, scheduler, store, version_mgr, tmp_path
-    ):
+    def test_trigger_success_full_flow(self, scheduler, store, version_mgr, tmp_path):
         scheduler.config.output_dir = str(tmp_path)
         version = MagicMock()
         version.version = "2.0.0"
@@ -279,13 +273,9 @@ class TestTrigger:
         # Dataset was saved to the configured output dir
         assert (tmp_path / "datasets").exists()
 
-    def test_trigger_default_reason_is_manual(
-        self, scheduler, version_mgr, tmp_path
-    ):
+    def test_trigger_default_reason_is_manual(self, scheduler, version_mgr, tmp_path):
         scheduler.config.output_dir = str(tmp_path)
-        scheduler.set_train_callback(
-            lambda ds: {"success": True, "quality_score": 0.5}
-        )
+        scheduler.set_train_callback(lambda ds: {"success": True, "quality_score": 0.5})
         result = scheduler.trigger()
         assert result["trigger_reason"] == "manual"
 
@@ -371,9 +361,7 @@ class TestShouldActivate:
         scheduler.config.min_quality_improvement = 0.01
         assert scheduler._should_activate(0.6) is True
 
-    def test_no_activate_when_improvement_insufficient(
-        self, scheduler, version_mgr
-    ):
+    def test_no_activate_when_improvement_insufficient(self, scheduler, version_mgr):
         active = MagicMock()
         active.quality_score = 0.5
         version_mgr.get_active.return_value = active

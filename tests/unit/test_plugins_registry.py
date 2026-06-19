@@ -329,9 +329,7 @@ def test_discover_legacy_get_path(registry: PluginRegistry):
 
 
 def test_discover_swallows_entry_point_errors(registry: PluginRegistry):
-    with patch(
-        "importlib.metadata.entry_points", side_effect=RuntimeError("boom")
-    ):
+    with patch("importlib.metadata.entry_points", side_effect=RuntimeError("boom")):
         # Local plugins still returned despite EP discovery exploding.
         registry.register(_plugin("survivor"))
         plugins = registry.discover()
@@ -425,7 +423,5 @@ def test_config_roundtrip_complex(registry: PluginRegistry):
     assert found.config == cfg
     # Confirm it was JSON-serialized in storage.
     with sqlite3.connect(registry.db_path) as conn:
-        raw = conn.execute(
-            "SELECT config FROM plugins WHERE name = ?", ("cfg",)
-        ).fetchone()[0]
+        raw = conn.execute("SELECT config FROM plugins WHERE name = ?", ("cfg",)).fetchone()[0]
     assert json.loads(raw) == cfg

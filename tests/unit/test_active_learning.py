@@ -58,9 +58,7 @@ def test_should_request_feedback_blocked_by_low_uncertainty():
 
 
 def test_should_request_feedback_blocked_by_similarity_to_asked():
-    learner = _learner(
-        warmup_interactions=1, cooldown_interactions=0, uncertainty_threshold=0.0
-    )
+    learner = _learner(warmup_interactions=1, cooldown_interactions=0, uncertainty_threshold=0.0)
     learner._asked_queries.append("how do i reset my password")
     result = learner.should_request_feedback("how do i reset my password", "I'm not sure")
     assert result is False

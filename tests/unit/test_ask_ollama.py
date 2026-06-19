@@ -55,7 +55,9 @@ def test_install_hint_installed_but_not_running() -> None:
 async def test_ensure_models_skips_present_and_dedupes() -> None:
     client = _FakeClient(exists=True)
     # Duplicates and empty strings must be collapsed; nothing should be pulled.
-    await ensure_models("http://localhost:11434", ["llama3.2", "llama3.2", "", "nomic-embed-text"], client=client)
+    await ensure_models(
+        "http://localhost:11434", ["llama3.2", "llama3.2", "", "nomic-embed-text"], client=client
+    )
     assert client.pull_called is False
 
 

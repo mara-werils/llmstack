@@ -116,9 +116,7 @@ class TestProviders:
         config = StackConfig(
             providers=ProvidersConfig(
                 enabled=True,
-                providers=[
-                    ProviderConfig(name="openai", base_url="http://localhost:1234/v1")
-                ],
+                providers=[ProviderConfig(name="openai", base_url="http://localhost:1234/v1")],
             )
         )
         assert audit_privacy(config).is_private is True

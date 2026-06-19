@@ -50,7 +50,8 @@ class TestCostRoutes:
 
     def test_set_pricing(self, cost_client):
         resp = cost_client.post(
-            "/cost/pricing", json={"model": "m", "input_per_million": 1.0, "output_per_million": 2.0}
+            "/cost/pricing",
+            json={"model": "m", "input_per_million": 1.0, "output_per_million": 2.0},
         )
         assert resp.json()["updated"] is True
 

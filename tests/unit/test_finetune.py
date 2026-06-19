@@ -342,7 +342,10 @@ class TestPrepareDataset:
 
     def test_skips_rows_that_fail_conversion(self, tmp_path):
         f = tmp_path / "data.jsonl"
-        rows = [{"input": f"a long enough question number {i}", "output": f"a long enough answer {i}"} for i in range(8)]
+        rows = [
+            {"input": f"a long enough question number {i}", "output": f"a long enough answer {i}"}
+            for i in range(8)
+        ]
         rows.append({"other": "no usable columns here at all"})
         f.write_text("\n".join(json.dumps(r) for r in rows))
 
@@ -352,7 +355,12 @@ class TestPrepareDataset:
     def test_max_length_filter(self, tmp_path):
         f = tmp_path / "data.jsonl"
         lines = [
-            json.dumps({"input": "a reasonably long question here", "output": "a reasonably long answer here"})
+            json.dumps(
+                {
+                    "input": "a reasonably long question here",
+                    "output": "a reasonably long answer here",
+                }
+            )
             for _ in range(8)
         ]
         f.write_text("\n".join(lines))

@@ -148,9 +148,7 @@ class TestChatCompletion:
     async def test_5xx_trips_breaker_and_raises(self, wiring, monkeypatch):
         breaker, cache, _ = wiring
         err = httpx.HTTPStatusError("e", request=None, response=httpx.Response(503))
-        monkeypatch.setattr(
-            proxy, "_get_pool", lambda: _FakePool(post=_Resp(raise_exc=err))
-        )
+        monkeypatch.setattr(proxy, "_get_pool", lambda: _FakePool(post=_Resp(raise_exc=err)))
         with pytest.raises(httpx.HTTPStatusError):
             await proxy.proxy_chat_completion({"model": "m", "messages": []})
         assert breaker.failures == 1
@@ -165,18 +163,14 @@ class TestChatCompletion:
 
     async def test_connect_error_trips_breaker(self, wiring, monkeypatch):
         breaker, _, _ = wiring
-        monkeypatch.setattr(
-            proxy, "_get_pool", lambda: _FakePool(post_exc=httpx.ConnectError("x"))
-        )
+        monkeypatch.setattr(proxy, "_get_pool", lambda: _FakePool(post_exc=httpx.ConnectError("x")))
         with pytest.raises(httpx.ConnectError):
             await proxy.proxy_chat_completion({"model": "m", "messages": []})
         assert breaker.failures == 1
 
     async def test_stream_path_yields_chunks(self, wiring, monkeypatch):
         breaker, _, _ = wiring
-        monkeypatch.setattr(
-            proxy, "_get_pool", lambda: _FakePool(stream_chunks=[b"x", b"y"])
-        )
+        monkeypatch.setattr(proxy, "_get_pool", lambda: _FakePool(stream_chunks=[b"x", b"y"]))
         gen = await proxy.proxy_chat_completion({"model": "m"}, stream=True)
         chunks = [c async for c in gen]
         assert chunks == [b"x", b"y"]

@@ -34,9 +34,7 @@ def analytics(store, version_mgr):
 
 
 def _add(store, fb_type, query="A reasonably long query here", response="A response", **kw):
-    store.add_feedback(
-        Feedback(feedback_type=fb_type, query=query, response=response, **kw)
-    )
+    store.add_feedback(Feedback(feedback_type=fb_type, query=query, response=response, **kw))
 
 
 # --------------------------------------------------------------------------- #
@@ -268,9 +266,7 @@ class TestQualityTimeline:
     def test_empty(self, analytics):
         assert analytics.get_quality_timeline() == []
 
-    def test_filters_zero_quality_and_orders_chronologically(
-        self, analytics, version_mgr
-    ):
+    def test_filters_zero_quality_and_orders_chronologically(self, analytics, version_mgr):
         version_mgr.create_version(
             base_model="base", adapter_path="", quality_score=0.0, activate=False
         )
@@ -380,21 +376,15 @@ class TestComputeStatus:
         assert analytics._compute_status(m) == "collecting"
 
     def test_improving(self, analytics):
-        m = LearningMetrics(
-            total_feedback=5, total_versions=2, quality_trend="improving"
-        )
+        m = LearningMetrics(total_feedback=5, total_versions=2, quality_trend="improving")
         assert analytics._compute_status(m) == "improving"
 
     def test_degrading(self, analytics):
-        m = LearningMetrics(
-            total_feedback=5, total_versions=2, quality_trend="declining"
-        )
+        m = LearningMetrics(total_feedback=5, total_versions=2, quality_trend="declining")
         assert analytics._compute_status(m) == "degrading"
 
     def test_active(self, analytics):
-        m = LearningMetrics(
-            total_feedback=5, total_versions=2, quality_trend="stable"
-        )
+        m = LearningMetrics(total_feedback=5, total_versions=2, quality_trend="stable")
         assert analytics._compute_status(m) == "active"
 
 

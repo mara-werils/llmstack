@@ -137,18 +137,10 @@ class _FakeDatasetGenerator:
 def client(monkeypatch):
     # The route imports these lazily from their source modules, so patch there.
     monkeypatch.setattr("llmstack.learn.store.FeedbackStore", _FakeStore)
-    monkeypatch.setattr(
-        "llmstack.learn.preferences.PreferenceLearner", _FakeLearner
-    )
-    monkeypatch.setattr(
-        "llmstack.learn.analytics.LearningAnalytics", _FakeAnalytics
-    )
-    monkeypatch.setattr(
-        "llmstack.learn.versions.ModelVersionManager", _FakeVersionManager
-    )
-    monkeypatch.setattr(
-        "llmstack.learn.dataset.DatasetGenerator", _FakeDatasetGenerator
-    )
+    monkeypatch.setattr("llmstack.learn.preferences.PreferenceLearner", _FakeLearner)
+    monkeypatch.setattr("llmstack.learn.analytics.LearningAnalytics", _FakeAnalytics)
+    monkeypatch.setattr("llmstack.learn.versions.ModelVersionManager", _FakeVersionManager)
+    monkeypatch.setattr("llmstack.learn.dataset.DatasetGenerator", _FakeDatasetGenerator)
 
     _FakeStore.last_instance = None
     _FakeLearner.last_instance = None
@@ -210,16 +202,12 @@ class TestFeedback:
         import llmstack.learn.store as store_mod
 
         store_mod.FeedbackStore = _make_store  # type: ignore[assignment]
-        resp = client.post(
-            "/learn/feedback", json={"feedback_type": "thumbs_down"}
-        )
+        resp = client.post("/learn/feedback", json={"feedback_type": "thumbs_down"})
         assert resp.status_code == 200
         assert resp.json()["pending_count"] == 5
 
     def test_invalid_feedback_type_400(self, client):
-        resp = client.post(
-            "/learn/feedback", json={"feedback_type": "not_a_real_type"}
-        )
+        resp = client.post("/learn/feedback", json={"feedback_type": "not_a_real_type"})
         assert resp.status_code == 400
         assert "Invalid feedback_type" in resp.json()["detail"]
 
@@ -242,9 +230,7 @@ class TestStatus:
         assert body["recommendations"] == ["keep going"]
         assert _FakeStore.last_instance.closed is True
 
-    def test_status_missing_recommendations_defaults_empty(
-        self, client, monkeypatch
-    ):
+    def test_status_missing_recommendations_defaults_empty(self, client, monkeypatch):
         monkeypatch.setattr(
             _FakeAnalytics,
             "summary",
