@@ -251,7 +251,7 @@ class ProviderRegistry:
             "mixtral": "groq",
         }
         for prefix, provider_name in prefixes.items():
-            if model_id.startswith(prefix) or model_id.startswith(prefix):
+            if model_id.startswith(prefix):
                 return self._providers.get(provider_name)
         return None
 
