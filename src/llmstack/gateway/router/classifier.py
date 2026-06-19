@@ -360,11 +360,13 @@ class QueryClassifier:
             factors["language_mix"] = 0.0
 
         # --- Factor 7: Question complexity ---
+        # Complex markers take precedence over simple ones; check complex first
+        # so the simple regex is skipped once complexity is established.
         q_score = 0.25  # neutral
-        if _SIMPLE_QUESTION_RE.search(last_user):
-            q_score = 0.1
         if _COMPLEX_QUESTION_RE.search(last_user):
             q_score = 0.7
+        elif _SIMPLE_QUESTION_RE.search(last_user):
+            q_score = 0.1
         constraint_hits = len(_MULTI_CONSTRAINT_RE.findall(last_user))
         if constraint_hits >= 2:
             q_score = min(1.0, q_score + 0.25)
