@@ -181,6 +181,20 @@ class TestLearningRateScheduler:
         sched = LearningRateScheduler(config)
         assert abs(sched.get_lr(50) - 5e-4) < 1e-6
 
+    def test_linear_decay_floors_at_min_lr_past_total(self):
+        config = LRSchedulerConfig(
+            schedule=ScheduleType.LINEAR_DECAY,
+            warmup_steps=0,
+            total_steps=1000,
+            min_lr=1e-5,
+            max_lr=1e-3,
+        )
+        sched = LearningRateScheduler(config)
+        # At and beyond the final step the LR must settle at min_lr, never below.
+        assert sched.get_lr(1000) == pytest.approx(1e-5)
+        assert sched.get_lr(5000) == pytest.approx(1e-5)
+        assert sched.get_lr(5000) >= 0.0
+
     def test_linear_decay_no_remaining_steps(self):
         config = LRSchedulerConfig(
             schedule=ScheduleType.LINEAR_DECAY,

@@ -177,5 +177,8 @@ class LearningRateScheduler:
         remaining = total - warmup
         if remaining <= 0:
             return self.config.max_lr
-        progress = (step - warmup) / remaining
-        return self.config.max_lr - (self.config.max_lr - self.config.min_lr) * progress
+        # Clamp progress so steps at/beyond total_steps settle at min_lr instead
+        # of decaying past it into negative territory (mirrors _cosine/_step_decay).
+        progress = min((step - warmup) / remaining, 1.0)
+        lr = self.config.max_lr - (self.config.max_lr - self.config.min_lr) * progress
+        return max(self.config.min_lr, lr)
