@@ -165,8 +165,10 @@ class ResponseCache:
             return
 
         try:
-            response["_cached_at"] = int(time.time())
-            raw = json.dumps(response)
+            # Serialize a copy so the caller's response dict isn't polluted
+            # with the internal _cached_at marker.
+            payload = {**response, "_cached_at": int(time.time())}
+            raw = json.dumps(payload)
             await self._redis.set(key, raw, ex=self._ttl)  # type: ignore[union-attr]
         except Exception:
             pass  # Cache write failure is non-fatal

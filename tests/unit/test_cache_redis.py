@@ -70,6 +70,12 @@ class TestGetPut:
         assert "_cache_age_s" in got
         assert connected.stats.hits == 1
 
+    async def test_put_does_not_mutate_caller_response(self, connected):
+        response = {"answer": 42}
+        await connected.put("m", MSGS, response, 0.0)
+        # The internal _cached_at marker must not leak into the caller's dict.
+        assert "_cached_at" not in response
+
     async def test_get_miss_records_miss(self, connected):
         assert await connected.get("m", MSGS, 0.0) is None
         assert connected.stats.misses == 1
