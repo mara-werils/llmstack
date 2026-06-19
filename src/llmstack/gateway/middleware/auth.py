@@ -28,14 +28,16 @@ class AuthMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         # Skip auth for health checks, docs, and UI
         skip_paths = (
-            "/healthz",
             "/metrics",
             "/docs",
             "/redoc",
             "/openapi.json",
             "/",
         )
-        if request.url.path in skip_paths or request.url.path.startswith("/ui"):
+        path = request.url.path
+        # startswith for /healthz so K8s readiness/liveness probes
+        # (/healthz/ready, /healthz/live) are also unauthenticated.
+        if path in skip_paths or path.startswith("/healthz") or path.startswith("/ui"):
             return await call_next(request)
 
         if not self._key_map:

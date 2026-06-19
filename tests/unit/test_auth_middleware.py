@@ -21,6 +21,14 @@ def _app(api_keys):
     async def health():
         return {"ok": True}
 
+    @app.get("/healthz/ready")
+    async def health_ready():
+        return {"ok": True}
+
+    @app.get("/healthz/live")
+    async def health_live():
+        return {"ok": True}
+
     @app.get("/ui/index")
     async def ui():
         return {"ok": True}
@@ -65,7 +73,9 @@ class TestDispatch:
         resp = client.get("/v1/models", headers={"Authorization": "Basic abc"})
         assert resp.status_code == 401
 
-    @pytest.mark.parametrize("path", ["/healthz", "/ui/index"])
+    @pytest.mark.parametrize(
+        "path", ["/healthz", "/healthz/ready", "/healthz/live", "/ui/index"]
+    )
     def test_skip_paths_bypass_auth(self, path):
         client = TestClient(_app(["sekret-123"]))
         assert client.get(path).status_code == 200
