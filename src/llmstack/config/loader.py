@@ -51,7 +51,7 @@ def _deep_merge(base: dict, override: dict) -> dict:
 def _apply_env_overrides(raw: dict) -> dict:
     """Apply environment variable overrides to config.
 
-    Convention: LLMSTACK_MODELS__CHAT__NAME=llama3.1 overrides
+    Convention: LLMSTACK_CFG_MODELS__CHAT__NAME=llama3.1 overrides
     models.chat.name in the config.
     """
     prefix = "LLMSTACK_CFG_"
@@ -59,6 +59,10 @@ def _apply_env_overrides(raw: dict) -> dict:
         if not key.startswith(prefix):
             continue
         parts = key[len(prefix) :].lower().split("__")
+        # Skip keys with an empty segment (e.g. bare "LLMSTACK_CFG_" or
+        # "LLMSTACK_CFG___X") so they don't inject a "" key into the config.
+        if not all(parts):
+            continue
         target = raw
         for part in parts[:-1]:
             if part not in target:

@@ -119,6 +119,14 @@ class TestEnvOverrides:
             result = _apply_env_overrides(raw)
         assert result["observe"]["metrics"] is False
 
+    def test_empty_suffix_is_ignored(self):
+        # A bare prefix or empty segment must not inject a "" key.
+        raw = {"models": {}}
+        with patch.dict(os.environ, {"LLMSTACK_CFG_": "x", "LLMSTACK_CFG___Y": "z"}):
+            result = _apply_env_overrides(raw)
+        assert "" not in result
+        assert result == {"models": {}}
+
 
 class TestLocalOverride:
     def test_load_with_local_override(self, tmp_path):
