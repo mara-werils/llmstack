@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+import logging
 import os
 import time
 from typing import AsyncIterator
@@ -14,6 +16,8 @@ from llmstack.gateway.providers.base import (
     ProviderModel,
     ProviderResponse,
 )
+
+logger = logging.getLogger(__name__)
 
 _raw = os.getenv("LLMSTACK_INFERENCE_URL", "http://llmstack-ollama:11434/v1")
 _DEFAULT_URL = _raw.rstrip("/") if _raw.rstrip("/").endswith("/v1") else _raw.rstrip("/") + "/v1"
@@ -72,6 +76,14 @@ class LocalProvider(Provider):
                     resp.raise_for_status()
                     async for chunk in resp.aiter_bytes():
                         yield chunk
+        except httpx.HTTPStatusError as exc:
+            # Mirror the non-streaming chat() path: normalize backend 4xx/5xx
+            # into a ProviderError instead of leaking a raw HTTPStatusError.
+            raise ProviderError(
+                f"Local stream error: {exc.response.status_code}",
+                status_code=exc.response.status_code,
+                retryable=exc.response.status_code >= 500,
+            ) from exc
         except (httpx.ConnectError, httpx.ReadTimeout, httpx.ConnectTimeout) as exc:
             raise ProviderError(f"Local stream error: {exc}", retryable=True) from exc
 
@@ -82,7 +94,9 @@ class LocalProvider(Provider):
                 resp = await client.get(url)
                 resp.raise_for_status()
                 data = resp.json()
-        except Exception:
+        except (httpx.HTTPError, json.JSONDecodeError) as exc:
+            # Surface the reason instead of silently returning stale models.
+            logger.warning("local list_models failed, returning cached set: %s", exc)
             return self._models
 
         models = []

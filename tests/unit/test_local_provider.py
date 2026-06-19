@@ -151,13 +151,27 @@ async def test_list_models_success(monkeypatch):
     assert models[1].context_length == 8192  # default
 
 
-async def test_list_models_falls_back_on_error(monkeypatch):
+async def test_list_models_falls_back_on_error(monkeypatch, caplog):
     p = LocalProvider()
     p._models = []
     monkeypatch.setattr(
-        httpx, "AsyncClient", lambda *a, **k: _FakeClient(get=_Resp(raise_exc=ValueError("x")))
+        httpx,
+        "AsyncClient",
+        lambda *a, **k: _FakeClient(get=_Resp(raise_exc=httpx.ConnectError("down"))),
     )
-    assert await p.list_models() == []
+    with caplog.at_level("WARNING"):
+        assert await p.list_models() == []
+    assert "list_models failed" in caplog.text
+
+
+async def test_chat_stream_http_status_error_5xx_retryable(monkeypatch):
+    err = httpx.HTTPStatusError("err", request=None, response=httpx.Response(503))
+    _patch(monkeypatch, stream_resp=_Resp(503, raise_exc=err))
+    with pytest.raises(ProviderError) as ei:
+        async for _ in LocalProvider().chat_stream({"model": "x"}):
+            pass
+    assert ei.value.status_code == 503
+    assert ei.value.retryable is True
 
 
 async def test_health_check_true_when_models_listed(monkeypatch):
