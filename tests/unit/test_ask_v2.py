@@ -52,9 +52,7 @@ class TestPersistentIndex:
         conn.commit()
         conn.execute("DELETE FROM files WHERE path='x.py'")
         conn.commit()
-        remaining = conn.execute(
-            "SELECT COUNT(*) FROM chunks WHERE file_path='x.py'"
-        ).fetchone()[0]
+        remaining = conn.execute("SELECT COUNT(*) FROM chunks WHERE file_path='x.py'").fetchone()[0]
         assert remaining == 0
         idx.close()
 
