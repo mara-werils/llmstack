@@ -34,9 +34,17 @@ def apikey_validate(key: str) -> None:
         console.print("[red]No key provided[/]")
         raise SystemExit(2)
 
-    if key.startswith("llmsk_") and len(key) >= 20:
-        success(f"Key format is valid (prefix: llmsk_, length: {len(key)})")
+    # Both prefixes are produced by the tool: 'llmsk_' by `apikey generate`
+    # and 'sk-llmstack-' by the key `llmstack up` auto-generates.
+    valid_prefixes = ("llmsk_", "sk-llmstack-")
+    matched = next((p for p in valid_prefixes if key.startswith(p)), None)
+    if matched and len(key) >= 20:
+        success(f"Key format is valid (prefix: {matched}, length: {len(key)})")
     else:
-        console.print("[yellow]Warning: Key does not follow recommended format (llmsk_...)[/]")
+        console.print(
+            "[yellow]Warning: Key does not follow a recommended format "
+            "(llmsk_... or sk-llmstack-...)[/]"
+        )
         info("Generate a new key with: llmstack apikey generate")
+        raise SystemExit(1)
         raise SystemExit(1)
