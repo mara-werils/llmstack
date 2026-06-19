@@ -122,6 +122,11 @@ export function activate(context: vscode.ExtensionContext): void {
   registerInlineCompletionProvider(context, readConfig);
 
   void refreshHealth();
+
+  // Poll periodically so the status bar reflects the gateway starting/stopping
+  // without the user having to click it. Cleared on deactivate.
+  const healthTimer = setInterval(() => void refreshHealth(), 15000);
+  context.subscriptions.push({ dispose: () => clearInterval(healthTimer) });
 }
 
 export function deactivate(): void {
