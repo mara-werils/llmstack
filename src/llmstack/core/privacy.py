@@ -49,8 +49,12 @@ def is_local_url(url: str) -> bool:
         return True
     if host in _LOCAL_HOSTS:
         return True
-    # Docker-compose service names used by llmstack (e.g. llmstack-ollama).
-    if host.startswith("llmstack") or host.endswith(".local"):
+    if host.endswith(".local"):
+        return True
+    # Docker-compose service names used by llmstack (e.g. llmstack-ollama) are
+    # single dotless labels. Require no dot so an externally-registered host
+    # like "llmstack.evil.com" is NOT misclassified as local.
+    if "." not in host and host.startswith("llmstack"):
         return True
     return False
 

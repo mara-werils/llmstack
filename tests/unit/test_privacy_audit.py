@@ -40,6 +40,9 @@ class TestIsLocalUrl:
             "https://api.anthropic.com",
             "http://10.0.0.5:8000",
             "https://example.com",
+            # A dotted host beginning with "llmstack" is external, not local.
+            "http://llmstack.evil.com",
+            "http://llmstack-attacker.example.com:8000",
         ],
     )
     def test_external(self, url):
