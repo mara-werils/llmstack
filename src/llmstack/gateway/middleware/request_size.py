@@ -23,7 +23,13 @@ class RequestSizeMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next):
         content_length = request.headers.get("content-length")
-        if content_length and int(content_length) > self.max_bytes:
+        try:
+            length = int(content_length) if content_length else None
+        except (TypeError, ValueError):
+            # A malformed (non-numeric) Content-Length header must not 500;
+            # let it through and rely on the body read for size enforcement.
+            length = None
+        if length is not None and length > self.max_bytes:
             client_ip = request.client.host if request.client else "unknown"
             logger.warning(
                 "Rejected oversized request: path=%s client=%s content_length=%s max_allowed=%d",
