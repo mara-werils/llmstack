@@ -225,7 +225,7 @@ def _load_text(path: Path) -> list[dict]:
     blocks = text.split("\n\n")
 
     rows = []
-    for i in range(0, len(blocks) - 1, 2):
+    for i in range(0, len(blocks), 2):
         q = blocks[i].strip()
         a = blocks[i + 1].strip() if i + 1 < len(blocks) else ""
         if q:

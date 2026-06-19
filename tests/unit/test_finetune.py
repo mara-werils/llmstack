@@ -252,6 +252,17 @@ class TestLoadData:
         assert fmt == "text"
         assert len(rows) >= 2
 
+    def test_load_text_keeps_trailing_question(self, tmp_path):
+        # An odd number of blocks (trailing question with no answer) must not
+        # silently drop the final block.
+        f = tmp_path / "data.txt"
+        f.write_text("Q1\n\nA1\n\nQ2 trailing")
+
+        rows, fmt = load_raw_data(f)
+        assert fmt == "text"
+        inputs = [r["input"] for r in rows]
+        assert "Q2 trailing" in inputs
+
     def test_unsupported_format(self, tmp_path):
         f = tmp_path / "data.xyz"
         f.write_text("stuff")
