@@ -72,6 +72,7 @@ nav:
   - Guide:
     - Ask Your Files: guide/ask.md
     - Editor Extension: guide/editor.md
+    - Privacy & No-Egress Proof: guide/privacy.md
     - Architecture: guide/architecture.md
     - Hardware Detection: guide/hardware-detection.md
     - Gateway: guide/gateway.md
