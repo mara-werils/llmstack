@@ -6,6 +6,8 @@
 
 <p align="center">
   <a href="https://pypi.org/project/llmstack-cli/"><img src="https://img.shields.io/pypi/v/llmstack-cli?color=blue" alt="PyPI"></a>
+  <a href="https://open-vsx.org/extension/llmstack/llmstack-vscode"><img src="https://img.shields.io/open-vsx/v/llmstack/llmstack-vscode?label=Open%20VSX&color=purple" alt="Open VSX"></a>
+  <a href="https://mara-werils.github.io/llmstack/"><img src="https://img.shields.io/badge/docs-mkdocs--material-blue" alt="Docs"></a>
   <a href="https://github.com/mara-werils/llmstack/actions/workflows/ci.yml"><img src="https://github.com/mara-werils/llmstack/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="https://github.com/mara-werils/llmstack/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-green" alt="License"></a>
   <a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-3.11+-blue" alt="Python"></a>
@@ -18,7 +20,9 @@
   <a href="#smart-routing">Smart Routing</a> &bull;
   <a href="#ai-agents--mcp">Agents & MCP</a> &bull;
   <a href="#fine-tuning">Fine-tuning</a> &bull;
-  <a href="#ai-observability">Observability</a>
+  <a href="#ai-observability">Observability</a> &bull;
+  <a href="docs/guide/editor.md">Editor</a> &bull;
+  <a href="https://mara-werils.github.io/llmstack/">Docs</a>
 </p>
 
 ---
