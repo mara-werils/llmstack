@@ -106,14 +106,20 @@
 - [x] `verify-private --live` — also probes the running gateway, catching env-var
       overrides that diverge from llmstack.yaml at runtime
 - [x] VS Code / OpenVSX extension (Ask, Explain, gateway health, opt-in inline completion) — `editors/vscode`
+- [x] **Editor agentic UX**: chat sidebar, AI edit with native-diff review +
+      one-step checkpoint revert, apply/insert code blocks, model picker,
+      in-editor 👍/👎 feedback wired to the learning pipeline, getting-started walkthrough
+- [x] **Documentation site** published to GitHub Pages (mkdocs-material)
+- [x] **Reproducible no-egress proof**: runtime egress monitor + privacy guide
+- [x] One-line installer (`curl … | sh`) preferring isolated uv/pipx installs
 - [x] Gateway test coverage backfill (replay, health, providers, proxy, cache, …)
-- [ ] Publish extension to OpenVSX + VS Marketplace
+- [ ] Publish extension to OpenVSX + VS Marketplace (CI ready; needs `OVSX_TOKEN` + a `vscode-v*` tag)
 - [ ] JetBrains plugin
 - [ ] Open benchmarks vs Cursor/Copilot on privacy + local latency
 
 ## v1.0 — Stable Release
 
-- [ ] Comprehensive test coverage (>90%)
+- [x] Comprehensive test coverage (>90%) — currently 95%+ (`fail_under = 95`)
 - [ ] Performance benchmarks vs alternatives
 - [ ] Kubernetes Helm chart
 - [ ] Official Docker images on GHCR
