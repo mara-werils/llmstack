@@ -8,17 +8,22 @@ your code and prompts **never leave your machine**.
 
 ## Features
 
-- **Ask about selection** (`Cmd/Ctrl+Alt+A`) — ask anything; the current
-  selection is sent as context.
+- **Chat sidebar** — a dedicated view in the activity bar. Streams replies with
+  markdown + code blocks, a model picker, and an optional "include editor
+  context" toggle. Every code block has **Apply**, **Insert**, and **Copy**.
+- **Edit with AI** (`Cmd/Ctrl+Alt+E`) — select code, describe a change, and
+  review it as a **native diff**. Nothing is written until you approve, and
+  **Revert last AI edit** undoes it in one step.
+- **👍 / 👎 feedback** — rate chat replies; feedback flows into the gateway's
+  adaptive-learning pipeline so your local model improves over time.
+- **Ask about selection** (`Cmd/Ctrl+Alt+A`) — quick questions with the current
+  selection as context.
 - **Explain selected code** — right-click any selection → _LLMStack: Explain
   selected code_.
-- **Gateway health** — a status-bar indicator shows whether your local gateway
-  is reachable.
-- **Streaming** — responses stream token-by-token into the LLMStack output
-  channel.
-- **Inline completions** (opt-in) — ghost-text code suggestions as you type,
-  powered by your local model. Toggle with _LLMStack: Toggle inline code
-  completion_ or `llmstack.inlineCompletion.enabled`.
+- **Inline completions** (opt-in) — ghost-text suggestions as you type, powered
+  by your local model. Toggle with `llmstack.inlineCompletion.enabled`.
+- **Gateway health** — a status-bar indicator (and an in-panel banner) shows
+  whether your local gateway is reachable, with a one-click **Start gateway**.
 
 ## Requirements
 
