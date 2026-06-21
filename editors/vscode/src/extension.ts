@@ -16,6 +16,7 @@ import {
   streamChat,
 } from "./gatewayClient";
 import { ChatViewProvider } from "./chatView";
+import { registerEditCommand } from "./editor";
 import { registerInlineCompletionProvider } from "./inlineCompletion";
 
 let output: vscode.OutputChannel;
@@ -129,6 +130,7 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.commands.registerCommand("llmstack.newChat", () => chat.newChat()),
   );
 
+  registerEditCommand(context, readConfig);
   registerInlineCompletionProvider(context, readConfig);
 
   void refreshHealth();

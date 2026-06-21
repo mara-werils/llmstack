@@ -63,6 +63,10 @@
         "title": "LLMStack: Toggle inline code completion"
       },
       {
+        "command": "llmstack.editSelection",
+        "title": "LLMStack: Edit selection with AI…"
+      },
+      {
         "command": "llmstack.openChat",
         "title": "LLMStack: Open chat"
       },
@@ -93,9 +97,14 @@
     "menus": {
       "editor/context": [
         {
-          "command": "llmstack.explain",
+          "command": "llmstack.editSelection",
           "when": "editorHasSelection",
           "group": "llmstack@1"
+        },
+        {
+          "command": "llmstack.explain",
+          "when": "editorHasSelection",
+          "group": "llmstack@2"
         }
       ],
       "view/title": [
@@ -112,6 +121,12 @@
         "key": "ctrl+alt+a",
         "mac": "cmd+alt+a",
         "when": "editorTextFocus"
+      },
+      {
+        "command": "llmstack.editSelection",
+        "key": "ctrl+alt+e",
+        "mac": "cmd+alt+e",
+        "when": "editorTextFocus && editorHasSelection"
       }
     ],
     "configuration": {
