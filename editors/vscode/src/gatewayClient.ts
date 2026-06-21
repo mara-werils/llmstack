@@ -158,10 +158,14 @@ export async function listModels(cfg: GatewayConfig): Promise<string[]> {
   }
 }
 
-/** Return true when the gateway health endpoint reports OK. */
+/**
+ * Return true when the gateway is reachable. Uses the liveness probe
+ * `/healthz/live` — the gateway exposes `/healthz*` and `/ping`, never `/health`,
+ * and `/healthz/live` is auth-exempt so it works even with gateway auth enabled.
+ */
 export async function checkHealth(cfg: GatewayConfig): Promise<boolean> {
   try {
-    const resp = await fetch(`${cfg.baseUrl}/health`, { headers: headers(cfg) });
+    const resp = await fetch(`${cfg.baseUrl}/healthz/live`, { headers: headers(cfg) });
     return resp.ok;
   } catch {
     return false;
