@@ -133,6 +133,36 @@
         "when": "editorTextFocus && editorHasSelection"
       }
     ],
+    "walkthroughs": [
+      {
+        "id": "llmstack.gettingStarted",
+        "title": "Get started with LLMStack",
+        "description": "Local, private AI in your editor — in three steps.",
+        "steps": [
+          {
+            "id": "start-gateway",
+            "title": "Start your local gateway",
+            "description": "Install the CLI and run the gateway. Code never leaves your machine.",
+            "media": { "markdown": "media/walkthrough/gateway.md" },
+            "completionEvents": ["onView:llmstack.chatView"]
+          },
+          {
+            "id": "open-chat",
+            "title": "Open the chat",
+            "description": "Open the LLMStack chat in the activity bar and ask anything.\n[Open chat](command:llmstack.openChat)",
+            "media": { "markdown": "media/walkthrough/chat.md" },
+            "completionEvents": ["onCommand:llmstack.openChat"]
+          },
+          {
+            "id": "edit-with-ai",
+            "title": "Edit code with AI",
+            "description": "Select code and edit it with a diff you approve before applying.\n[Run edit](command:llmstack.editSelection)",
+            "media": { "markdown": "media/walkthrough/edit.md" },
+            "completionEvents": ["onCommand:llmstack.editSelection"]
+          }
+        ]
+      }
+    ],
     "configuration": {
       "title": "LLMStack",
       "properties": {
