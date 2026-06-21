@@ -15,6 +15,7 @@ import {
   checkHealth,
   streamChat,
 } from "./gatewayClient";
+import { ChatViewProvider } from "./chatView";
 import { registerInlineCompletionProvider } from "./inlineCompletion";
 
 let output: vscode.OutputChannel;
@@ -117,6 +118,15 @@ export function activate(context: vscode.ExtensionContext): void {
         3000,
       );
     }),
+  );
+
+  const chat = new ChatViewProvider(context.extensionUri, readConfig);
+  context.subscriptions.push(
+    vscode.window.registerWebviewViewProvider(ChatViewProvider.viewType, chat),
+    vscode.commands.registerCommand("llmstack.openChat", () =>
+      vscode.commands.executeCommand("llmstack.chatView.focus"),
+    ),
+    vscode.commands.registerCommand("llmstack.newChat", () => chat.newChat()),
   );
 
   registerInlineCompletionProvider(context, readConfig);

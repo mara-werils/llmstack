@@ -61,14 +61,48 @@
       {
         "command": "llmstack.toggleInlineCompletion",
         "title": "LLMStack: Toggle inline code completion"
+      },
+      {
+        "command": "llmstack.openChat",
+        "title": "LLMStack: Open chat"
+      },
+      {
+        "command": "llmstack.newChat",
+        "title": "LLMStack: New chat",
+        "icon": "$(add)"
       }
     ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "llmstack",
+          "title": "LLMStack",
+          "icon": "media/llmstack.svg"
+        }
+      ]
+    },
+    "views": {
+      "llmstack": [
+        {
+          "type": "webview",
+          "id": "llmstack.chatView",
+          "name": "Chat"
+        }
+      ]
+    },
     "menus": {
       "editor/context": [
         {
           "command": "llmstack.explain",
           "when": "editorHasSelection",
           "group": "llmstack@1"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "llmstack.newChat",
+          "when": "view == llmstack.chatView",
+          "group": "navigation"
         }
       ]
     },
