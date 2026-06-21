@@ -45,9 +45,32 @@ You now have 7 production-grade services: multi-model inference, embeddings, vec
 
 ---
 
+## In Your Editor
+
+Bring it into VS Code, Cursor, Windsurf, or VSCodium. The extension talks to your
+local gateway, so code never leaves your machine.
+
+- **Chat sidebar** with model picker and editor context.
+- **Edit with AI** — review changes as a native diff before they touch your file,
+  and revert in one step.
+- **Inline completions** and 👍/👎 feedback that trains your local model.
+
+[Editor extension guide](guide/editor.md){ .md-button .md-button--primary }
+
+## Verifiable Privacy
+
+"Runs locally" is easy to claim. llmstack lets you **prove** it — both statically
+(`llmstack verify-private`) and at runtime (an egress monitor you can gate CI on).
+
+[Privacy & no-egress proof](guide/privacy.md){ .md-button }
+
+---
+
 ## Key Features
 
 - **`llmstack ask`** -- chat with your files from the terminal. PDF, code, logs, docs. One command.
+- **Editor extension** -- chat, AI edits with diff review, and inline completion in VS Code & forks.
+- **Verifiable privacy** -- static audit + runtime egress monitor prove no data leaves the machine.
 - **Smart Model Router** -- routes queries to the right-sized model automatically
 - **Zero configuration** -- hardware detection auto-selects vLLM or Ollama based on your GPU
 - **OpenAI-compatible API** -- works with LangChain, LlamaIndex, Vercel AI SDK, openai-python
@@ -125,6 +148,9 @@ print(response.choices[0].message.content)
 | Built-in vector DB | **Yes** | No | No | No |
 | Observability dashboard | **Yes** | No | Partial | Partial |
 | Plugin ecosystem | **Yes** | No | No | No |
+
+See how llmstack compares to other AI coding tools (Cline, Continue, Tabby, Aider)
+in the [full comparison](comparison.md).
 
 ## Requirements
 
