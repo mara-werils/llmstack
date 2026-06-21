@@ -67,6 +67,10 @@
         "title": "LLMStack: Edit selection with AI…"
       },
       {
+        "command": "llmstack.revertEdit",
+        "title": "LLMStack: Revert last AI edit"
+      },
+      {
         "command": "llmstack.openChat",
         "title": "LLMStack: Open chat"
       },

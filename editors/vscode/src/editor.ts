@@ -42,7 +42,24 @@ function stripFences(raw: string): string {
     .trimEnd();
 }
 
+/** A snapshot of the most recent AI edit so it can be reverted in one step. */
+interface Checkpoint {
+  uri: vscode.Uri;
+  range: vscode.Range;
+  original: string;
+}
+
 let diffCounter = 0;
+let lastCheckpoint: Checkpoint | undefined;
+
+/** End position reached after inserting `text` starting at `start`. */
+function advance(start: vscode.Position, text: string): vscode.Position {
+  const lines = text.split("\n");
+  if (lines.length === 1) {
+    return new vscode.Position(start.line, start.character + text.length);
+  }
+  return new vscode.Position(start.line + lines.length - 1, lines[lines.length - 1].length);
+}
 
 export function registerEditCommand(
   context: vscode.ExtensionContext,
@@ -54,7 +71,22 @@ export function registerEditCommand(
     vscode.commands.registerCommand("llmstack.editSelection", () =>
       runEdit(readConfig, provider),
     ),
+    vscode.commands.registerCommand("llmstack.revertEdit", () => revertEdit()),
   );
+}
+
+/** Restore the file to its state before the last applied AI edit. */
+async function revertEdit(): Promise<void> {
+  const checkpoint = lastCheckpoint;
+  if (!checkpoint) {
+    vscode.window.showInformationMessage("LLMStack: no AI edit to revert.");
+    return;
+  }
+  const edit = new vscode.WorkspaceEdit();
+  edit.replace(checkpoint.uri, checkpoint.range, checkpoint.original);
+  await vscode.workspace.applyEdit(edit);
+  lastCheckpoint = undefined;
+  vscode.window.setStatusBarMessage("LLMStack: reverted AI edit", 3000);
 }
 
 async function runEdit(
@@ -147,5 +179,14 @@ async function runEdit(
     const edit = new vscode.WorkspaceEdit();
     edit.replace(doc.uri, selection, proposed);
     await vscode.workspace.applyEdit(edit);
+    lastCheckpoint = {
+      uri: doc.uri,
+      range: new vscode.Range(selection.start, advance(selection.start, proposed)),
+      original,
+    };
+    vscode.window.setStatusBarMessage(
+      "LLMStack: edit applied — run 'LLMStack: Revert last AI edit' to undo",
+      4000,
+    );
   }
 }
