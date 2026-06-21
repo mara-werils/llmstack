@@ -71,6 +71,7 @@ nav:
     - Configuration: getting-started/configuration.md
   - Guide:
     - Ask Your Files: guide/ask.md
+    - Editor Extension: guide/editor.md
     - Architecture: guide/architecture.md
     - Hardware Detection: guide/hardware-detection.md
     - Gateway: guide/gateway.md

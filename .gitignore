@@ -20,6 +20,7 @@ data/
 .coverage.*
 htmlcov/
 coverage.xml
+site/
 llmstack.yaml
 llmstack.local.yaml
 .llmstack-index/
