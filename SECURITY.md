@@ -46,3 +46,27 @@ LLMStack includes several built-in security controls:
 - Keep LLMStack and its dependencies up to date.
 - When exposing the gateway to the internet, always enable API key
   authentication and set a restrictive `cors` origin list.
+
+## Privacy & Telemetry
+
+LLMStack collects **no telemetry**. The CLI and gateway do not phone home, send
+usage analytics, or require an account. There is nothing to opt out of.
+
+You can verify this yourself — both statically and at runtime:
+
+- `llmstack verify-private` audits your configuration for any external egress and
+  exits non-zero if the local-only guarantee is broken (CI-gateable).
+- `llmstack verify-private --live` additionally probes the running gateway to
+  catch environment-variable overrides that diverge from `llmstack.yaml`.
+- The runtime egress monitor (`llmstack.core.egress`) records every outbound
+  socket connection a code path makes, so you can assert in CI that a workload
+  never leaves the machine. See the [Privacy guide](docs/guide/privacy.md).
+
+## Supply Chain
+
+- Releases are published to PyPI via GitHub Actions using OIDC trusted
+  publishing — no long-lived PyPI token is stored.
+- Container images are built and pushed to GHCR from tagged releases.
+- The VS Code extension has **zero runtime dependencies** (it uses the native
+  `fetch` in the editor's Node runtime), minimizing its supply-chain surface.
+- CI runs `ruff`, `bandit`, and `safety` on every change.
