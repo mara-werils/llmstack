@@ -5,6 +5,8 @@
   const messagesEl = document.getElementById("messages");
   const inputEl = document.getElementById("input");
   const sendBtn = document.getElementById("send");
+  const ctxToggle = document.getElementById("ctx-toggle");
+  const ctxLabel = document.getElementById("ctx-label");
 
   let streaming = false;
   let assistantBody = null;
@@ -72,7 +74,11 @@
     assistantBody = addMessage("assistant");
     assistantRaw = "";
     setBusy(true);
-    vscode.postMessage({ type: "send", text: text });
+    vscode.postMessage({
+      type: "send",
+      text: text,
+      includeContext: ctxToggle.checked,
+    });
     persist();
   }
 
@@ -241,6 +247,16 @@
       assistantRaw = "";
       setBusy(false);
       persist();
+    } else if (msg.type === "context") {
+      if (msg.file) {
+        ctxLabel.textContent =
+          (msg.hasSelection ? "Include selection · " : "Include file · ") + msg.file;
+        ctxToggle.disabled = false;
+      } else {
+        ctxLabel.textContent = "Include editor context";
+        ctxToggle.checked = false;
+        ctxToggle.disabled = true;
+      }
     }
   });
 

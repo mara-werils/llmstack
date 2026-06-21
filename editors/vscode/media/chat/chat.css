@@ -126,6 +126,27 @@ code.inline {
   line-height: 1.6;
 }
 
+#ctx {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  font-size: 11px;
+  opacity: 0.85;
+  border-top: 1px solid var(--vscode-panel-border);
+  cursor: pointer;
+}
+
+#ctx input {
+  margin: 0;
+}
+
+#ctx-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 #composer {
   display: flex;
   gap: 6px;

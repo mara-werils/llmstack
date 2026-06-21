@@ -5,6 +5,8 @@
  * the host speaks the gateway's OpenAI-compatible streaming API.
  */
 
+import * as path from "path";
+
 import * as vscode from "vscode";
 
 import {
@@ -14,6 +16,9 @@ import {
   streamChat,
 } from "./gatewayClient";
 
+/** Max characters of editor context sent with a message, to bound prompt size. */
+const MAX_CONTEXT_CHARS = 6000;
+
 const SYSTEM_PROMPT =
   "You are a concise coding assistant running locally via LLMStack. " +
   "Answer directly and show code where helpful. Everything stays on the user's machine.";
@@ -21,6 +26,7 @@ const SYSTEM_PROMPT =
 interface WebviewMessage {
   type?: string;
   text?: string;
+  includeContext?: boolean;
 }
 
 /** Provides the LLMStack chat view contributed to the activity bar. */
@@ -30,6 +36,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
   private view?: vscode.WebviewView;
   private controller?: AbortController;
   private history: ChatMessage[] = [];
+  private contextWatchers: vscode.Disposable[] = [];
 
   constructor(
     private readonly extensionUri: vscode.Uri,
@@ -46,6 +53,50 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
     view.webview.onDidReceiveMessage((msg: WebviewMessage) => {
       void this.onMessage(msg);
     });
+    this.registerContextWatchers();
+    view.onDidDispose(() => this.disposeContextWatchers());
+  }
+
+  private registerContextWatchers(): void {
+    this.disposeContextWatchers();
+    this.contextWatchers.push(
+      vscode.window.onDidChangeActiveTextEditor(() => this.postContextInfo()),
+      vscode.window.onDidChangeTextEditorSelection(() => this.postContextInfo()),
+    );
+    this.postContextInfo();
+  }
+
+  private disposeContextWatchers(): void {
+    this.contextWatchers.forEach((d) => d.dispose());
+    this.contextWatchers = [];
+  }
+
+  private postContextInfo(): void {
+    const editor = vscode.window.activeTextEditor;
+    const file = editor ? path.basename(editor.document.fileName) : "";
+    const hasSelection = !!editor && !editor.selection.isEmpty;
+    void this.view?.webview.postMessage({ type: "context", file, hasSelection });
+  }
+
+  /** Build a fenced code block from the active selection (or whole file), capped in size. */
+  private buildContext(): string {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) {
+      return "";
+    }
+    const selection = editor.selection;
+    const doc = editor.document;
+    const raw = selection.isEmpty ? doc.getText() : doc.getText(selection);
+    if (!raw.trim()) {
+      return "";
+    }
+    const clipped =
+      raw.length > MAX_CONTEXT_CHARS
+        ? `${raw.slice(0, MAX_CONTEXT_CHARS)}\n… (truncated)`
+        : raw;
+    const name = path.basename(doc.fileName);
+    const label = selection.isEmpty ? `Active file ${name}` : `Selection from ${name}`;
+    return `${label}:\n\`\`\`${doc.languageId}\n${clipped}\n\`\`\``;
   }
 
   /** Reset the conversation and clear the panel. */
@@ -57,7 +108,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
 
   private async onMessage(msg: WebviewMessage): Promise<void> {
     if (msg.type === "send" && typeof msg.text === "string") {
-      await this.handleSend(msg.text);
+      await this.handleSend(msg.text, msg.includeContext === true);
     } else if (msg.type === "stop") {
       this.controller?.abort();
     } else if (msg.type === "copy" && typeof msg.text === "string") {
@@ -89,13 +140,15 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
     });
   }
 
-  private async handleSend(text: string): Promise<void> {
+  private async handleSend(text: string, includeContext: boolean): Promise<void> {
     const view = this.view;
     if (!view) {
       return;
     }
     const cfg = this.readConfig();
-    this.history.push({ role: "user", content: text });
+    const context = includeContext ? this.buildContext() : "";
+    const userContent = context ? `${text}\n\n${context}` : text;
+    this.history.push({ role: "user", content: userContent });
     const messages: ChatMessage[] = [
       { role: "system", content: SYSTEM_PROMPT },
       ...this.history,
@@ -163,6 +216,10 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
   <body>
     <div id="root">
       <div id="messages"></div>
+      <label id="ctx">
+        <input type="checkbox" id="ctx-toggle" />
+        <span id="ctx-label">Include editor context</span>
+      </label>
       <div id="composer">
         <textarea id="input" rows="2" placeholder="Ask your local model… (Enter to send, Shift+Enter for newline)"></textarea>
         <button id="send">Send</button>
