@@ -33,6 +33,8 @@ class AuthMiddleware(BaseHTTPMiddleware):
             "/redoc",
             "/openapi.json",
             "/",
+            "/health",
+            "/ping",
         )
         path = request.url.path
         # startswith for /healthz so K8s readiness/liveness probes

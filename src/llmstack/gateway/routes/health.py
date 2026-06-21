@@ -133,6 +133,16 @@ async def liveness():
     return JSONResponse(content={"status": "alive"}, status_code=200)
 
 
+@router.get("/health")
+async def health_alias():
+    """Convenience alias of the liveness probe (`/healthz/live`).
+
+    Many tools (Docker HEALTHCHECK, uptime monitors, editor extensions) probe
+    `/health` by convention; mirroring liveness here means they just work.
+    """
+    return JSONResponse(content={"status": "alive"}, status_code=200)
+
+
 @router.get("/healthz/ready")
 async def readiness():
     """Kubernetes readiness probe — returns 200 only if all backends are reachable."""

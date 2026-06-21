@@ -41,6 +41,20 @@ def make_client():
 # ---------------------------------------------------------------------------
 
 
+def test_health_alias_returns_alive(make_client):
+    client = make_client()
+    resp = client.get("/health")
+    assert resp.status_code == 200
+    assert resp.json() == {"status": "alive"}
+
+
+def test_ping_returns_pong(make_client):
+    client = make_client()
+    resp = client.get("/ping")
+    assert resp.status_code == 200
+    assert resp.text == "pong"
+
+
 class _FakeResp:
     def __init__(self, status_code):
         self.status_code = status_code
