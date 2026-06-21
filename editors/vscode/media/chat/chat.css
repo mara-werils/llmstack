@@ -17,6 +17,24 @@ body {
   height: 100vh;
 }
 
+#toolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--vscode-panel-border);
+}
+
+#model {
+  background: var(--vscode-dropdown-background);
+  color: var(--vscode-dropdown-foreground);
+  border: 1px solid var(--vscode-dropdown-border, transparent);
+  border-radius: 3px;
+  padding: 2px 4px;
+  font-size: 11px;
+  max-width: 100%;
+}
+
 #messages {
   flex: 1 1 auto;
   overflow-y: auto;

@@ -13,6 +13,7 @@ import {
   ChatMessage,
   GatewayConfig,
   GatewayError,
+  listModels,
   streamChat,
 } from "./gatewayClient";
 
@@ -37,6 +38,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
   private controller?: AbortController;
   private history: ChatMessage[] = [];
   private contextWatchers: vscode.Disposable[] = [];
+  private modelOverride?: string;
 
   constructor(
     private readonly extensionUri: vscode.Uri,
@@ -69,6 +71,14 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
   private disposeContextWatchers(): void {
     this.contextWatchers.forEach((d) => d.dispose());
     this.contextWatchers = [];
+  }
+
+  /** Fetch available models from the gateway and offer them in the panel picker. */
+  private async postModels(): Promise<void> {
+    const cfg = this.readConfig();
+    const models = await listModels(cfg);
+    const current = this.modelOverride ?? cfg.model;
+    void this.view?.webview.postMessage({ type: "models", models, current });
   }
 
   private postContextInfo(): void {
@@ -107,10 +117,15 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
   }
 
   private async onMessage(msg: WebviewMessage): Promise<void> {
-    if (msg.type === "send" && typeof msg.text === "string") {
+    if (msg.type === "ready") {
+      this.postContextInfo();
+      await this.postModels();
+    } else if (msg.type === "send" && typeof msg.text === "string") {
       await this.handleSend(msg.text, msg.includeContext === true);
     } else if (msg.type === "stop") {
       this.controller?.abort();
+    } else if (msg.type === "model") {
+      this.modelOverride = msg.text || undefined;
     } else if (msg.type === "copy" && typeof msg.text === "string") {
       await vscode.env.clipboard.writeText(msg.text);
       vscode.window.setStatusBarMessage("LLMStack: copied to clipboard", 2000);
@@ -146,6 +161,9 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
       return;
     }
     const cfg = this.readConfig();
+    if (this.modelOverride) {
+      cfg.model = this.modelOverride;
+    }
     const context = includeContext ? this.buildContext() : "";
     const userContent = context ? `${text}\n\n${context}` : text;
     this.history.push({ role: "user", content: userContent });
@@ -215,6 +233,9 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
   </head>
   <body>
     <div id="root">
+      <div id="toolbar">
+        <select id="model" title="Model used for this chat"></select>
+      </div>
       <div id="messages"></div>
       <label id="ctx">
         <input type="checkbox" id="ctx-toggle" />

@@ -119,6 +119,23 @@ export async function complete(
   return typeof content === "string" ? content : "";
 }
 
+/** List model IDs the gateway exposes (OpenAI-compatible `/v1/models`). */
+export async function listModels(cfg: GatewayConfig): Promise<string[]> {
+  try {
+    const resp = await fetch(`${cfg.baseUrl}/v1/models`, { headers: headers(cfg) });
+    if (!resp.ok) {
+      return [];
+    }
+    const data = (await resp.json()) as { data?: { id?: string }[] };
+    const ids = (data?.data ?? [])
+      .map((m) => m.id)
+      .filter((id): id is string => typeof id === "string" && id.length > 0);
+    return Array.from(new Set(ids));
+  } catch {
+    return [];
+  }
+}
+
 /** Return true when the gateway health endpoint reports OK. */
 export async function checkHealth(cfg: GatewayConfig): Promise<boolean> {
   try {

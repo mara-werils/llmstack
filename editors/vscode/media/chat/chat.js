@@ -7,6 +7,7 @@
   const sendBtn = document.getElementById("send");
   const ctxToggle = document.getElementById("ctx-toggle");
   const ctxLabel = document.getElementById("ctx-label");
+  const modelSelect = document.getElementById("model");
 
   let streaming = false;
   let assistantBody = null;
@@ -199,6 +200,10 @@
     }
   });
 
+  modelSelect.addEventListener("change", function () {
+    vscode.postMessage({ type: "model", text: modelSelect.value });
+  });
+
   // Delegated handler so restored code blocks keep working after a reload.
   messagesEl.addEventListener("click", function (e) {
     const btn = e.target && e.target.closest && e.target.closest(".code-action");
@@ -247,6 +252,24 @@
       assistantRaw = "";
       setBusy(false);
       persist();
+    } else if (msg.type === "models") {
+      modelSelect.innerHTML = "";
+      const models =
+        msg.models && msg.models.length
+          ? msg.models
+          : msg.current
+            ? [msg.current]
+            : [];
+      for (const id of models) {
+        const opt = document.createElement("option");
+        opt.value = id;
+        opt.textContent = id;
+        if (id === msg.current) {
+          opt.selected = true;
+        }
+        modelSelect.appendChild(opt);
+      }
+      modelSelect.disabled = models.length === 0;
     } else if (msg.type === "context") {
       if (msg.file) {
         ctxLabel.textContent =
