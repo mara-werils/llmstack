@@ -119,6 +119,28 @@ export async function complete(
   return typeof content === "string" ? content : "";
 }
 
+export interface Feedback {
+  feedbackType: "thumbs_up" | "thumbs_down";
+  query: string;
+  response: string;
+  model: string;
+}
+
+/** Send thumbs feedback to the gateway's adaptive-learning pipeline. Best-effort. */
+export async function sendFeedback(cfg: GatewayConfig, fb: Feedback): Promise<void> {
+  await fetch(`${cfg.baseUrl}/v1/feedback`, {
+    method: "POST",
+    headers: headers(cfg),
+    body: JSON.stringify({
+      feedback_type: fb.feedbackType,
+      query: fb.query,
+      response: fb.response,
+      model: fb.model,
+      command: "vscode-chat",
+    }),
+  });
+}
+
 /** List model IDs the gateway exposes (OpenAI-compatible `/v1/models`). */
 export async function listModels(cfg: GatewayConfig): Promise<string[]> {
   try {

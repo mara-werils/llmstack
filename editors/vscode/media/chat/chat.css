@@ -136,6 +136,26 @@ code.inline {
   border-radius: 3px;
 }
 
+.feedback {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.fb-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  opacity: 0.55;
+  font-size: 13px;
+  padding: 0 4px;
+}
+
+.fb-btn:hover,
+.fb-btn.chosen {
+  opacity: 1;
+}
+
 .empty {
   opacity: 0.6;
   padding: 24px 16px;

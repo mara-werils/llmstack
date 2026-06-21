@@ -12,6 +12,7 @@
   let streaming = false;
   let assistantBody = null;
   let assistantRaw = "";
+  let lastUserText = "";
 
   const saved = vscode.getState();
   if (saved && saved.html) {
@@ -71,6 +72,7 @@
       return;
     }
     addMessage("user").textContent = text;
+    lastUserText = text;
     inputEl.value = "";
     assistantBody = addMessage("assistant");
     assistantRaw = "";
@@ -155,6 +157,25 @@
     return btn;
   }
 
+  function makeVote(vote, label) {
+    const btn = document.createElement("button");
+    btn.className = "fb-btn";
+    btn.dataset.vote = vote;
+    btn.textContent = label;
+    return btn;
+  }
+
+  function addFeedback(wrap) {
+    if (!wrap || wrap.querySelector(".feedback")) {
+      return;
+    }
+    const fb = document.createElement("div");
+    fb.className = "feedback";
+    fb.appendChild(makeVote("up", "👍"));
+    fb.appendChild(makeVote("down", "👎"));
+    wrap.appendChild(fb);
+  }
+
   function appendText(container, text) {
     const div = document.createElement("div");
     div.className = "md-text";
@@ -204,9 +225,31 @@
     vscode.postMessage({ type: "model", text: modelSelect.value });
   });
 
-  // Delegated handler so restored code blocks keep working after a reload.
+  // Delegated handler so restored buttons keep working after a reload.
   messagesEl.addEventListener("click", function (e) {
-    const btn = e.target && e.target.closest && e.target.closest(".code-action");
+    const target = e.target;
+    if (!target || !target.closest) {
+      return;
+    }
+
+    const fbBtn = target.closest(".fb-btn");
+    if (fbBtn) {
+      const wrap = fbBtn.closest(".msg");
+      vscode.postMessage({
+        type: "feedback",
+        vote: fbBtn.dataset.vote,
+        query: (wrap && wrap.dataset.query) || "",
+        response: (wrap && wrap.dataset.response) || "",
+      });
+      const siblings = fbBtn.parentElement.querySelectorAll(".fb-btn");
+      siblings.forEach(function (x) {
+        x.classList.remove("chosen");
+      });
+      fbBtn.classList.add("chosen");
+      return;
+    }
+
+    const btn = target.closest(".code-action");
     if (!btn) {
       return;
     }
@@ -228,7 +271,14 @@
       scrollDown();
     } else if (msg.type === "done") {
       if (assistantBody) {
-        renderMarkdown(assistantBody, assistantRaw);
+        const finalResponse = assistantRaw;
+        renderMarkdown(assistantBody, finalResponse);
+        const wrap = assistantBody.parentElement;
+        if (wrap) {
+          wrap.dataset.query = lastUserText;
+          wrap.dataset.response = finalResponse;
+          addFeedback(wrap);
+        }
       }
       setBusy(false);
       assistantBody = null;

@@ -14,6 +14,7 @@ import {
   GatewayConfig,
   GatewayError,
   listModels,
+  sendFeedback,
   streamChat,
 } from "./gatewayClient";
 
@@ -28,6 +29,9 @@ interface WebviewMessage {
   type?: string;
   text?: string;
   includeContext?: boolean;
+  vote?: string;
+  query?: string;
+  response?: string;
 }
 
 /** Provides the LLMStack chat view contributed to the activity bar. */
@@ -126,6 +130,18 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
       this.controller?.abort();
     } else if (msg.type === "model") {
       this.modelOverride = msg.text || undefined;
+    } else if (msg.type === "feedback" && (msg.vote === "up" || msg.vote === "down")) {
+      const cfg = this.readConfig();
+      if (this.modelOverride) {
+        cfg.model = this.modelOverride;
+      }
+      void sendFeedback(cfg, {
+        feedbackType: msg.vote === "up" ? "thumbs_up" : "thumbs_down",
+        query: typeof msg.query === "string" ? msg.query : "",
+        response: typeof msg.response === "string" ? msg.response : "",
+        model: cfg.model,
+      }).catch(() => undefined);
+      vscode.window.setStatusBarMessage("LLMStack: feedback sent — thanks!", 2000);
     } else if (msg.type === "copy" && typeof msg.text === "string") {
       await vscode.env.clipboard.writeText(msg.text);
       vscode.window.setStatusBarMessage("LLMStack: copied to clipboard", 2000);
