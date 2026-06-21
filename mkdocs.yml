@@ -86,6 +86,7 @@ nav:
     - RAG: api/rag.md
     - System: api/system.md
   - CLI Reference: cli.md
+  - Comparison: comparison.md
   - Examples: examples.md
   - Changelog: changelog.md
   - Contributing: contributing.md
