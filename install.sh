@@ -29,9 +29,21 @@ if [ "$MAJOR" -lt 3 ] || ([ "$MAJOR" -eq 3 ] && [ "$MINOR" -lt 11 ]); then
 fi
 info "Python $PYTHON_VERSION"
 
-# Install llmstack
+# Install llmstack with the best available tool. Isolated installs (uv/pipx) are
+# preferred — a bare `pip install` fails on PEP 668 "externally-managed" Pythons
+# (modern Homebrew / Debian / Ubuntu).
 echo -e "\nInstalling llmstack..."
-pip install --quiet llmstack-cli 2>/dev/null || pip3 install --quiet llmstack-cli
+if command -v uv &>/dev/null; then
+    info "Using uv (isolated tool install)"
+    uv tool install --upgrade llmstack-cli
+elif command -v pipx &>/dev/null; then
+    info "Using pipx (isolated install)"
+    pipx install --force llmstack-cli
+else
+    warn "uv/pipx not found — installing with 'pip install --user'."
+    warn "For an isolated install, see https://docs.astral.sh/uv/"
+    python3 -m pip install --user --upgrade llmstack-cli
+fi
 info "llmstack installed"
 
 # Check Ollama
@@ -41,9 +53,14 @@ else
     warn "Ollama not found — install from https://ollama.com"
 fi
 
-# Run quickstart
-echo -e "\nRunning quickstart..."
-llmstack quickstart --skip-pull 2>/dev/null || true
+# Run quickstart only if llmstack landed on PATH
+if command -v llmstack &>/dev/null; then
+    echo -e "\nRunning quickstart..."
+    llmstack quickstart --skip-pull 2>/dev/null || true
+else
+    warn "llmstack is installed but not on your PATH yet."
+    warn "Add your tool bin dir (e.g. ~/.local/bin) to PATH and re-open your shell."
+fi
 
 echo -e "\n${BOLD}Done!${NC} Get started:"
 echo "  llmstack quickstart    # setup model + config"
