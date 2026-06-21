@@ -1,0 +1,39 @@
+# Privacy gate — fails the build if the default configuration is not private or
+# if a core offline workload makes any external network connection. This turns
+# the "your code never leaves your machine" promise into an enforced invariant.
+name: Privacy Gate
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/llmstack/core/privacy.py"
+      - "src/llmstack/core/privacy_live.py"
+      - "src/llmstack/core/egress.py"
+      - "examples/airgapped_proof.py"
+      - ".github/workflows/privacy.yml"
+  pull_request:
+    paths:
+      - "src/llmstack/core/privacy.py"
+      - "src/llmstack/core/privacy_live.py"
+      - "src/llmstack/core/egress.py"
+      - "examples/airgapped_proof.py"
+      - ".github/workflows/privacy.yml"
+  workflow_dispatch:
+
+jobs:
+  no-egress:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install llmstack
+        run: pip install -e .
+
+      - name: Prove no external egress
+        run: python examples/airgapped_proof.py
