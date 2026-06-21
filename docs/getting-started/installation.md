@@ -17,6 +17,17 @@ For GPU-accelerated inference:
 | Apple Silicon (M1--M4) | No additional setup needed (Metal acceleration via Ollama) |
 | CPU only | No additional setup needed |
 
+## Quick install (one-liner)
+
+The fastest path — auto-picks `uv`, `pipx`, or `pip`:
+
+```bash
+curl -LsSf https://raw.githubusercontent.com/mara-werils/llmstack/main/install.sh | sh
+```
+
+Prefer an isolated install? Use `uv tool install llmstack-cli` or
+`pipx install llmstack-cli`.
+
 ## Install from PyPI
 
 ```bash
@@ -127,6 +138,12 @@ LLMStack Doctor
 
 All checks passed!
 ```
+
+## Install the Editor Extension
+
+Want AI in your editor? Install **LLMStack** from the VS Code Marketplace, or from
+the [Open VSX Registry](https://open-vsx.org) for Cursor / Windsurf / VSCodium.
+See the [editor extension guide](../guide/editor.md).
 
 ## Next Steps
 
