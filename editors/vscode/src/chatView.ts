@@ -48,10 +48,15 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
   private contextWatchers: vscode.Disposable[] = [];
   private modelOverride?: string;
 
+  private static readonly MODEL_KEY = "llmstack.chat.model";
+
   constructor(
     private readonly extensionUri: vscode.Uri,
     private readonly readConfig: () => GatewayConfig,
-  ) {}
+    private readonly state: vscode.Memento,
+  ) {
+    this.modelOverride = state.get<string>(ChatViewProvider.MODEL_KEY) || undefined;
+  }
 
   public resolveWebviewView(view: vscode.WebviewView): void {
     this.view = view;
@@ -151,6 +156,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
       this.controller?.abort();
     } else if (msg.type === "model") {
       this.modelOverride = msg.text || undefined;
+      await this.state.update(ChatViewProvider.MODEL_KEY, this.modelOverride);
     } else if (msg.type === "feedback" && (msg.vote === "up" || msg.vote === "down")) {
       const cfg = this.readConfig();
       if (this.modelOverride) {

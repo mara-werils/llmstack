@@ -121,7 +121,7 @@ export function activate(context: vscode.ExtensionContext): void {
     }),
   );
 
-  const chat = new ChatViewProvider(context.extensionUri, readConfig);
+  const chat = new ChatViewProvider(context.extensionUri, readConfig, context.workspaceState);
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider(ChatViewProvider.viewType, chat),
     vscode.commands.registerCommand("llmstack.openChat", () =>
