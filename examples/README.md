@@ -23,6 +23,7 @@ The gateway will be available at `http://localhost:8000`.
 | [`llamaindex_rag.py`](llamaindex_rag.py) | LlamaIndex | Document indexing, Qdrant vector store, chat engine with memory |
 | [`fastapi_app.py`](fastapi_app.py) | FastAPI | Production app with RAG Q&A, summarization, translation endpoints |
 | [`sdk_quickstart.py`](sdk_quickstart.py) | openai + httpx | All llmstack features: health, chat, stream, embed, RAG ingest/query |
+| [`airgapped_proof.py`](airgapped_proof.py) | llmstack core | Prove a workload is air-gapped: static privacy audit + runtime egress monitor (CI-gateable) |
 | [`vercel_ai/`](vercel_ai/) | Vercel AI SDK (TS) | Next.js streaming route, embeddings, multi-turn conversation |
 
 ## Quick start per example
