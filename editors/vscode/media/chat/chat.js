@@ -8,6 +8,9 @@
   const ctxToggle = document.getElementById("ctx-toggle");
   const ctxLabel = document.getElementById("ctx-label");
   const modelSelect = document.getElementById("model");
+  const banner = document.getElementById("banner");
+  const bannerStart = document.getElementById("banner-start");
+  const bannerHelp = document.getElementById("banner-help");
 
   let streaming = false;
   let assistantBody = null;
@@ -225,6 +228,14 @@
     vscode.postMessage({ type: "model", text: modelSelect.value });
   });
 
+  bannerStart.addEventListener("click", function () {
+    vscode.postMessage({ type: "startGateway" });
+  });
+
+  bannerHelp.addEventListener("click", function () {
+    vscode.postMessage({ type: "openWalkthrough" });
+  });
+
   // Delegated handler so restored buttons keep working after a reload.
   messagesEl.addEventListener("click", function (e) {
     const target = e.target;
@@ -302,6 +313,8 @@
       assistantRaw = "";
       setBusy(false);
       persist();
+    } else if (msg.type === "health") {
+      banner.hidden = !!msg.ok;
     } else if (msg.type === "models") {
       modelSelect.innerHTML = "";
       const models =

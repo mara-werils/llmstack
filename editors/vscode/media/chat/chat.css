@@ -17,6 +17,36 @@ body {
   height: 100vh;
 }
 
+#banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  background: var(--vscode-inputValidation-warningBackground, rgba(255, 200, 0, 0.1));
+  border-bottom: 1px solid var(--vscode-inputValidation-warningBorder, var(--vscode-panel-border));
+  font-size: 12px;
+}
+
+#banner[hidden] {
+  display: none;
+}
+
+.banner-text {
+  flex: 1 1 auto;
+}
+
+#banner button {
+  padding: 2px 8px;
+  font-size: 11px;
+}
+
+#banner .link {
+  background: transparent;
+  color: var(--vscode-textLink-foreground);
+  text-decoration: underline;
+}
+
 #toolbar {
   display: flex;
   align-items: center;

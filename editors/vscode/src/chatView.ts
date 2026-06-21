@@ -13,10 +13,14 @@ import {
   ChatMessage,
   GatewayConfig,
   GatewayError,
+  checkHealth,
   listModels,
   sendFeedback,
   streamChat,
 } from "./gatewayClient";
+
+/** Fully-qualified walkthrough id (publisher.name#walkthroughId). */
+const WALKTHROUGH_ID = "llmstack.llmstack-vscode#llmstack.gettingStarted";
 
 /** Max characters of editor context sent with a message, to bound prompt size. */
 const MAX_CONTEXT_CHARS = 6000;
@@ -77,6 +81,12 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
     this.contextWatchers = [];
   }
 
+  /** Tell the webview whether the gateway is currently reachable. */
+  private async postHealth(): Promise<void> {
+    const ok = await checkHealth(this.readConfig());
+    void this.view?.webview.postMessage({ type: "health", ok });
+  }
+
   /** Fetch available models from the gateway and offer them in the panel picker. */
   private async postModels(): Promise<void> {
     const cfg = this.readConfig();
@@ -124,6 +134,17 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
     if (msg.type === "ready") {
       this.postContextInfo();
       await this.postModels();
+      await this.postHealth();
+    } else if (msg.type === "startGateway") {
+      const terminal = vscode.window.createTerminal("LLMStack");
+      terminal.show();
+      terminal.sendText("llmstack up");
+    } else if (msg.type === "openWalkthrough") {
+      await vscode.commands.executeCommand(
+        "workbench.action.openWalkthrough",
+        WALKTHROUGH_ID,
+        false,
+      );
     } else if (msg.type === "send" && typeof msg.text === "string") {
       await this.handleSend(msg.text, msg.includeContext === true);
     } else if (msg.type === "stop") {
@@ -215,6 +236,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
             ? `Gateway error ${err.status}: ${err.message}`
             : `Could not reach the gateway at ${cfg.baseUrl}. Is 'llmstack up' running?`;
         void view.webview.postMessage({ type: "error", message });
+        void this.postHealth();
       }
     } finally {
       if (this.controller === controller) {
@@ -249,6 +271,11 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
   </head>
   <body>
     <div id="root">
+      <div id="banner" hidden>
+        <span class="banner-text">⚠ Gateway not reachable.</span>
+        <button id="banner-start">Start gateway</button>
+        <button id="banner-help" class="link">Getting started</button>
+      </div>
       <div id="toolbar">
         <select id="model" title="Model used for this chat"></select>
       </div>
