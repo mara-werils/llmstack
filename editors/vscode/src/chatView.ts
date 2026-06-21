@@ -60,6 +60,9 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
       await this.handleSend(msg.text);
     } else if (msg.type === "stop") {
       this.controller?.abort();
+    } else if (msg.type === "copy" && typeof msg.text === "string") {
+      await vscode.env.clipboard.writeText(msg.text);
+      vscode.window.setStatusBarMessage("LLMStack: copied to clipboard", 2000);
     }
   }
 

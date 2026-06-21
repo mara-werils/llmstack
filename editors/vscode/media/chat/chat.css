@@ -53,6 +53,71 @@ body {
   color: var(--vscode-errorForeground);
 }
 
+.md-text {
+  white-space: pre-wrap;
+}
+
+.code-block {
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 4px;
+  margin: 8px 0;
+  overflow: hidden;
+}
+
+.code-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2px 4px 2px 8px;
+  background: var(--vscode-editorWidget-background);
+  font-size: 11px;
+}
+
+.code-lang {
+  opacity: 0.7;
+  text-transform: lowercase;
+}
+
+.code-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.code-action {
+  background: transparent;
+  color: var(--vscode-foreground);
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 3px;
+  padding: 1px 6px;
+  font-size: 11px;
+  cursor: pointer;
+  align-self: auto;
+}
+
+.code-action:hover {
+  background: var(--vscode-toolbar-hoverBackground);
+}
+
+.code-block pre {
+  margin: 0;
+  padding: 8px;
+  overflow-x: auto;
+  background: var(--vscode-textCodeBlock-background);
+}
+
+.code-block code {
+  font-family: var(--vscode-editor-font-family, monospace);
+  font-size: var(--vscode-editor-font-size, 12px);
+  white-space: pre;
+}
+
+code.inline {
+  font-family: var(--vscode-editor-font-family, monospace);
+  background: var(--vscode-textCodeBlock-background);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
 .empty {
   opacity: 0.6;
   padding: 24px 16px;
