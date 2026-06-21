@@ -132,6 +132,7 @@ llmstack verify-private --live   # also probes the *running* gateway, not just l
 
 ```bash
 # Install (pick one)
+curl -LsSf https://raw.githubusercontent.com/mara-werils/llmstack/main/install.sh | sh   # one-liner
 brew install mara-werils/llmstack/llmstack   # macOS / Linux (Homebrew)
 pipx install llmstack-cli                     # isolated, no venv to manage
 uv tool install llmstack-cli                  # same, via uv
@@ -149,11 +150,13 @@ llmstack up
 
 | Method | Command | Best for |
 |--------|---------|----------|
+| **One-liner** | `curl -LsSf https://raw.githubusercontent.com/mara-werils/llmstack/main/install.sh \| sh` | Fastest start (auto-picks uv/pipx/pip) |
 | **Homebrew** | `brew install mara-werils/llmstack/llmstack` | macOS / Linux, auto-updates |
 | **pipx** | `pipx install llmstack-cli` | Isolated CLI, no venv juggling |
 | **uv** | `uv tool install llmstack-cli` | uv users |
 | **pip** | `pip install llmstack-cli` | Inside an existing environment |
 | **Docker** | `docker run -p 8000:8000 ghcr.io/mara-werils/llmstack:latest` | Running the gateway as a server |
+| **Editor** | Search **LLMStack** in VS Code, Cursor, Windsurf, or VSCodium (Open VSX) | AI in your editor — [guide](docs/guide/editor.md) |
 
 ---
 
