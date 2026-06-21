@@ -63,7 +63,30 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
     } else if (msg.type === "copy" && typeof msg.text === "string") {
       await vscode.env.clipboard.writeText(msg.text);
       vscode.window.setStatusBarMessage("LLMStack: copied to clipboard", 2000);
+    } else if (msg.type === "apply" && typeof msg.text === "string") {
+      await this.applyToEditor(msg.text, true);
+    } else if (msg.type === "insert" && typeof msg.text === "string") {
+      await this.applyToEditor(msg.text, false);
     }
+  }
+
+  /** Insert generated code into the active editor, replacing the selection if one exists. */
+  private async applyToEditor(text: string, replaceSelection: boolean): Promise<void> {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) {
+      vscode.window.showInformationMessage(
+        "LLMStack: open a file and place the cursor where the code should go.",
+      );
+      return;
+    }
+    const selection = editor.selection;
+    await editor.edit((builder) => {
+      if (replaceSelection && !selection.isEmpty) {
+        builder.replace(selection, text);
+      } else {
+        builder.insert(selection.active, text);
+      }
+    });
   }
 
   private async handleSend(text: string): Promise<void> {

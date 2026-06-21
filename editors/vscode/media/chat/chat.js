@@ -124,6 +124,8 @@
     langEl.textContent = lang || "code";
     const actions = document.createElement("div");
     actions.className = "code-actions";
+    actions.appendChild(makeAction("apply", "Apply"));
+    actions.appendChild(makeAction("insert", "Insert"));
     actions.appendChild(makeAction("copy", "Copy"));
     header.appendChild(langEl);
     header.appendChild(actions);
