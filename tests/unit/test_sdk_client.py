@@ -277,6 +277,33 @@ class TestSyncClient:
                 assert isinstance(resp, HealthResponse)
                 assert resp.status == "healthy"
 
+    def test_savings(self) -> None:
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = {
+            "total_saved_usd": 1.23,
+            "total_requests": 10,
+            "subscription": {"key": "cursor-pro", "months_covered": 0.06},
+        }
+
+        with Client() as c:
+            with patch.object(c._client, "get", return_value=mock_resp) as mock_get:
+                summary = c.savings(plan="cursor-pro")
+                assert summary["total_saved_usd"] == 1.23
+                assert summary["subscription"]["key"] == "cursor-pro"
+                # plan is passed through as a query param
+                assert mock_get.call_args.kwargs["params"] == {"plan": "cursor-pro"}
+
+    def test_savings_default_plan_sends_no_params(self) -> None:
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = {"total_saved_usd": 0.0, "total_requests": 0}
+
+        with Client() as c:
+            with patch.object(c._client, "get", return_value=mock_resp) as mock_get:
+                c.savings()
+                assert mock_get.call_args.kwargs["params"] is None
+
     def test_rag_ingest(self) -> None:
         mock_resp = MagicMock()
         mock_resp.status_code = 200
@@ -512,6 +539,17 @@ class TestAsyncClient:
             with patch.object(c._client, "get", new_callable=AsyncMock, return_value=mock_resp):
                 resp = await c.health()
                 assert resp.status == "ok"
+
+    @pytest.mark.asyncio
+    async def test_savings(self) -> None:
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = {"total_saved_usd": 2.5, "total_requests": 4}
+
+        async with AsyncClient() as c:
+            with patch.object(c._client, "get", new_callable=AsyncMock, return_value=mock_resp):
+                summary = await c.savings()
+                assert summary["total_saved_usd"] == 2.5
 
     @pytest.mark.asyncio
     async def test_ask_convenience(self) -> None:

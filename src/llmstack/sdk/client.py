@@ -289,6 +289,25 @@ class Client:
         _raise_for_error(resp)
         return HealthResponse.from_dict(resp.json())
 
+    # -- savings -----------------------------------------------------------
+
+    def savings(self, plan: str | None = None) -> dict[str, Any]:
+        """Return cumulative savings from serving requests locally.
+
+        Args:
+            plan: Subscription to compare against (e.g. ``"copilot-pro"``,
+                ``"cursor-pro"``); defaults to the gateway's baseline.
+
+        Returns:
+            A dict with the running totals (``total_saved_usd``,
+            ``total_requests``, …) and a ``subscription`` block giving how many
+            months of the chosen plan the savings would cover.
+        """
+        params = {"plan": plan} if plan else None
+        resp = self._get("/v1/savings/summary", params=params)
+        _raise_for_error(resp)
+        return resp.json()
+
     # -- convenience methods -----------------------------------------------
 
     def ask(self, question: str, model: str = "llama3.2", **kwargs: Any) -> str:
@@ -561,6 +580,23 @@ class AsyncClient:
         resp = await self._get("/healthz")
         _raise_for_error(resp)
         return HealthResponse.from_dict(resp.json())
+
+    # -- savings -----------------------------------------------------------
+
+    async def savings(self, plan: str | None = None) -> dict[str, Any]:
+        """Return cumulative savings from serving requests locally.
+
+        Args:
+            plan: Subscription to compare against (e.g. ``"copilot-pro"``);
+                defaults to the gateway's baseline.
+
+        Returns:
+            A dict with the running totals and a ``subscription`` block.
+        """
+        params = {"plan": plan} if plan else None
+        resp = await self._get("/v1/savings/summary", params=params)
+        _raise_for_error(resp)
+        return resp.json()
 
     # -- convenience methods -----------------------------------------------
 
