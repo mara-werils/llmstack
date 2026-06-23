@@ -11,7 +11,9 @@ cloud model) so the figure is one we can defend rather than inflate.
 
 from __future__ import annotations
 
+import json
 from dataclasses import asdict, dataclass
+from pathlib import Path
 
 from llmstack.core.pricing import (
     SubscriptionPlan,
@@ -76,3 +78,107 @@ class SavingsCalculator:
         """How many months of a paid subscription ``saved_usd`` would cover."""
         plan: SubscriptionPlan = baseline_subscription(plan_key)
         return saved_usd / plan.effective_monthly_usd
+
+
+DEFAULT_LEDGER_PATH = Path.home() / ".llmstack" / "savings.json"
+
+
+@dataclass
+class SavingsState:
+    """Cumulative savings totals, persisted across runs."""
+
+    total_requests: int = 0
+    total_input_tokens: int = 0
+    total_output_tokens: int = 0
+    total_saved_usd: float = 0.0
+    first_recorded_at: float | None = None
+    last_recorded_at: float | None = None
+
+    def as_dict(self) -> dict[str, object]:
+        return asdict(self)
+
+
+class SavingsLedger:
+    """A small, file-backed running total of dollars saved by running locally.
+
+    The ledger is deliberately I/O-light and deterministic: timestamps are passed
+    in by the caller (``record(..., timestamp=...)``) rather than read from the
+    clock, so tests are reproducible and the gateway controls the time source.
+    """
+
+    def __init__(self, path: Path | None = None) -> None:
+        self.path = path or DEFAULT_LEDGER_PATH
+        self.state = self._load()
+
+    def _load(self) -> SavingsState:
+        if not self.path.exists():
+            return SavingsState()
+        try:
+            raw = json.loads(self.path.read_text())
+        except (json.JSONDecodeError, OSError):
+            return SavingsState()
+        known = SavingsState().as_dict().keys()
+        return SavingsState(**{k: v for k, v in raw.items() if k in known})
+
+    def save(self) -> None:
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self.path.write_text(json.dumps(self.state.as_dict(), indent=2))
+
+    def record(
+        self,
+        estimate: SavingsEstimate,
+        *,
+        timestamp: float,
+        persist: bool = True,
+    ) -> SavingsState:
+        """Fold a :class:`SavingsEstimate` into the running totals and persist."""
+        s = self.state
+        s.total_requests += 1
+        s.total_input_tokens += estimate.input_tokens
+        s.total_output_tokens += estimate.output_tokens
+        s.total_saved_usd += estimate.saved_usd
+        if s.first_recorded_at is None:
+            s.first_recorded_at = timestamp
+        s.last_recorded_at = timestamp
+        if persist:
+            self.save()
+        return s
+
+    def summary(self, plan_key: str | None = None) -> dict[str, object]:
+        """A display-ready snapshot, including subscription-months equivalence."""
+        s = self.state
+        plan = baseline_subscription(plan_key)
+        months = s.total_saved_usd / plan.effective_monthly_usd
+        return {
+            **s.as_dict(),
+            "subscription": {
+                "key": plan.key,
+                "name": plan.name,
+                "monthly_usd": plan.effective_monthly_usd,
+                "months_covered": months,
+            },
+        }
+
+    def reset(self, *, persist: bool = True) -> None:
+        """Clear all totals."""
+        self.state = SavingsState()
+        if persist:
+            self.save()
+
+
+# A process-wide ledger, created lazily so importing this module is side-effect free.
+_ledger: SavingsLedger | None = None
+
+
+def get_ledger() -> SavingsLedger:
+    """Return the process-wide :class:`SavingsLedger`, creating it on first use."""
+    global _ledger
+    if _ledger is None:
+        _ledger = SavingsLedger()
+    return _ledger
+
+
+def set_ledger(ledger: SavingsLedger) -> None:
+    """Override the process-wide ledger (used by the gateway and in tests)."""
+    global _ledger
+    _ledger = ledger
