@@ -113,14 +113,18 @@
 - [x] **Reproducible no-egress proof**: runtime egress monitor + privacy guide
 - [x] One-line installer (`curl … | sh`) preferring isolated uv/pipx installs
 - [x] Gateway test coverage backfill (replay, health, providers, proxy, cache, …)
+- [x] **Provable savings**: `llmstack savings` + `/v1/savings` value local usage
+      against a dated, sourced cloud-pricing catalog (`core/pricing`, `core/savings`)
+- [x] **Reproducible benchmarks** (`llmstack benchmark`): cost + latency + a runtime
+      zero-egress proof in one report, each carrying a methodology hash; CI-gated
 - [ ] Publish extension to OpenVSX + VS Marketplace (CI ready; needs `OVSX_TOKEN` + a `vscode-v*` tag)
 - [ ] JetBrains plugin
-- [ ] Open benchmarks vs Cursor/Copilot on privacy + local latency
 
 ## v1.0 — Stable Release
 
 - [x] Comprehensive test coverage (>90%) — currently 95%+ (`fail_under = 95`)
-- [ ] Performance benchmarks vs alternatives
+- [x] Performance benchmarks vs alternatives — reproducible `llmstack benchmark`
+      harness (cost + latency + privacy), methodology-hashed and CI-gated
 - [ ] Kubernetes Helm chart
 - [ ] Official Docker images on GHCR
 - [ ] Plugin marketplace

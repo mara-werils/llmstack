@@ -1,5 +1,22 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+- **Provable savings** — `llmstack savings` turns "saves you money" into a running
+  total, valued against a dated, sourced cloud-pricing catalog
+  (`llmstack.core.pricing`). The gateway accrues the avoided cloud cost for every
+  locally-served request into a local ledger (`~/.llmstack/savings.json`), exposed
+  at `GET /v1/savings/summary` and `GET /v1/savings/pricing`, and surfaced in the
+  Python/TypeScript SDKs (`client.savings()`) and the VS Code extension.
+- **Reproducible benchmarks** — `llmstack benchmark` runs a versioned, deterministic
+  suite (`llmstack.benchmark`) that measures latency/throughput, values the run
+  against a cloud baseline, and proves zero external egress, emitting a JSON +
+  Markdown report. Each report carries a **methodology hash** so anyone can confirm
+  they ran the identical benchmark. A `--mock` mode and a CI gate
+  (`examples/benchmark_proof.py`, `.github/workflows/benchmark.yml`) keep it green
+  and honest. See `docs/guide/savings.md` and `docs/guide/benchmarks.md`.
+
 ## [0.5.0] - 2026-05-08
 
 ### Added
