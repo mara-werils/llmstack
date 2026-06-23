@@ -184,6 +184,7 @@ class TestToolsList:
         assert "echo" in names
         assert "llmstack_chat" in names
         assert "llmstack_ask" in names
+        assert "llmstack_savings" in names
 
     async def test_agent_tool_schema_mapped(self):
         srv = MCPServer(tools=_registry(_FakeTool("echo")))
@@ -235,6 +236,35 @@ class TestToolsCall:
             {"name": "llmstack_chat", "arguments": {"message": "hey"}}
         )
         assert result["content"][0]["text"] == "chat-out"
+
+    async def test_dispatches_llmstack_savings(self, monkeypatch, tmp_path):
+        import llmstack.core.savings as core_savings
+        from llmstack.core.savings import SavingsCalculator, get_ledger
+
+        monkeypatch.setattr(core_savings, "DEFAULT_LEDGER_PATH", tmp_path / "savings.json")
+        monkeypatch.setattr(core_savings, "_ledger", None)
+        get_ledger().record(SavingsCalculator("gpt-4o").estimate(1000, 500), timestamp=1.0)
+
+        srv = MCPServer(tools=_registry())
+        result = await srv._handle_tools_call(
+            {"name": "llmstack_savings", "arguments": {"plan": "cursor-pro"}}
+        )
+        assert "Saved $" in result["content"][0]["text"]
+        assert "Cursor Pro" in result["content"][0]["text"]
+        assert not result.get("isError")
+        monkeypatch.setattr(core_savings, "_ledger", None)
+
+    async def test_llmstack_savings_unknown_plan(self, monkeypatch, tmp_path):
+        import llmstack.core.savings as core_savings
+
+        monkeypatch.setattr(core_savings, "DEFAULT_LEDGER_PATH", tmp_path / "savings.json")
+        monkeypatch.setattr(core_savings, "_ledger", None)
+        srv = MCPServer(tools=_registry())
+        result = await srv._handle_tools_call(
+            {"name": "llmstack_savings", "arguments": {"plan": "nope"}}
+        )
+        assert result["isError"] is True
+        monkeypatch.setattr(core_savings, "_ledger", None)
 
     async def test_dispatches_llmstack_ask(self, monkeypatch):
         engine = _install_fake_ask_engine(monkeypatch, answer="ans", sources=[])

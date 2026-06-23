@@ -180,6 +180,24 @@ class MCPServer:
             }
         )
 
+        tools.append(
+            {
+                "name": "llmstack_savings",
+                "description": "Report how much money has been saved by serving requests "
+                "locally instead of paying a cloud provider, valued against dated pricing.",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "plan": {
+                            "type": "string",
+                            "description": "Subscription to compare against "
+                            "(e.g. copilot-pro, cursor-pro)",
+                        },
+                    },
+                },
+            }
+        )
+
         return {"tools": tools}
 
     async def _handle_tools_call(self, params: dict) -> dict:
@@ -192,6 +210,8 @@ class MCPServer:
             return await self._tool_chat(arguments)
         if tool_name == "llmstack_ask":
             return await self._tool_ask(arguments)
+        if tool_name == "llmstack_savings":
+            return await self._tool_savings(arguments)
 
         # Handle agent tools
         tool = self.tools.get(tool_name)
@@ -235,6 +255,28 @@ class MCPServer:
                 "content": [{"type": "text", "text": f"LLM error: {exc}"}],
                 "isError": True,
             }
+
+    async def _tool_savings(self, args: dict) -> dict:
+        """Handle llmstack_savings tool — report local-inference savings."""
+        from llmstack.core import pricing
+        from llmstack.core.savings import get_ledger
+
+        plan = args.get("plan") or pricing.DEFAULT_SUBSCRIPTION_BASELINE
+        try:
+            summary = get_ledger().summary(plan)
+        except KeyError:
+            return {
+                "content": [{"type": "text", "text": f"Unknown plan: {plan}"}],
+                "isError": True,
+            }
+        sub = summary["subscription"]
+        text = (
+            f"Saved ${float(summary['total_saved_usd']):.4f} across "
+            f"{summary['total_requests']} local request(s) — about "
+            f"{float(sub['months_covered']):.2f} month(s) of {sub['name']}. "
+            f"Valued against {pricing.DEFAULT_API_BASELINE} pricing (as of {pricing.PRICING_AS_OF})."
+        )
+        return {"content": [{"type": "text", "text": text}]}
 
     async def _tool_ask(self, args: dict) -> dict:
         """Handle llmstack_ask tool — RAG over local files."""
