@@ -9,13 +9,56 @@ from __future__ import annotations
 
 import json as _json
 
+from rich.table import Table
+
 from llmstack.cli.console import banner, console, info, success
 from llmstack.core import pricing
 from llmstack.core.savings import get_ledger
 
 
-def savings(plan: str | None = None, as_json: bool = False, reset: bool = False) -> None:
+def _show_pricing() -> None:
+    """Print the dated, sourced pricing the savings figure is based on."""
+    banner("Savings pricing catalog", f"as of {pricing.PRICING_AS_OF}")
+
+    api = Table(title="Metered API baselines (USD per 1M tokens)", show_edge=False)
+    api.add_column("Model", style="model")
+    api.add_column("Vendor")
+    api.add_column("Input", justify="right", style="cost")
+    api.add_column("Output", justify="right", style="cost")
+    for p in pricing.API_PRICING.values():
+        marker = "  (baseline)" if p.model == pricing.DEFAULT_API_BASELINE else ""
+        api.add_row(
+            f"{p.model}{marker}",
+            p.vendor,
+            f"${p.input_per_million:g}",
+            f"${p.output_per_million:g}",
+        )
+    console.print(api)
+
+    subs = Table(title="Subscription alternatives", show_edge=False)
+    subs.add_column("Plan", style="model")
+    subs.add_column("Vendor")
+    subs.add_column("Monthly", justify="right", style="cost")
+    for s in pricing.SUBSCRIPTIONS.values():
+        subs.add_row(s.name, s.vendor, f"${s.effective_monthly_usd:.2f}")
+    console.print(subs)
+    console.print(
+        "\n  [muted]All figures are public list prices captured for comparison; "
+        "see each entry's source in the API at /v1/savings/pricing.[/]"
+    )
+
+
+def savings(
+    plan: str | None = None,
+    as_json: bool = False,
+    reset: bool = False,
+    show_pricing: bool = False,
+) -> None:
     """Show cumulative local-inference savings versus a paid alternative."""
+    if show_pricing:
+        _show_pricing()
+        return
+
     ledger = get_ledger()
 
     if reset:

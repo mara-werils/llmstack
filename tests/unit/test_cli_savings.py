@@ -63,3 +63,11 @@ def test_reset(ledger_path, capsys) -> None:
     savings(reset=True)
     assert "reset" in capsys.readouterr().out.lower()
     assert core_savings.get_ledger().state.total_requests == 0
+
+
+def test_show_pricing(capsys) -> None:
+    savings(show_pricing=True)
+    out = capsys.readouterr().out
+    assert "pricing catalog" in out.lower()
+    assert "baseline" in out
+    assert "Copilot" in out or "Cursor" in out
