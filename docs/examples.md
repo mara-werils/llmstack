@@ -2,6 +2,22 @@
 
 This page shows common integration patterns for llmstack across different frameworks and use cases.
 
+## Prove the value (runnable)
+
+Two self-contained scripts in [`examples/`](https://github.com/mara-werils/llmstack/tree/main/examples)
+turn the "saves money" and "faster/private" claims into numbers you can reproduce:
+
+```bash
+python examples/savings_demo.py      # value local usage in dollars (savings engine)
+python examples/benchmark_proof.py   # reproducible benchmark + zero-egress proof (exits non-zero on egress)
+```
+
+`savings_demo.py` runs the same calculator and ledger behind `llmstack savings`
+against an isolated temp ledger. `benchmark_proof.py` runs the deterministic
+benchmark suite under the egress monitor — the exact check the `Benchmark` CI
+workflow gates on. See the [savings](guide/savings.md) and
+[benchmarks](guide/benchmarks.md) guides.
+
 ## Python (openai SDK)
 
 The simplest way to use llmstack from Python is with the official OpenAI client:
