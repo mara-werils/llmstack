@@ -543,3 +543,53 @@ class TestObservabilityHelpers:
         monkeypatch.setattr(state, "get_stats", _boom)
         # Exception inside the body must be swallowed by the bare except.
         chat_route._record_stats("fast", "simple", 1.0)
+
+
+class TestSavingsAccrual:
+    def _proxy_factory(self, prompt_tokens=10, completion_tokens=5, extra=None):
+        async def _proxy(payload, stream, provider_name):
+            result = {
+                "id": "cmpl-s",
+                "choices": [{"message": {"content": "ok"}, "finish_reason": "stop"}],
+                "usage": {
+                    "prompt_tokens": prompt_tokens,
+                    "completion_tokens": completion_tokens,
+                },
+            }
+            if extra:
+                result.update(extra)
+            return result
+
+        return _proxy
+
+    def _install_tracker(self, monkeypatch, tmp_path):
+        from llmstack.core.savings import SavingsCalculator, SavingsLedger
+        from llmstack.gateway.savings import SavingsTracker, init_savings_tracker
+        import llmstack.gateway.savings as gw_savings
+
+        tracker = SavingsTracker(
+            calculator=SavingsCalculator("gpt-4o"),
+            ledger=SavingsLedger(path=tmp_path / "savings.json"),
+        )
+        init_savings_tracker(tracker)
+        monkeypatch.setattr(gw_savings, "_tracker", tracker, raising=False)  # ensure cleanup-safe
+        return tracker
+
+    def test_local_completion_accrues_savings(self, monkeypatch, tmp_path):
+        tracker = self._install_tracker(monkeypatch, tmp_path)
+        try:
+            monkeypatch.setattr(chat_route, "proxy_chat_completion", self._proxy_factory())
+            client = _make_client()
+            resp = client.post("/v1/chat/completions", json=_body(model="gpt"))
+            assert resp.status_code == 200
+            assert tracker.ledger.state.total_requests == 1
+            assert tracker.ledger.state.total_saved_usd > 0
+        finally:
+            import llmstack.gateway.savings as gw_savings
+
+            gw_savings._tracker = None
+
+    def test_record_savings_helper_swallows_errors(self):
+        # Non-dict result and malformed usage must not raise.
+        chat_route._record_savings("not-a-dict", 0.0)
+        chat_route._record_savings({"usage": None}, 0.0)

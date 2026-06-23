@@ -197,6 +197,21 @@ def _record_stats(
         pass
 
 
+def _record_savings(result: dict, cost_usd: float) -> None:
+    """Accrue the money saved when a request is served locally (cost 0)."""
+    try:
+        if not isinstance(result, dict):
+            return
+        usage = result.get("usage", {}) or {}
+        input_tokens = usage.get("prompt_tokens", 0)
+        output_tokens = usage.get("completion_tokens", 0)
+        from llmstack.gateway.savings import get_savings_tracker
+
+        get_savings_tracker().record(input_tokens, output_tokens, cost_usd=cost_usd)
+    except Exception:
+        pass
+
+
 @router.post("/chat/completions")
 async def chat_completions(request: Request):
     try:
@@ -262,6 +277,9 @@ async def chat_completions(request: Request):
                 cost_usd,
                 cached=isinstance(result, dict) and result.get("_cached", False),
             )
+
+            # Accrue savings for locally-served (free) requests.
+            _record_savings(result, cost_usd)
 
             # Strip internal cache markers from the body BEFORE serializing
             # (JSONResponse renders content on construction), then surface the
