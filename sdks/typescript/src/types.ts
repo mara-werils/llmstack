@@ -201,6 +201,25 @@ export interface HealthResponse {
   cache: Record<string, unknown>;
 }
 
+/** Subscription-equivalence block within a savings summary. */
+export interface SavingsSubscription {
+  key: string;
+  name: string;
+  monthly_usd: number;
+  months_covered: number;
+}
+
+/** Response from `GET /v1/savings/summary`. */
+export interface SavingsSummary {
+  total_requests: number;
+  total_input_tokens: number;
+  total_output_tokens: number;
+  total_saved_usd: number;
+  first_recorded_at: number | null;
+  last_recorded_at: number | null;
+  subscription: SavingsSubscription;
+}
+
 // ---------------------------------------------------------------------------
 // Errors
 // ---------------------------------------------------------------------------

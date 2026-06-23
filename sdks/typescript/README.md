@@ -174,6 +174,17 @@ console.log(health.services);     // { inference: true, rag: true, ... }
 console.log(health.circuit_breaker);
 ```
 
+### `client.savings(plan?)`
+
+Cumulative money saved by serving requests locally instead of paying a cloud
+provider, valued against a dated cloud baseline.
+
+```typescript
+const savings = await client.savings("cursor-pro");
+console.log(savings.total_saved_usd);              // 12.34
+console.log(savings.subscription.months_covered);  // e.g. 0.6 months of Cursor Pro
+```
+
 ## Cancellation
 
 Every request accepts an `AbortSignal`:

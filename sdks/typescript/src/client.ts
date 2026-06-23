@@ -19,6 +19,7 @@ import type {
   RAGStreamDelta,
   RAGStatusResponse,
   HealthResponse,
+  SavingsSummary,
 } from "./types.js";
 import { parseSSEStream } from "./streaming.js";
 
@@ -181,6 +182,20 @@ export class LLMStackClient {
   /** Gateway health check. */
   async health(options?: RequestOptions): Promise<HealthResponse> {
     return this._request<HealthResponse>("GET", "/healthz", undefined, options);
+  }
+
+  /**
+   * Cumulative money saved by serving requests locally instead of paying a
+   * cloud provider, valued against a dated cloud baseline.
+   *
+   * @param plan - Subscription to compare against (e.g. `"copilot-pro"`,
+   *   `"cursor-pro"`). Defaults to the gateway's baseline when omitted.
+   */
+  async savings(plan?: string, options?: RequestOptions): Promise<SavingsSummary> {
+    const path = plan
+      ? `/v1/savings/summary?plan=${encodeURIComponent(plan)}`
+      : "/v1/savings/summary";
+    return this._request<SavingsSummary>("GET", path, undefined, options);
   }
 
   // -----------------------------------------------------------------------
