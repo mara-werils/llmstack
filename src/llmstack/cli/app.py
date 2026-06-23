@@ -329,6 +329,34 @@ def bench(
     _bench(model=model, suite=suite, output=output)
 
 
+@app.command(name="benchmark")
+def benchmark_cmd(
+    model: str = typer.Option("llama3.2", "--model", "-m", help="Local model to benchmark"),
+    suite: str = typer.Option("default", "--suite", "-s", help="Benchmark suite name"),
+    baseline: str = typer.Option(
+        None, "--baseline", "-b", help="Cloud baseline to compare cost against (e.g. gpt-4o)"
+    ),
+    ollama_url: str = typer.Option("http://localhost:11434", "--ollama-url", help="Ollama API URL"),
+    output: str = typer.Option(None, "--output", "-o", help="Write report .md (+ .json) here"),
+    proof: bool = typer.Option(True, "--proof/--no-proof", help="Prove zero external egress"),
+    warmup: int = typer.Option(1, "--warmup", help="Warmup runs before measuring"),
+    mock: bool = typer.Option(False, "--mock", help="Deterministic run with no model (CI/demo)"),
+) -> None:
+    """Reproducible cost+latency+privacy benchmark vs cloud, with a shareable report."""
+    from llmstack.cli.commands.benchmark import benchmark as _benchmark
+
+    _benchmark(
+        model=model,
+        suite_name=suite,
+        baseline=baseline,
+        ollama_url=ollama_url,
+        output=output,
+        proof=proof,
+        warmup=warmup,
+        mock=mock,
+    )
+
+
 @app.command()
 def ask(
     question: str = typer.Argument("", help="Question to ask (omit for interactive mode)"),
