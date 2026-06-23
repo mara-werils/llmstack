@@ -233,6 +233,20 @@ def cost(
 
 
 @app.command()
+def savings(
+    plan: str = typer.Option(
+        None, "--plan", "-p", help="Subscription to compare against (e.g. copilot-pro, cursor-pro)"
+    ),
+    as_json: bool = typer.Option(False, "--json", help="Emit the raw summary as JSON"),
+    reset: bool = typer.Option(False, "--reset", help="Reset the savings ledger to zero"),
+) -> None:
+    """Show how much running locally has saved you vs paid alternatives."""
+    from llmstack.cli.commands.savings import savings as _savings
+
+    _savings(plan=plan, as_json=as_json, reset=reset)
+
+
+@app.command()
 def playground(
     gateway_url: str = typer.Option(None, "--url", "-u", help="Gateway URL"),
 ) -> None:
