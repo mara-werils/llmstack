@@ -1,0 +1,49 @@
+# Benchmark gate — runs the reproducible benchmark harness in deterministic mock
+# mode on every change to the benchmark code, proving it makes zero external
+# network connections and uploading the shareable report as an artifact.
+name: Benchmark
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/llmstack/benchmark/**"
+      - "src/llmstack/core/pricing.py"
+      - "examples/benchmark_proof.py"
+      - ".github/workflows/benchmark.yml"
+  pull_request:
+    paths:
+      - "src/llmstack/benchmark/**"
+      - "src/llmstack/core/pricing.py"
+      - "examples/benchmark_proof.py"
+      - ".github/workflows/benchmark.yml"
+  workflow_dispatch:
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install llmstack
+        run: pip install -e .
+
+      - name: Run reproducible benchmark and prove zero egress
+        run: python examples/benchmark_proof.py | tee benchmark-report.md
+
+      - name: Write a saved report via the CLI (mock mode)
+        run: llmstack benchmark --mock --warmup 0 --output benchmark-report.md
+
+      - name: Upload benchmark report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: benchmark-report
+          path: |
+            benchmark-report.md
+            benchmark-report.json
