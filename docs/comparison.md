@@ -38,6 +38,11 @@ Legend: ✅ yes · ⚠️ partial · ❌ no · 🚧 in progress
 - **The privacy claim is verifiable.** `llmstack verify-private` (static) plus a
   runtime egress monitor let you *prove* no data leaves the machine — in CI. See
   the [Privacy guide](guide/privacy.md).
+- **The value claims are reproducible.** `llmstack savings` tallies the cloud bill
+  you didn't pay (vs [dated, sourced pricing](guide/savings.md)), and
+  `llmstack benchmark` produces a cost + latency + zero-egress report carrying a
+  methodology hash, so anyone can [reproduce it](guide/benchmarks.md) rather than
+  take a marketing number on faith.
 - **It learns from you.** Thumbs feedback and fine-tuning let the stack adapt to
   your codebase — locally, on your own data.
 
@@ -53,4 +58,7 @@ Legend: ✅ yes · ⚠️ partial · ❌ no · 🚧 in progress
 Public install and star counts (e.g. Cline's millions of installs) are
 point-in-time, vendor-reported, and measure *cumulative installs* — not retained,
 active users. We avoid quoting adoption figures we can't reproduce, and we don't
-claim benchmark wins without a reproducible methodology.
+claim benchmark wins without a reproducible methodology. That's why the numbers
+llmstack does report — savings and benchmarks — ship as tools you run yourself
+(`llmstack savings`, `llmstack benchmark`), each valued against dated, sourced
+pricing and fingerprinted with a methodology hash. The figures are yours, not ours.
