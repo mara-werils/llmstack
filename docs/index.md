@@ -64,6 +64,19 @@ local gateway, so code never leaves your machine.
 
 [Privacy & no-egress proof](guide/privacy.md){ .md-button }
 
+## Prove the Value
+
+The savings and benchmark numbers are yours, generated locally — not our marketing.
+
+- **`llmstack savings`** turns "saves you money" into a running total, valued
+  against dated, sourced cloud pricing: *how many months of Copilot/Cursor your
+  local usage has already paid for.*
+- **`llmstack benchmark`** runs a reproducible suite that reports cost, latency,
+  and a zero-egress proof in one shareable report — each carrying a methodology
+  hash so anyone can confirm they ran the identical benchmark.
+
+[Savings](guide/savings.md){ .md-button } [Reproducible benchmarks](guide/benchmarks.md){ .md-button }
+
 ---
 
 ## Key Features
@@ -71,6 +84,8 @@ local gateway, so code never leaves your machine.
 - **`llmstack ask`** -- chat with your files from the terminal. PDF, code, logs, docs. One command.
 - **Editor extension** -- chat, AI edits with diff review, and inline completion in VS Code & forks.
 - **Verifiable privacy** -- static audit + runtime egress monitor prove no data leaves the machine.
+- **Provable savings** -- `llmstack savings` tallies the cloud bill you didn't pay, vs dated pricing.
+- **Reproducible benchmarks** -- `llmstack benchmark` reports cost, latency, and a zero-egress proof.
 - **Smart Model Router** -- routes queries to the right-sized model automatically
 - **Zero configuration** -- hardware detection auto-selects vLLM or Ollama based on your GPU
 - **OpenAI-compatible API** -- works with LangChain, LlamaIndex, Vercel AI SDK, openai-python
