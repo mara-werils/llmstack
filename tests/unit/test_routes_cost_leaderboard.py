@@ -28,6 +28,22 @@ class TestCostRoutes:
     def test_summary(self, cost_client):
         assert cost_client.get("/cost/summary").status_code == 200
 
+    def test_summary_includes_local_savings(self, cost_client, tmp_path, monkeypatch):
+        from llmstack.core.savings import SavingsCalculator, SavingsLedger
+        from llmstack.gateway import savings as gw_savings
+        from llmstack.gateway.savings import SavingsTracker
+
+        tracker = SavingsTracker(
+            calculator=SavingsCalculator("gpt-4o"),
+            ledger=SavingsLedger(path=tmp_path / "savings.json"),
+        )
+        tracker.record(1000, 500, timestamp=1.0)
+        monkeypatch.setattr(gw_savings, "_tracker", tracker)
+        body = cost_client.get("/cost/summary").json()
+        assert "savings" in body
+        assert body["savings"]["total_saved_usd"] > 0
+        monkeypatch.setattr(gw_savings, "_tracker", None)
+
     def test_budget_crud(self, cost_client):
         resp = cost_client.post(
             "/cost/budgets", json={"name": "b1", "limit_usd": 10, "period": "monthly"}

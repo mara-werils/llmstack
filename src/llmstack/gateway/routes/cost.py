@@ -41,8 +41,17 @@ class SetPricingRequest(BaseModel):
 
 @router.get("/cost/summary")
 async def cost_summary():
-    """Get comprehensive cost summary with breakdowns."""
-    return get_tracker().get_summary()
+    """Get comprehensive cost summary with breakdowns, plus local savings."""
+    summary = get_tracker().get_summary()
+    # Fold in the running "saved by running locally" total so a single cost view
+    # shows both what cloud calls cost and what local calls avoided.
+    try:
+        from llmstack.gateway.savings import get_savings_tracker
+
+        summary["savings"] = get_savings_tracker().summary()
+    except Exception:  # pragma: no cover - never let savings break the cost view
+        pass
+    return summary
 
 
 @router.get("/cost/budgets")
