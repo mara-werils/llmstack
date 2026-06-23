@@ -172,6 +172,35 @@ export async function checkHealth(cfg: GatewayConfig): Promise<boolean> {
   }
 }
 
+export interface SavingsSummary {
+  total_requests: number;
+  total_saved_usd: number;
+  subscription: { name: string; monthly_usd: number; months_covered: number };
+}
+
+/**
+ * Fetch the running "money saved by running locally" total from the gateway.
+ * Returns `undefined` when the gateway is unreachable or the route is absent.
+ */
+export async function fetchSavings(
+  cfg: GatewayConfig,
+  plan?: string,
+): Promise<SavingsSummary | undefined> {
+  try {
+    const url = new URL(`${cfg.baseUrl}/v1/savings/summary`);
+    if (plan) {
+      url.searchParams.set("plan", plan);
+    }
+    const resp = await fetch(url, { headers: headers(cfg) });
+    if (!resp.ok) {
+      return undefined;
+    }
+    return (await resp.json()) as SavingsSummary;
+  } catch {
+    return undefined;
+  }
+}
+
 async function safeText(resp: Response): Promise<string> {
   try {
     return await resp.text();

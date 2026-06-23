@@ -14,6 +14,8 @@ All notable changes to the LLMStack VS Code extension are documented here.
 - **👍 / 👎 feedback** on chat replies, sent to the gateway learning pipeline.
 - **Getting-started walkthrough** and an in-panel "gateway not reachable" banner
   with a one-click **Start gateway**.
+- **`LLMStack: Show savings vs cloud`** command, and a running "saved $X so far"
+  total folded into the status-bar tooltip when the gateway is reachable.
 
 ### Fixed
 - Gateway health check now hits `/healthz/live` instead of the nonexistent

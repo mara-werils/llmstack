@@ -59,6 +59,10 @@
         "title": "LLMStack: Check gateway health"
       },
       {
+        "command": "llmstack.showSavings",
+        "title": "LLMStack: Show savings vs cloud"
+      },
+      {
         "command": "llmstack.toggleInlineCompletion",
         "title": "LLMStack: Toggle inline code completion"
       },

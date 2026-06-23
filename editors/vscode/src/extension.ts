@@ -13,6 +13,7 @@ import {
   GatewayConfig,
   GatewayError,
   checkHealth,
+  fetchSavings,
   streamChat,
 } from "./gatewayClient";
 import { ChatViewProvider } from "./chatView";
@@ -76,11 +77,41 @@ function selectedText(): string {
 }
 
 async function refreshHealth(): Promise<void> {
-  const ok = await checkHealth(readConfig());
+  const cfg = readConfig();
+  const ok = await checkHealth(cfg);
   statusBar.text = ok ? "$(check) LLMStack" : "$(circle-slash) LLMStack";
-  statusBar.tooltip = ok
-    ? "LLMStack gateway is reachable (local)"
-    : "LLMStack gateway is not reachable — run 'llmstack up'";
+  if (!ok) {
+    statusBar.tooltip = "LLMStack gateway is not reachable — run 'llmstack up'";
+    return;
+  }
+  // When reachable, fold the running savings total into the tooltip so the
+  // value story is visible at a glance.
+  const savings = await fetchSavings(cfg);
+  statusBar.tooltip =
+    savings && savings.total_saved_usd > 0
+      ? `LLMStack gateway reachable (local) — saved $${savings.total_saved_usd.toFixed(
+          2,
+        )} so far`
+      : "LLMStack gateway is reachable (local)";
+}
+
+async function showSavings(): Promise<void> {
+  const cfg = readConfig();
+  const savings = await fetchSavings(cfg);
+  if (!savings) {
+    vscode.window.showWarningMessage(
+      "LLMStack: could not read savings. Is 'llmstack up' running?",
+    );
+    return;
+  }
+  const sub = savings.subscription;
+  const saved = savings.total_saved_usd.toFixed(2);
+  const months = sub ? sub.months_covered.toFixed(1) : "0";
+  const name = sub ? sub.name : "a paid plan";
+  vscode.window.showInformationMessage(
+    `LLMStack has saved you $${saved} running locally — about ${months} month(s) of ${name}, ` +
+      `across ${savings.total_requests} request(s).`,
+  );
 }
 
 export function activate(context: vscode.ExtensionContext): void {
@@ -110,6 +141,7 @@ export function activate(context: vscode.ExtensionContext): void {
       await runPrompt("Explain what this code does and flag any bugs:", code);
     }),
     vscode.commands.registerCommand("llmstack.checkHealth", refreshHealth),
+    vscode.commands.registerCommand("llmstack.showSavings", showSavings),
     vscode.commands.registerCommand("llmstack.toggleInlineCompletion", async () => {
       const cfg = vscode.workspace.getConfiguration("llmstack");
       const next = !cfg.get<boolean>("inlineCompletion.enabled", false);
