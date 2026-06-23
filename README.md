@@ -21,6 +21,7 @@
   <a href="#ai-agents--mcp">Agents & MCP</a> &bull;
   <a href="#fine-tuning">Fine-tuning</a> &bull;
   <a href="#ai-observability">Observability</a> &bull;
+  <a href="#prove-the-value--savings--reproducible-benchmarks">Prove the Value</a> &bull;
   <a href="docs/guide/editor.md">Editor</a> &bull;
   <a href="https://mara-werils.github.io/llmstack/">Docs</a>
 </p>
@@ -129,6 +130,8 @@ llmstack verify-private --live   # also probes the *running* gateway, not just l
 ```
 
 **In your editor** — the [VS Code / OpenVSX extension](editors/vscode) brings Ask and Explain commands to VS Code, Cursor, and Windsurf, all routed through your local gateway.
+
+**Prove the value** — `llmstack savings` tallies the cloud bill you didn't pay, and `llmstack benchmark` produces a reproducible cost + latency + zero-egress report. The numbers are *yours*, generated locally. [See below](#prove-the-value--savings--reproducible-benchmarks).
 
 ---
 
@@ -404,6 +407,50 @@ Each trace captures: prompt, routing decision, provider, model, response, latenc
 
 ---
 
+## Prove the Value — Savings & Reproducible Benchmarks
+
+llmstack's two headline claims — *the open alternative to Cursor/Copilot* and
+*it saves you money* — ship as numbers you generate locally, not as marketing.
+
+### Savings: the cloud bill you didn't pay
+
+```bash
+llmstack savings                 # cumulative savings + months of Copilot/Cursor covered
+llmstack savings --plan cursor-pro --json
+```
+
+The gateway books a saving on every locally-served request — the cloud price you
+*didn't* pay — into a local ledger (`~/.llmstack/savings.json`, read offline, no
+network). It's valued against [dated, sourced pricing](docs/guide/savings.md) using
+`gpt-4o-mini` (one of the cheapest mainstream cloud models) as the baseline, so the
+figure is conservative. Cloud-routed (paid) requests are never counted.
+
+```
+GET /v1/savings/summary    # running total + subscription-months covered
+GET /v1/savings/pricing    # the exact dated pricing the math is based on
+```
+
+### Benchmarks: cost + latency + privacy, reproducibly
+
+```bash
+llmstack benchmark                  # default suite vs local Ollama
+llmstack benchmark -b gpt-4o -o report.md
+llmstack benchmark --mock           # deterministic, no model required
+```
+
+Each report measures latency (mean/p50/p95/p99), throughput, the cloud **cost** for
+the same tokens, and a **zero-egress proof** (the run executes under the egress
+monitor). Every report carries a **methodology hash** — a fingerprint of the suite
+version + tasks + baseline + pricing, but *not* the machine-specific latencies — so
+two people can confirm they ran the identical benchmark. The harness never prints a
+cloud latency number it can't reproduce; latency is *your* measured number.
+
+A CI gate (`examples/benchmark_proof.py`) runs the suite in deterministic mode and
+fails the build on any external connection. See the
+[benchmark guide](docs/guide/benchmarks.md).
+
+---
+
 ## More about `llmstack ask`
 
 See the [top of this README](#ask-your-codebase-anything) for the full feature breakdown. Under the hood:
@@ -470,6 +517,8 @@ Auto hardware detection:
 | `llmstack finetune <data>` | Fine-tune a model on your data |
 | `llmstack eval` | Evaluate model quality |
 | `llmstack bench` | Benchmark routing performance |
+| `llmstack benchmark` | Reproducible cost + latency + zero-egress report vs cloud |
+| `llmstack savings` | Show money saved running locally vs paid alternatives |
 | `llmstack export` | Generate docker-compose.yml |
 | `llmstack logs <service>` | Stream service logs |
 | `llmstack doctor` | Diagnose system issues |
