@@ -405,3 +405,44 @@ LLMStack Doctor
 
 All checks passed!
 ```
+
+## `llmstack savings`
+
+Show how much running locally has saved you versus paid alternatives. Reads a
+local ledger (`~/.llmstack/savings.json`) directly — no gateway or network needed.
+
+```bash
+llmstack savings                  # cumulative savings vs the default baseline
+llmstack savings --plan cursor-pro
+llmstack savings --json           # raw summary for scripts/dashboards
+llmstack savings --pricing        # show the dated, sourced pricing the figure uses
+llmstack savings --reset          # start the ledger over
+```
+
+The figure is valued against `gpt-4o-mini` list pricing (a conservative baseline)
+and tells you how many months of Copilot/Cursor/ChatGPT Plus your local usage has
+already covered. See the [savings guide](guide/savings.md).
+
+## `llmstack benchmark`
+
+Run the reproducible benchmark suite: measure local latency and throughput, value
+the run against a cloud baseline, and prove zero external egress — all in one
+shareable report.
+
+```bash
+llmstack benchmark                      # default suite vs local Ollama
+llmstack benchmark --mock               # deterministic demo, no model required
+llmstack benchmark -b gpt-4o -o report.md   # compare cost vs GPT-4o, save report (.md + .json)
+```
+
+| Option | Description |
+|---|---|
+| `--model, -m` | Local model to benchmark (default `llama3.2`) |
+| `--suite, -s` | Benchmark suite name (default `default`) |
+| `--baseline, -b` | Cloud baseline to compare cost against (e.g. `gpt-4o`) |
+| `--output, -o` | Write the report `.md` (and `.json`) to this path |
+| `--no-proof` | Skip the runtime zero-egress proof |
+| `--mock` | Deterministic run with no model (CI/demo) |
+
+Every report carries a methodology hash so anyone can confirm they ran the
+identical benchmark. See the [benchmark guide](guide/benchmarks.md).

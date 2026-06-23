@@ -68,6 +68,39 @@ curl http://localhost:8000/healthz
 
 **Debugging**: When requests fail, check `/healthz` first. If the circuit breaker is `open`, the inference backend is down. If cache status is `disconnected`, Redis may have stopped.
 
+## Savings
+
+### `GET /v1/savings/summary`
+
+Cumulative money saved by serving requests from a local backend instead of a
+metered cloud API, valued against a dated baseline. Accepts an optional `plan`
+query parameter (e.g. `copilot-pro`, `cursor-pro`) for the subscription-months
+equivalence.
+
+```bash
+curl "http://localhost:8000/v1/savings/summary?plan=cursor-pro"
+```
+
+```json
+{
+  "total_requests": 128,
+  "total_input_tokens": 90400,
+  "total_output_tokens": 41200,
+  "total_saved_usd": 0.0382,
+  "subscription": { "key": "cursor-pro", "name": "Cursor Pro", "monthly_usd": 16.0, "months_covered": 0.0024 }
+}
+```
+
+### `GET /v1/savings/pricing`
+
+The dated, sourced pricing catalog the savings figure is derived from — every
+metered baseline and subscription with its `as_of` month and `source` URL, so the
+number is auditable rather than asserted.
+
+### `POST /v1/savings/reset`
+
+Reset the savings ledger to zero.
+
 ## Metrics
 
 ### `GET /metrics`
