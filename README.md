@@ -511,6 +511,8 @@ Auto hardware detection:
 
 | Command | Description |
 |---------|-------------|
+| `llmstack quickstart` | Zero-key local AI in ~30s: size a model to your hardware, pull it, prove a real completion |
+| `llmstack ready [--json]` | Fast first-run readiness check; exits non-zero when not ready (CI/script friendly) |
 | `llmstack ask <question> [path]` | Ask questions about local files (persistent index, hybrid search) |
 | `llmstack ask -i [path]` | Interactive conversation with your codebase |
 | `llmstack init [--preset]` | Create config (presets: chat, rag, agent) |
