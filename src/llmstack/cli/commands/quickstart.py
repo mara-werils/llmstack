@@ -15,6 +15,7 @@ from llmstack.core.onboarding import (
     DEFAULT_OLLAMA_URL,
     ollama_install_hint,
     probe_ollama,
+    recommend_embed_model,
     recommend_model,
     verify_first_value,
 )
@@ -55,17 +56,20 @@ def quickstart(
         raise SystemExit(1)
     success("Ollama is running")
 
-    # Step 3/4 -- ensure the chosen model is present.
-    console.print(f"\n[accent]Step 3/4[/] Ensuring '{model}' is available...")
+    # Step 3/4 -- ensure the chat + embedding models are present (ask/RAG need both).
+    embed = recommend_embed_model(hw).name
+    console.print(f"\n[accent]Step 3/4[/] Ensuring models ('{model}' + '{embed}' for ask/RAG)...")
     if skip_pull:
         console.print("  [muted]Skipping pull (--skip-pull)[/]")
-    elif status.has_model(model):
-        success(f"Model '{model}' already pulled")
     else:
-        warn(f"Model '{model}' not found locally, pulling...")
         from llmstack.cli.commands.pull import pull
 
-        pull(model=model, ollama_url=ollama_url)
+        for needed in (model, embed):
+            if status.has_model(needed):
+                success(f"Model '{needed}' already pulled")
+            else:
+                warn(f"Model '{needed}' not found locally, pulling...")
+                pull(model=needed, ollama_url=ollama_url)
 
     # Step 4/4 -- prove first value with a real, private, local completion.
     console.print("\n[accent]Step 4/4[/] Proving first value (one local completion)...")
