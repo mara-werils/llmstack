@@ -308,6 +308,21 @@ class Client:
         _raise_for_error(resp)
         return resp.json()
 
+    def onboarding(self, ollama_url: str | None = None) -> dict[str, Any]:
+        """Report first-run readiness for zero-key local inference.
+
+        Args:
+            ollama_url: Probe a specific Ollama URL instead of the gateway default.
+
+        Returns:
+            A dict with ``ready``, the recommended chat/embed models, detected
+            hardware, which models are present, and concrete next-step ``hints``.
+        """
+        params = {"ollama_url": ollama_url} if ollama_url else None
+        resp = self._get("/v1/onboarding", params=params)
+        _raise_for_error(resp)
+        return resp.json()
+
     # -- convenience methods -----------------------------------------------
 
     def ask(self, question: str, model: str = "llama3.2", **kwargs: Any) -> str:
@@ -595,6 +610,20 @@ class AsyncClient:
         """
         params = {"plan": plan} if plan else None
         resp = await self._get("/v1/savings/summary", params=params)
+        _raise_for_error(resp)
+        return resp.json()
+
+    async def onboarding(self, ollama_url: str | None = None) -> dict[str, Any]:
+        """Report first-run readiness for zero-key local inference.
+
+        Args:
+            ollama_url: Probe a specific Ollama URL instead of the gateway default.
+
+        Returns:
+            A dict with ``ready``, recommended models, hardware, and ``hints``.
+        """
+        params = {"ollama_url": ollama_url} if ollama_url else None
+        resp = await self._get("/v1/onboarding", params=params)
         _raise_for_error(resp)
         return resp.json()
 

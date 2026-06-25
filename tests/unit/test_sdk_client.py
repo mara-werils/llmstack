@@ -304,6 +304,32 @@ class TestSyncClient:
                 c.savings()
                 assert mock_get.call_args.kwargs["params"] is None
 
+    def test_onboarding(self) -> None:
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = {
+            "ready": False,
+            "recommended": {"chat_model": {"name": "llama3.2"}},
+            "hints": ["ollama pull llama3.2"],
+        }
+
+        with Client() as c:
+            with patch.object(c._client, "get", return_value=mock_resp) as mock_get:
+                report = c.onboarding(ollama_url="http://host:11434")
+                assert report["ready"] is False
+                assert report["hints"] == ["ollama pull llama3.2"]
+                assert mock_get.call_args.kwargs["params"] == {"ollama_url": "http://host:11434"}
+
+    def test_onboarding_default_sends_no_params(self) -> None:
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = {"ready": True}
+
+        with Client() as c:
+            with patch.object(c._client, "get", return_value=mock_resp) as mock_get:
+                c.onboarding()
+                assert mock_get.call_args.kwargs["params"] is None
+
     def test_rag_ingest(self) -> None:
         mock_resp = MagicMock()
         mock_resp.status_code = 200
@@ -550,6 +576,17 @@ class TestAsyncClient:
             with patch.object(c._client, "get", new_callable=AsyncMock, return_value=mock_resp):
                 summary = await c.savings()
                 assert summary["total_saved_usd"] == 2.5
+
+    @pytest.mark.asyncio
+    async def test_onboarding(self) -> None:
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = {"ready": True, "hints": []}
+
+        async with AsyncClient() as c:
+            with patch.object(c._client, "get", new_callable=AsyncMock, return_value=mock_resp):
+                report = await c.onboarding()
+                assert report["ready"] is True
 
     @pytest.mark.asyncio
     async def test_ask_convenience(self) -> None:
