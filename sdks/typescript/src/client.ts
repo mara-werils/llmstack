@@ -214,6 +214,11 @@ export class LLMStackClient {
     return this._request<OnboardingStatus>("GET", path, undefined, options);
   }
 
+  /** True when the machine is ready for zero-key local inference. */
+  async ready(ollamaUrl?: string, options?: RequestOptions): Promise<boolean> {
+    return (await this.onboarding(ollamaUrl, options)).ready;
+  }
+
   // -----------------------------------------------------------------------
   // Namespaced implementations
   // -----------------------------------------------------------------------
