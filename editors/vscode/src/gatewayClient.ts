@@ -201,6 +201,37 @@ export async function fetchSavings(
   }
 }
 
+export interface OnboardingStatus {
+  ready: boolean;
+  ollama: { url: string; running: boolean; models: string[] };
+  recommended: {
+    chat_model: { name: string; label?: string; reason?: string };
+    embed_model: { name: string; label?: string; reason?: string };
+  };
+  chat_model: { name: string; ready: boolean };
+  embed_model: { name: string; ready: boolean };
+  hints: string[];
+}
+
+/**
+ * Fetch first-run readiness from the gateway (`GET /v1/onboarding`): whether
+ * Ollama is up, which models are present, and next-step hints. Returns
+ * `undefined` when the gateway is unreachable or the route is absent.
+ */
+export async function fetchOnboarding(
+  cfg: GatewayConfig,
+): Promise<OnboardingStatus | undefined> {
+  try {
+    const resp = await fetch(`${cfg.baseUrl}/v1/onboarding`, { headers: headers(cfg) });
+    if (!resp.ok) {
+      return undefined;
+    }
+    return (await resp.json()) as OnboardingStatus;
+  } catch {
+    return undefined;
+  }
+}
+
 async function safeText(resp: Response): Promise<string> {
   try {
     return await resp.text();
