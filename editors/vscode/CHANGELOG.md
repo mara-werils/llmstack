@@ -2,6 +2,17 @@
 
 All notable changes to the LLMStack VS Code extension are documented here.
 
+## [0.3.0] — Unreleased
+
+### Added
+- **`LLMStack: Run quickstart`** — set up a local model from inside the editor.
+- **First-run readiness check**: when the machine isn't ready for local inference,
+  a one-click prompt offers to run quickstart (backed by the gateway's
+  `/v1/onboarding`).
+- **`LLMStack: Switch model`** — quick pick over the gateway's `/v1/models`.
+- Inline completions: **configurable debounce** (`inlineCompletion.debounceMs`)
+  and **per-language opt-out** (`inlineCompletion.disabledLanguages`).
+
 ## [0.2.0] — Unreleased
 
 ### Added

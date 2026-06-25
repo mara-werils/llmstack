@@ -2,7 +2,7 @@
   "name": "llmstack-vscode",
   "displayName": "LLMStack — Local AI",
   "description": "Local-first AI coding assistant. Talks to your own LLMStack gateway — code never leaves your machine.",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "publisher": "llmstack",
   "license": "Apache-2.0",
   "icon": "media/icon.png",

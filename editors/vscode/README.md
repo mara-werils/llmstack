@@ -21,7 +21,12 @@ your code and prompts **never leave your machine**.
 - **Explain selected code** — right-click any selection → _LLMStack: Explain
   selected code_.
 - **Inline completions** (opt-in) — ghost-text suggestions as you type, powered
-  by your local model. Toggle with `llmstack.inlineCompletion.enabled`.
+  by your local model. Toggle with `llmstack.inlineCompletion.enabled`; tune
+  `debounceMs` and opt languages out with `disabledLanguages`.
+- **Run quickstart** — _LLMStack: Run quickstart_ sets up a local model from
+  inside the editor, and a first-run check offers it automatically when you're
+  not ready yet.
+- **Switch model** — _LLMStack: Switch model_ picks from the gateway's models.
 - **Gateway health** — a status-bar indicator (and an in-panel banner) shows
   whether your local gateway is reachable, with a one-click **Start gateway**.
 
