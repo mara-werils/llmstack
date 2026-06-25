@@ -96,6 +96,16 @@ def recommend_embed_model(hw: HardwareProfile) -> EmbedChoice:
     return choice
 
 
+def chat_model_catalog() -> tuple[ModelChoice, ...]:
+    """All chat models the recommender can choose from, smallest first."""
+    return _CATALOG
+
+
+def embed_model_catalog() -> tuple[EmbedChoice, ...]:
+    """All embedding models the recommender can choose from, smallest first."""
+    return _EMBED_CATALOG
+
+
 @dataclass(frozen=True)
 class OllamaStatus:
     """Result of probing a local Ollama server."""

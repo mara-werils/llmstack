@@ -10,6 +10,8 @@ from llmstack.core.onboarding import (
     FIRST_VALUE_PROMPT,
     OllamaStatus,
     assess_readiness,
+    chat_model_catalog,
+    embed_model_catalog,
     ollama_install_hint,
     probe_ollama,
     recommend_embed_model,
@@ -87,6 +89,24 @@ def test_recommend_model_returns_smallest_for_tiny_machine():
     assert choice.name == "llama3.2:1b"
     assert choice.approx_download_gb > 0
     assert choice.reason
+
+
+# --- catalogs ---------------------------------------------------------------
+
+
+def test_chat_catalog_is_non_empty_and_sorted_by_memory():
+    catalog = chat_model_catalog()
+    assert len(catalog) >= 2
+    mins = [m.min_memory_gb for m in catalog]
+    assert mins == sorted(mins)
+    assert len({m.name for m in catalog}) == len(catalog)  # unique names
+
+
+def test_embed_catalog_is_non_empty_and_sorted_by_memory():
+    catalog = embed_model_catalog()
+    assert len(catalog) >= 1
+    mins = [m.min_memory_gb for m in catalog]
+    assert mins == sorted(mins)
 
 
 # --- recommend_embed_model --------------------------------------------------
