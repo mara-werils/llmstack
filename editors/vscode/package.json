@@ -67,6 +67,10 @@
         "title": "LLMStack: Run quickstart (set up local AI)"
       },
       {
+        "command": "llmstack.switchModel",
+        "title": "LLMStack: Switch model"
+      },
+      {
         "command": "llmstack.toggleInlineCompletion",
         "title": "LLMStack: Toggle inline code completion"
       },

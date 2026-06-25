@@ -15,6 +15,7 @@ import {
   checkHealth,
   fetchOnboarding,
   fetchSavings,
+  listModels,
   streamChat,
 } from "./gatewayClient";
 import { ChatViewProvider } from "./chatView";
@@ -168,6 +169,25 @@ export function activate(context: vscode.ExtensionContext): void {
       const term = vscode.window.createTerminal("LLMStack Quickstart");
       term.show();
       term.sendText("llmstack quickstart");
+    }),
+    vscode.commands.registerCommand("llmstack.switchModel", async () => {
+      const cfg = readConfig();
+      const models = await listModels(cfg);
+      if (models.length === 0) {
+        vscode.window.showWarningMessage(
+          "LLMStack: no models found. Is the gateway running?",
+        );
+        return;
+      }
+      const pick = await vscode.window.showQuickPick(models, {
+        placeHolder: `Active model: ${cfg.model}`,
+      });
+      if (pick) {
+        await vscode.workspace
+          .getConfiguration("llmstack")
+          .update("model", pick, vscode.ConfigurationTarget.Global);
+        vscode.window.setStatusBarMessage(`LLMStack: model set to ${pick}`, 3000);
+      }
     }),
     vscode.commands.registerCommand("llmstack.toggleInlineCompletion", async () => {
       const cfg = vscode.workspace.getConfiguration("llmstack");
