@@ -86,8 +86,17 @@ async function refreshHealth(): Promise<void> {
     statusBar.tooltip = "LLMStack gateway is not reachable — run 'llmstack up'";
     return;
   }
-  // When reachable, fold the running savings total into the tooltip so the
-  // value story is visible at a glance.
+  // Reachable but not set up for local inference yet — surface that clearly.
+  const onboarding = await fetchOnboarding(cfg);
+  if (onboarding && !onboarding.ready) {
+    statusBar.text = "$(warning) LLMStack";
+    statusBar.tooltip = `LLMStack: not ready for local inference — ${
+      onboarding.hints[0] ?? "run quickstart"
+    }`;
+    return;
+  }
+  // When reachable and ready, fold the running savings total into the tooltip so
+  // the value story is visible at a glance.
   const savings = await fetchSavings(cfg);
   statusBar.tooltip =
     savings && savings.total_saved_usd > 0
