@@ -36,8 +36,14 @@
 
 ```bash
 brew install mara-werils/llmstack/llmstack   # or: pipx install llmstack-cli
-llmstack ask -i ./src/                         # start chatting with your codebase
+llmstack quickstart                            # sizes a model to your machine, proves it works
+llmstack ask -i ./src/                         # then chat with your codebase
 ```
+
+`quickstart` is the 30-second path to first value: it detects your hardware,
+recommends and pulls a local model, and prints a real local completion so you
+*see* it work. No API key, no Docker -- the only prerequisite is [Ollama](https://ollama.com/download).
+(Docker is optional, used only for the full gateway stack via `llmstack up`.)
 
 ## Ask Your Codebase Anything
 

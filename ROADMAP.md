@@ -100,7 +100,8 @@
 > Strategy: win on the two proven levers of adoption — being **inside the IDE**
 > and a **frictionless, provably-private first run**. See `PRODUCT_STRATEGY.md`.
 
-- [x] Frictionless onboarding: `init` wizard, `up` pre-flight checks, auto model download
+- [x] Frictionless onboarding: `quickstart` proves first value (hardware-sized model,
+      a real local completion, zero key, no Docker), `init` wizard, `up` pre-flight checks
 - [x] Distribution: Homebrew tap, PyPI, GHCR (auto-published on release)
 - [x] **`llmstack verify-private`** — audit config for any external data egress
 - [x] `verify-private --live` — also probes the running gateway, catching env-var
