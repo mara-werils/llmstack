@@ -63,7 +63,10 @@ else
 fi
 
 echo -e "\n${BOLD}Done!${NC} Get started:"
-echo "  llmstack quickstart    # setup model + config"
+echo "  llmstack quickstart    # zero-key local AI, proves it works (~30s)"
 echo "  llmstack chat          # start chatting"
-echo "  llmstack doctor        # check system health"
+echo "  llmstack doctor        # check first-run readiness"
+echo ""
+echo "  Editor (VS Code / Cursor / VSCodium):"
+echo "    code --install-extension llmstack.llmstack-vscode"
 echo ""
