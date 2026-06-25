@@ -209,6 +209,16 @@ class ReadinessReport:
     ready: bool
     hints: tuple[str, ...]
 
+    def summary(self) -> str:
+        """One-line human summary, reused by the CLI, MCP tool, and editors."""
+        if self.ready:
+            return (
+                f"Ready for zero-key local inference: {self.chat_model} (chat) + "
+                f"{self.embed_model} (embeddings)."
+            )
+        nxt = self.hints[0] if self.hints else "set up a local model"
+        return f"Not ready for zero-key local inference. Next: {nxt}"
+
 
 def assess_readiness(
     hw: HardwareProfile,

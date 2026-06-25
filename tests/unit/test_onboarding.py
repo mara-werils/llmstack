@@ -249,6 +249,15 @@ def test_assess_readiness_missing_models_suggests_pull():
     assert any(h.startswith("ollama pull nomic-embed-text") for h in report.hints)
 
 
+def test_readiness_summary_ready_and_not_ready():
+    status_ready = OllamaStatus(running=True, models=("llama3.2:latest", "nomic-embed-text:latest"))
+    ready = assess_readiness(_hw(ram_gb=8), status_ready)
+    assert "Ready for zero-key local inference" in ready.summary()
+
+    not_ready = assess_readiness(_hw(ram_gb=8), OllamaStatus(running=False))
+    assert not_ready.summary().startswith("Not ready")
+
+
 def test_assess_readiness_honours_explicit_models():
     status = OllamaStatus(running=True, models=("mistral:latest", "bge-m3:latest"))
     report = assess_readiness(

@@ -29,7 +29,7 @@ def ready(ollama_url: str = DEFAULT_OLLAMA_URL, as_json: bool = False) -> None:
             }
         )
     elif report.ready:
-        success(f"Ready for zero-key local inference: {report.chat_model} + {report.embed_model}")
+        success(report.summary())
     else:
         warn("Not ready for zero-key local inference")
         for hint in report.hints:
