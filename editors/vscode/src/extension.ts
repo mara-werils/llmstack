@@ -13,6 +13,7 @@ import {
   GatewayConfig,
   GatewayError,
   checkHealth,
+  fetchOnboarding,
   fetchSavings,
   streamChat,
 } from "./gatewayClient";
@@ -114,6 +115,27 @@ async function showSavings(): Promise<void> {
   );
 }
 
+/**
+ * On first reachable run, if the machine isn't ready for local inference, offer
+ * a one-click path to fix it. Silent when the gateway is down (the status bar
+ * already signals that) or when everything is ready.
+ */
+async function checkFirstRun(): Promise<void> {
+  const status = await fetchOnboarding(readConfig());
+  if (!status || status.ready) {
+    return;
+  }
+  const next = status.hints[0] ?? "set up a local model";
+  const choice = await vscode.window.showWarningMessage(
+    `LLMStack isn't ready for local inference yet (${next}).`,
+    "Run quickstart",
+    "Dismiss",
+  );
+  if (choice === "Run quickstart") {
+    await vscode.commands.executeCommand("llmstack.runQuickstart");
+  }
+}
+
 export function activate(context: vscode.ExtensionContext): void {
   output = vscode.window.createOutputChannel("LLMStack");
   statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
@@ -171,6 +193,7 @@ export function activate(context: vscode.ExtensionContext): void {
   registerInlineCompletionProvider(context, readConfig);
 
   void refreshHealth();
+  void checkFirstRun();
 
   // Poll periodically so the status bar reflects the gateway starting/stopping
   // without the user having to click it. Cleared on deactivate.
