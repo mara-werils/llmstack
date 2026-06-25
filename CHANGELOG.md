@@ -3,6 +3,18 @@
 ## [Unreleased]
 
 ### Added
+- **Frictionless first run** — `llmstack quickstart` is now the 30-second path to
+  first value: it detects hardware and recommends a chat + embedding model sized
+  to the machine (`llmstack.core.onboarding`), treats Ollama as the sole
+  prerequisite (no Docker), and **proves first value** by printing a real local
+  completion. The hard Docker requirement (which contradicted the "No Docker"
+  promise) is gone -- Docker is only needed for the full `llmstack up` stack.
+- **Readiness everywhere** -- one shared verdict ("ready for zero-key local
+  inference, and what's left") surfaced through `llmstack ready` (with `--json`,
+  exits non-zero when not ready), `llmstack doctor`, `llmstack info`, the gateway
+  `GET /v1/onboarding` route, `client.onboarding()`/`client.ready()` in the
+  Python + TypeScript SDKs, an `llmstack_onboarding` MCP tool, and the VS Code
+  extension (first-run prompt + status-bar warning).
 - **Provable savings** — `llmstack savings` turns "saves you money" into a running
   total, valued against a dated, sourced cloud-pricing catalog
   (`llmstack.core.pricing`). The gateway accrues the avoided cloud cost for every
