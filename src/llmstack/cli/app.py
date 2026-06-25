@@ -80,6 +80,17 @@ def quickstart(
 
 
 @app.command()
+def ready(
+    ollama_url: str = typer.Option("http://localhost:11434", "--ollama-url", help="Ollama API URL"),
+    json_output: bool = typer.Option(False, "--json", help="Machine-readable JSON output"),
+) -> None:
+    """Fast first-run readiness check; exits non-zero when not ready."""
+    from llmstack.cli.commands.ready import ready as _ready
+
+    _ready(ollama_url=ollama_url, as_json=json_output)
+
+
+@app.command()
 def init(
     preset: str = typer.Option(None, "--preset", "-p", help="Preset: chat, rag, agent"),
     directory: str = typer.Option(None, "--dir", "-d", help="Target directory"),
