@@ -330,6 +330,24 @@ class TestSyncClient:
                 c.onboarding()
                 assert mock_get.call_args.kwargs["params"] is None
 
+    def test_ready_returns_bool(self) -> None:
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = {"ready": True}
+
+        with Client() as c:
+            with patch.object(c._client, "get", return_value=mock_resp):
+                assert c.ready() is True
+
+    def test_ready_false_when_not_ready(self) -> None:
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = {"ready": False}
+
+        with Client() as c:
+            with patch.object(c._client, "get", return_value=mock_resp):
+                assert c.ready() is False
+
     def test_rag_ingest(self) -> None:
         mock_resp = MagicMock()
         mock_resp.status_code = 200
@@ -587,6 +605,16 @@ class TestAsyncClient:
             with patch.object(c._client, "get", new_callable=AsyncMock, return_value=mock_resp):
                 report = await c.onboarding()
                 assert report["ready"] is True
+
+    @pytest.mark.asyncio
+    async def test_ready(self) -> None:
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = {"ready": False}
+
+        async with AsyncClient() as c:
+            with patch.object(c._client, "get", new_callable=AsyncMock, return_value=mock_resp):
+                assert await c.ready() is False
 
     @pytest.mark.asyncio
     async def test_ask_convenience(self) -> None:

@@ -323,6 +323,10 @@ class Client:
         _raise_for_error(resp)
         return resp.json()
 
+    def ready(self, ollama_url: str | None = None) -> bool:
+        """True when the machine is ready for zero-key local inference."""
+        return bool(self.onboarding(ollama_url).get("ready"))
+
     # -- convenience methods -----------------------------------------------
 
     def ask(self, question: str, model: str = "llama3.2", **kwargs: Any) -> str:
@@ -626,6 +630,10 @@ class AsyncClient:
         resp = await self._get("/v1/onboarding", params=params)
         _raise_for_error(resp)
         return resp.json()
+
+    async def ready(self, ollama_url: str | None = None) -> bool:
+        """True when the machine is ready for zero-key local inference."""
+        return bool((await self.onboarding(ollama_url)).get("ready"))
 
     # -- convenience methods -----------------------------------------------
 
