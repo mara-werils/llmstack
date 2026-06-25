@@ -31,6 +31,12 @@ def info() -> None:
             console.print(f"  Runtime     {hw.docker_runtime}")
         else:
             console.print("  GPU         [muted]not detected[/]")
+
+        from llmstack.core.onboarding import recommend_embed_model, recommend_model
+
+        rec = recommend_model(hw)
+        rec_embed = recommend_embed_model(hw)
+        console.print(f"  Recommended {rec.name} (chat) + {rec_embed.name} (embeddings)")
     except Exception:
         console.print("\n[accent]Hardware[/]")
         console.print("  [muted]detection unavailable[/]")
