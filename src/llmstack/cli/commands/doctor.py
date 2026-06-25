@@ -203,6 +203,22 @@ def doctor() -> None:
         console.print("    [muted]Start: ollama serve[/]")
         warnings += 1
 
+    # ── First-run readiness ───────────────────────────────────────────
+    console.print("\n[accent]First-run readiness[/]")
+    from llmstack.core.onboarding import assess_readiness, probe_ollama
+
+    report = assess_readiness(hw, probe_ollama(ollama_url))
+    if report.ready:
+        success(
+            f"Ready for zero-key local inference "
+            f"({report.chat_model} + {report.embed_model})"
+        )
+    else:
+        warn("Not ready yet for zero-key local inference -- run: llmstack quickstart")
+        warnings += 1
+        for hint in report.hints:
+            console.print(f"    [muted]{hint}[/]")
+
     # ── Redis ─────────────────────────────────────────────────────────
     console.print("\n[accent]Redis[/]")
     i, w = _check_redis()
