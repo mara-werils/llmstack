@@ -118,6 +118,10 @@
       against a dated, sourced cloud-pricing catalog (`core/pricing`, `core/savings`)
 - [x] **Reproducible benchmarks** (`llmstack benchmark`): cost + latency + a runtime
       zero-egress proof in one report, each carrying a methodology hash; CI-gated
+- [x] **First-run readiness everywhere**: hardware-sized model recommendation
+      (`core/onboarding`) shared by `llmstack quickstart`/`ready`/`doctor`/`info`,
+      the gateway `GET /v1/onboarding` route, `client.onboarding()`/`ready()` in
+      both SDKs, an `llmstack_onboarding` MCP tool, and the VS Code first-run prompt
 - [ ] Publish extension to OpenVSX + VS Marketplace (CI ready; needs `OVSX_TOKEN` + a `vscode-v*` tag)
 - [ ] JetBrains plugin
 
