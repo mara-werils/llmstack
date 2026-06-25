@@ -28,6 +28,7 @@ from llmstack.gateway.routes.templates import router as templates_router
 from llmstack.gateway.routes.conversations import router as conversations_router
 from llmstack.gateway.routes.cost import router as cost_router
 from llmstack.gateway.routes.savings import router as savings_router
+from llmstack.gateway.routes.onboarding import router as onboarding_router
 from llmstack.gateway.routes.webhooks import router as webhooks_router
 from llmstack.gateway.routes.batch import router as batch_router
 from llmstack.gateway.routes.leaderboard import router as leaderboard_router
@@ -390,6 +391,7 @@ def create_app() -> FastAPI:
     app.include_router(conversations_router, prefix="/v1")
     app.include_router(cost_router, prefix="/v1")
     app.include_router(savings_router, prefix="/v1")
+    app.include_router(onboarding_router, prefix="/v1")
     app.include_router(webhooks_router, prefix="/v1")
     app.include_router(batch_router, prefix="/v1")
     app.include_router(leaderboard_router, prefix="/v1")
