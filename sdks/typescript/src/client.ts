@@ -20,6 +20,7 @@ import type {
   RAGStatusResponse,
   HealthResponse,
   SavingsSummary,
+  OnboardingStatus,
 } from "./types.js";
 import { parseSSEStream } from "./streaming.js";
 
@@ -196,6 +197,21 @@ export class LLMStackClient {
       ? `/v1/savings/summary?plan=${encodeURIComponent(plan)}`
       : "/v1/savings/summary";
     return this._request<SavingsSummary>("GET", path, undefined, options);
+  }
+
+  /**
+   * First-run readiness for zero-key local inference: whether Ollama is up,
+   * which models are present, the recommended chat/embed models, and the
+   * concrete next-step hints to get to a working local setup.
+   */
+  async onboarding(
+    ollamaUrl?: string,
+    options?: RequestOptions,
+  ): Promise<OnboardingStatus> {
+    const path = ollamaUrl
+      ? `/v1/onboarding?ollama_url=${encodeURIComponent(ollamaUrl)}`
+      : "/v1/onboarding";
+    return this._request<OnboardingStatus>("GET", path, undefined, options);
   }
 
   // -----------------------------------------------------------------------

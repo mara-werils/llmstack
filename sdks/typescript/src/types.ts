@@ -220,6 +220,30 @@ export interface SavingsSummary {
   subscription: SavingsSubscription;
 }
 
+/** A recommended local model within an onboarding report. */
+export interface OnboardingModel {
+  name: string;
+  label?: string;
+  reason?: string;
+  approx_download_gb?: number;
+}
+
+/** Response from `GET /v1/onboarding`: first-run readiness. */
+export interface OnboardingStatus {
+  ready: boolean;
+  ollama: { url: string; running: boolean; models: string[] };
+  hardware: {
+    cpu_cores: number;
+    ram_gb: number;
+    gpu_vendor: string;
+    gpu_vram_gb: number;
+  };
+  recommended: { chat_model: OnboardingModel; embed_model: OnboardingModel };
+  chat_model: { name: string; ready: boolean };
+  embed_model: { name: string; ready: boolean };
+  hints: string[];
+}
+
 // ---------------------------------------------------------------------------
 // Errors
 // ---------------------------------------------------------------------------

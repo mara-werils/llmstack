@@ -31,6 +31,9 @@ export type {
   // Savings
   SavingsSummary,
   SavingsSubscription,
+  // Onboarding
+  OnboardingStatus,
+  OnboardingModel,
   // Errors
   LLMStackErrorDetail,
 } from "./types.js";
