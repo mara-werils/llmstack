@@ -142,6 +142,11 @@ export function activate(context: vscode.ExtensionContext): void {
     }),
     vscode.commands.registerCommand("llmstack.checkHealth", refreshHealth),
     vscode.commands.registerCommand("llmstack.showSavings", showSavings),
+    vscode.commands.registerCommand("llmstack.runQuickstart", () => {
+      const term = vscode.window.createTerminal("LLMStack Quickstart");
+      term.show();
+      term.sendText("llmstack quickstart");
+    }),
     vscode.commands.registerCommand("llmstack.toggleInlineCompletion", async () => {
       const cfg = vscode.workspace.getConfiguration("llmstack");
       const next = !cfg.get<boolean>("inlineCompletion.enabled", false);

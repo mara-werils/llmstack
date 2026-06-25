@@ -63,6 +63,10 @@
         "title": "LLMStack: Show savings vs cloud"
       },
       {
+        "command": "llmstack.runQuickstart",
+        "title": "LLMStack: Run quickstart (set up local AI)"
+      },
+      {
         "command": "llmstack.toggleInlineCompletion",
         "title": "LLMStack: Toggle inline code completion"
       },
