@@ -11,6 +11,7 @@ from llmstack.core.onboarding import (
     OllamaStatus,
     ollama_install_hint,
     probe_ollama,
+    recommend_embed_model,
     recommend_model,
     usable_memory_gb,
     verify_first_value,
@@ -85,6 +86,24 @@ def test_recommend_model_returns_smallest_for_tiny_machine():
     assert choice.name == "llama3.2:1b"
     assert choice.approx_download_gb > 0
     assert choice.reason
+
+
+# --- recommend_embed_model --------------------------------------------------
+
+
+def test_recommend_embed_model_default_runs_anywhere():
+    choice = recommend_embed_model(_hw(ram_gb=4))
+    assert choice.name == "nomic-embed-text"
+    assert choice.approx_download_gb > 0
+
+
+def test_recommend_embed_model_upgrades_on_capable_hardware():
+    assert recommend_embed_model(_hw(ram_gb=32)).name == "mxbai-embed-large"
+
+
+def test_recommend_embed_model_uses_vram_budget():
+    hw = _hw(ram_gb=128, gpu_vendor="nvidia", gpu_vram_gb=8)
+    assert recommend_embed_model(hw).name == "nomic-embed-text"
 
 
 # --- OllamaStatus.has_model -------------------------------------------------

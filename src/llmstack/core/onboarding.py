@@ -68,6 +68,35 @@ def recommend_model(hw: HardwareProfile) -> ModelChoice:
 
 
 @dataclass(frozen=True)
+class EmbedChoice:
+    """A recommended local embedding model for ``ask``/RAG and why."""
+
+    name: str  # Ollama tag, e.g. "nomic-embed-text"
+    label: str
+    min_memory_gb: float
+    approx_download_gb: float
+    reason: str
+
+
+# ``ask`` and RAG need an embedding model. nomic-embed-text is tiny and runs
+# anywhere; capable machines get a higher-quality retriever.
+_EMBED_CATALOG: tuple[EmbedChoice, ...] = (
+    EmbedChoice("nomic-embed-text", "Nomic Embed Text", 0.0, 0.27, "fast, runs anywhere"),
+    EmbedChoice("mxbai-embed-large", "MxBai Embed Large", 16.0, 0.67, "higher-quality retrieval"),
+)
+
+
+def recommend_embed_model(hw: HardwareProfile) -> EmbedChoice:
+    """Pick the largest embedding model whose memory budget fits the hardware."""
+    memory = usable_memory_gb(hw)
+    choice = _EMBED_CATALOG[0]
+    for model in _EMBED_CATALOG:
+        if memory >= model.min_memory_gb:
+            choice = model
+    return choice
+
+
+@dataclass(frozen=True)
 class OllamaStatus:
     """Result of probing a local Ollama server."""
 
