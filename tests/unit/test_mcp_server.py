@@ -185,6 +185,7 @@ class TestToolsList:
         assert "llmstack_chat" in names
         assert "llmstack_ask" in names
         assert "llmstack_savings" in names
+        assert "llmstack_onboarding" in names
 
     async def test_agent_tool_schema_mapped(self):
         srv = MCPServer(tools=_registry(_FakeTool("echo")))
@@ -265,6 +266,37 @@ class TestToolsCall:
         )
         assert result["isError"] is True
         monkeypatch.setattr(core_savings, "_ledger", None)
+
+    async def test_dispatches_llmstack_onboarding_ready(self, monkeypatch):
+        import llmstack.core.onboarding as onboarding
+        from llmstack.core.hardware import detect_hardware
+
+        hw = detect_hardware()
+        ready = onboarding.OllamaStatus(
+            running=True,
+            models=(
+                onboarding.recommend_model(hw).name,
+                onboarding.recommend_embed_model(hw).name,
+            ),
+        )
+        monkeypatch.setattr(onboarding, "probe_ollama", lambda *a, **k: ready)
+        srv = MCPServer(tools=_registry())
+        result = await srv._handle_tools_call(
+            {"name": "llmstack_onboarding", "arguments": {}}
+        )
+        assert "Ready for zero-key local inference" in result["content"][0]["text"]
+        assert not result.get("isError")
+
+    async def test_dispatches_llmstack_onboarding_not_ready(self, monkeypatch):
+        import llmstack.core.onboarding as onboarding
+
+        down = onboarding.OllamaStatus(running=False)
+        monkeypatch.setattr(onboarding, "probe_ollama", lambda *a, **k: down)
+        srv = MCPServer(tools=_registry())
+        result = await srv._handle_tools_call(
+            {"name": "llmstack_onboarding", "arguments": {}}
+        )
+        assert "Not ready yet" in result["content"][0]["text"]
 
     async def test_dispatches_llmstack_ask(self, monkeypatch):
         engine = _install_fake_ask_engine(monkeypatch, answer="ans", sources=[])

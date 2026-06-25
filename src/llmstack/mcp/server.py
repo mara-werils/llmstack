@@ -198,6 +198,16 @@ class MCPServer:
             }
         )
 
+        tools.append(
+            {
+                "name": "llmstack_onboarding",
+                "description": "Report first-run readiness for zero-key local inference: "
+                "whether Ollama is running, which models are present, the recommended "
+                "chat/embedding models, and the next steps to get a working local setup.",
+                "inputSchema": {"type": "object", "properties": {}},
+            }
+        )
+
         return {"tools": tools}
 
     async def _handle_tools_call(self, params: dict) -> dict:
@@ -212,6 +222,8 @@ class MCPServer:
             return await self._tool_ask(arguments)
         if tool_name == "llmstack_savings":
             return await self._tool_savings(arguments)
+        if tool_name == "llmstack_onboarding":
+            return await self._tool_onboarding(arguments)
 
         # Handle agent tools
         tool = self.tools.get(tool_name)
@@ -276,6 +288,22 @@ class MCPServer:
             f"{float(sub['months_covered']):.2f} month(s) of {sub['name']}. "
             f"Valued against {pricing.DEFAULT_API_BASELINE} pricing (as of {pricing.PRICING_AS_OF})."
         )
+        return {"content": [{"type": "text", "text": text}]}
+
+    async def _tool_onboarding(self, args: dict) -> dict:
+        """Handle llmstack_onboarding tool — report first-run readiness."""
+        from llmstack.core.hardware import detect_hardware
+        from llmstack.core.onboarding import assess_readiness, probe_ollama
+
+        report = assess_readiness(detect_hardware(), probe_ollama(self.ollama_url))
+        if report.ready:
+            text = (
+                f"Ready for zero-key local inference: {report.chat_model} (chat) + "
+                f"{report.embed_model} (embeddings) are installed and Ollama is running."
+            )
+        else:
+            steps = "\n".join(f"  - {hint}" for hint in report.hints)
+            text = "Not ready yet for local inference. Next steps:\n" + steps
         return {"content": [{"type": "text", "text": text}]}
 
     async def _tool_ask(self, args: dict) -> dict:
