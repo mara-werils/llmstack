@@ -1,6 +1,6 @@
 {
   "name": "@llmstack/client",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Official TypeScript/JavaScript SDK for LLMStack - OpenAI-compatible gateway client",
   "main": "dist/index.js",
   "module": "dist/index.mjs",

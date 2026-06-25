@@ -185,6 +185,19 @@ console.log(savings.total_saved_usd);              // 12.34
 console.log(savings.subscription.months_covered);  // e.g. 0.6 months of Cursor Pro
 ```
 
+### `client.onboarding(ollamaUrl?)` / `client.ready(ollamaUrl?)`
+
+First-run readiness for zero-key local inference: whether Ollama is up, which
+models are present, the recommended models, and next-step hints. `ready()` is a
+boolean shortcut over `onboarding().ready`.
+
+```typescript
+if (!(await client.ready())) {
+  const status = await client.onboarding();
+  console.log(status.hints); // e.g. ["ollama pull llama3.2", ...]
+}
+```
+
 ## Cancellation
 
 Every request accepts an `AbortSignal`:
