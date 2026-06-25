@@ -183,6 +183,60 @@ def verify_first_value(
             client.close()
 
 
+@dataclass(frozen=True)
+class ReadinessReport:
+    """Whether the machine is ready for zero-key local inference, and what's left.
+
+    The single source of truth reused by ``doctor``, the gateway readiness route,
+    the SDKs, the MCP tool, and the editor extensions so every surface agrees.
+    """
+
+    ollama_running: bool
+    chat_model: str
+    chat_model_ready: bool
+    embed_model: str
+    embed_model_ready: bool
+    ready: bool
+    hints: tuple[str, ...]
+
+
+def assess_readiness(
+    hw: HardwareProfile,
+    status: OllamaStatus,
+    *,
+    chat_model: str | None = None,
+    embed_model: str | None = None,
+) -> ReadinessReport:
+    """Combine hardware, Ollama status, and model availability into one verdict."""
+    chat = chat_model or recommend_model(hw).name
+    embed = embed_model or recommend_embed_model(hw).name
+    chat_ready = status.has_model(chat)
+    embed_ready = status.has_model(embed)
+    ready = status.running and chat_ready and embed_ready
+
+    hints: list[str] = []
+    if not status.running:
+        hints.extend(ollama_install_hint())
+        hints.append("Then run: llmstack quickstart")
+    else:
+        if not chat_ready:
+            hints.append(f"ollama pull {chat}")
+        if not embed_ready:
+            hints.append(f"ollama pull {embed}")
+    if ready:
+        hints.append("Ready -- try: llmstack ask -i .")
+
+    return ReadinessReport(
+        ollama_running=status.running,
+        chat_model=chat,
+        chat_model_ready=chat_ready,
+        embed_model=embed,
+        embed_model_ready=embed_ready,
+        ready=ready,
+        hints=tuple(hints),
+    )
+
+
 def ollama_install_hint(system: str | None = None) -> list[str]:
     """OS-specific commands to install and start Ollama."""
     system = system or platform.system()

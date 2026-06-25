@@ -9,6 +9,7 @@ from llmstack.core.hardware import HardwareProfile
 from llmstack.core.onboarding import (
     FIRST_VALUE_PROMPT,
     OllamaStatus,
+    assess_readiness,
     ollama_install_hint,
     probe_ollama,
     recommend_embed_model,
@@ -199,6 +200,43 @@ def test_verify_first_value_creates_and_closes_its_own_client():
 def test_first_value_prompt_mentions_local_and_private():
     assert "local" in FIRST_VALUE_PROMPT
     assert "privately" in FIRST_VALUE_PROMPT
+
+
+# --- assess_readiness -------------------------------------------------------
+
+
+def test_assess_readiness_all_present_is_ready():
+    hw = _hw(ram_gb=8)  # recommends llama3.2 + nomic-embed-text
+    status = OllamaStatus(running=True, models=("llama3.2:latest", "nomic-embed-text:latest"))
+    report = assess_readiness(hw, status)
+    assert report.ready is True
+    assert report.chat_model_ready and report.embed_model_ready
+    assert any("llmstack ask" in h for h in report.hints)
+
+
+def test_assess_readiness_ollama_down_lists_install_hints():
+    report = assess_readiness(_hw(ram_gb=8), OllamaStatus(running=False))
+    assert report.ready is False
+    assert any("quickstart" in h for h in report.hints)
+    assert any("ollama" in h.lower() for h in report.hints)
+
+
+def test_assess_readiness_missing_models_suggests_pull():
+    status = OllamaStatus(running=True, models=())
+    report = assess_readiness(_hw(ram_gb=8), status)
+    assert report.ready is False
+    assert any(h.startswith("ollama pull llama3.2") for h in report.hints)
+    assert any(h.startswith("ollama pull nomic-embed-text") for h in report.hints)
+
+
+def test_assess_readiness_honours_explicit_models():
+    status = OllamaStatus(running=True, models=("mistral:latest", "bge-m3:latest"))
+    report = assess_readiness(
+        _hw(ram_gb=8), status, chat_model="mistral", embed_model="bge-m3"
+    )
+    assert report.ready is True
+    assert report.chat_model == "mistral"
+    assert report.embed_model == "bge-m3"
 
 
 # --- ollama_install_hint ----------------------------------------------------
