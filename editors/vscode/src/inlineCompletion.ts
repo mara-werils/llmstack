@@ -83,8 +83,15 @@ export function createInlineCompletionProvider(
         return undefined;
       }
 
+      // Allow opting specific languages out (e.g. plaintext, markdown, env files).
+      const disabled = settings.get<string[]>("inlineCompletion.disabledLanguages", []);
+      if (disabled.includes(document.languageId)) {
+        return undefined;
+      }
+
       // Debounce so we don't fire a request on every keystroke.
-      await delay(DEBOUNCE_MS, token);
+      const debounceMs = settings.get<number>("inlineCompletion.debounceMs", DEBOUNCE_MS);
+      await delay(debounceMs, token);
       if (token.isCancellationRequested) {
         return undefined;
       }

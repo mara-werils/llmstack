@@ -207,6 +207,19 @@
           "type": "number",
           "default": 200,
           "description": "Maximum tokens to generate for a single inline completion."
+        },
+        "llmstack.inlineCompletion.debounceMs": {
+          "type": "number",
+          "default": 200,
+          "description": "Idle time (ms) to wait after typing before requesting an inline completion."
+        },
+        "llmstack.inlineCompletion.disabledLanguages": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "Language IDs to disable inline completions for (e.g. plaintext, markdown)."
         }
       }
     }
