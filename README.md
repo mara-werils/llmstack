@@ -539,6 +539,7 @@ Auto hardware detection:
 | `POST /v1/chat/completions` | Chat (auto-routed across providers) |
 | `POST /v1/embeddings` | Text embeddings |
 | `GET /v1/models` | List models from all providers (with pricing) |
+| `GET /v1/onboarding` | First-run readiness: recommended models, what's installed, next steps |
 | `POST /v1/rag/ingest` | Ingest documents for RAG |
 | `POST /v1/rag/query` | RAG query with citations |
 | `GET /v1/observe/traces` | Request traces with quality scores |
