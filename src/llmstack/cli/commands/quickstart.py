@@ -26,6 +26,7 @@ def quickstart(
     ollama_url: str = DEFAULT_OLLAMA_URL,
     skip_pull: bool = False,
     verify: bool = True,
+    embed_model: str | None = None,
 ) -> None:
     """Get from zero to a working local completion -- no API key, no Docker."""
     banner("LLMStack Quickstart", "Zero to a working local completion -- no API key, no Docker")
@@ -57,7 +58,7 @@ def quickstart(
     success("Ollama is running")
 
     # Step 3/4 -- ensure the chat + embedding models are present (ask/RAG need both).
-    embed = recommend_embed_model(hw).name
+    embed = embed_model or recommend_embed_model(hw).name
     console.print(f"\n[accent]Step 3/4[/] Ensuring models ('{model}' + '{embed}' for ask/RAG)...")
     if skip_pull:
         console.print("  [muted]Skipping pull (--skip-pull)[/]")

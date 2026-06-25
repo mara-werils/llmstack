@@ -67,6 +67,9 @@ def quickstart(
     model: str = typer.Option(
         None, "--model", "-m", help="Model to use (default: sized to your hardware)"
     ),
+    embed_model: str = typer.Option(
+        None, "--embed-model", help="Embedding model for ask/RAG (default: sized to your hardware)"
+    ),
     ollama_url: str = typer.Option("http://localhost:11434", "--ollama-url", help="Ollama API URL"),
     skip_pull: bool = typer.Option(False, "--skip-pull", help="Skip the model pull check"),
     verify: bool = typer.Option(
@@ -76,7 +79,13 @@ def quickstart(
     """Zero to a working local completion in one command -- no API key, no Docker."""
     from llmstack.cli.commands.quickstart import quickstart as _quickstart
 
-    _quickstart(model=model, ollama_url=ollama_url, skip_pull=skip_pull, verify=verify)
+    _quickstart(
+        model=model,
+        ollama_url=ollama_url,
+        skip_pull=skip_pull,
+        verify=verify,
+        embed_model=embed_model,
+    )
 
 
 @app.command()
