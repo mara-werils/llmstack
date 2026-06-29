@@ -178,6 +178,20 @@ def test_check_nvidia_docker_subprocess_error():
         assert _check_nvidia_docker() is False
 
 
+def test_check_nvidia_docker_makes_a_single_scoped_docker_call():
+    with (
+        patch("llmstack.core.hardware.shutil.which", return_value="/usr/bin/nvidia-smi"),
+        patch(
+            "llmstack.core.hardware.subprocess.check_output",
+            return_value="Runtimes: nvidia runc\n",
+        ) as mock_out,
+    ):
+        assert _check_nvidia_docker() is True
+    # Exactly one docker call, and it queries only the runtimes field.
+    mock_out.assert_called_once()
+    assert mock_out.call_args.args[0] == ["docker", "info", "--format", "{{.Runtimes}}"]
+
+
 def test_detect_hardware_linux_no_gpu():
     with (
         patch("llmstack.core.hardware.platform.system", return_value="Linux"),

@@ -89,13 +89,14 @@ def _check_nvidia_docker() -> bool:
     if not shutil.which("nvidia-smi"):
         return False
     try:
-        subprocess.check_output(
+        # Query just the runtimes field -- a full `docker info` dump is slower and
+        # could match "nvidia" anywhere in unrelated output. (Previously this ran
+        # `docker info` twice and threw away the first, faster, scoped result.)
+        out = subprocess.check_output(
             ["docker", "info", "--format", "{{.Runtimes}}"],
             text=True,
             timeout=10,
         )
-        # If nvidia runtime exists, docker info will mention it
-        out = subprocess.check_output(["docker", "info"], text=True, timeout=10)
         return "nvidia" in out.lower()
     except (subprocess.SubprocessError, FileNotFoundError):
         return False
