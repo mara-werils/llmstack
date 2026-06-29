@@ -6,6 +6,7 @@
 
 import type {
   LLMStackClientOptions,
+  ChatMessage,
   ChatCompletionRequest,
   ChatCompletionResponse,
   ChatCompletionChunk,
@@ -217,6 +218,43 @@ export class LLMStackClient {
   /** True when the machine is ready for zero-key local inference. */
   async ready(ollamaUrl?: string, options?: RequestOptions): Promise<boolean> {
     return (await this.onboarding(ollamaUrl, options)).ready;
+  }
+
+  /**
+   * Convenience: send a single question and get the reply text back.
+   *
+   * @param question - The user's question.
+   * @param model - Model identifier (default: `"llama3.2"`).
+   */
+  async ask(question: string, model = "llama3.2", options?: RequestOptions): Promise<string> {
+    const resp = (await this._chatCreate(
+      { model, messages: [{ role: "user", content: question }], stream: false },
+      options,
+    )) as ChatCompletionResponse;
+    return resp.choices[0]?.message?.content ?? "";
+  }
+
+  /**
+   * Convenience: send a prompt with an optional system message and get text back.
+   *
+   * @param prompt - The user prompt.
+   * @param model - Model identifier (default: `"llama3.2"`).
+   * @param system - Optional system prompt.
+   */
+  async complete(
+    prompt: string,
+    model = "llama3.2",
+    system = "",
+    options?: RequestOptions,
+  ): Promise<string> {
+    const messages: ChatMessage[] = [];
+    if (system) messages.push({ role: "system", content: system });
+    messages.push({ role: "user", content: prompt });
+    const resp = (await this._chatCreate(
+      { model, messages, stream: false },
+      options,
+    )) as ChatCompletionResponse;
+    return resp.choices[0]?.message?.content ?? "";
   }
 
   // -----------------------------------------------------------------------
