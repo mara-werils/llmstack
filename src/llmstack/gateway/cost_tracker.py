@@ -80,10 +80,10 @@ class BudgetAlert:
     current_spend: float
     limit_usd: float
     percent_used: float
-    triggered_at: float = 0.0
+    triggered_at: float | None = None
 
     def __post_init__(self):
-        if not self.triggered_at:
+        if self.triggered_at is None:
             self.triggered_at = time.time()
 
     def to_dict(self) -> dict:

@@ -72,7 +72,7 @@ class BatchJob:
     requests: list[BatchRequest] = field(default_factory=list)
     results: list[BatchResult] = field(default_factory=list)
     concurrency: int = 5
-    created_at: float = 0.0
+    created_at: float | None = None
     started_at: float = 0.0
     completed_at: float = 0.0
     metadata: dict[str, Any] = field(default_factory=dict)
@@ -80,7 +80,7 @@ class BatchJob:
     def __post_init__(self):
         if not self.id:
             self.id = str(uuid.uuid4())[:12]
-        if not self.created_at:
+        if self.created_at is None:
             self.created_at = time.time()
 
     @property

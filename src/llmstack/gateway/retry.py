@@ -66,10 +66,10 @@ class RetryAttempt:
     error: str = ""
     latency_ms: float = 0.0
     success: bool = False
-    timestamp: float = 0.0
+    timestamp: float | None = None
 
     def __post_init__(self):
-        if not self.timestamp:
+        if self.timestamp is None:
             self.timestamp = time.time()
 
     def to_dict(self) -> dict:

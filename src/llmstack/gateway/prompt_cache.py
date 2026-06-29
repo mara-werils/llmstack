@@ -21,11 +21,11 @@ class CachedPrefix:
     prefix_text: str
     token_count: int = 0
     hit_count: int = 0
-    created_at: float = 0.0
+    created_at: float | None = None
     last_hit: float = 0.0
 
     def __post_init__(self):
-        if not self.created_at:
+        if self.created_at is None:
             self.created_at = time.time()
 
 
