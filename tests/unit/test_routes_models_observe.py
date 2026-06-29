@@ -41,6 +41,22 @@ def test_models_dedupes_and_merges_providers(models_client):
     assert "gpt-4o" in ids
 
 
+def test_models_created_timestamp_is_stable(models_client):
+    app, monkeypatch = models_client
+
+    class _Reg:
+        def all_models(self):
+            return [ProviderModel(id="gpt-4o", provider="openai", context_length=128000)]
+
+    monkeypatch.setattr(registry_mod, "get_registry", lambda: _Reg())
+    client = TestClient(app)
+    first = {m["id"]: m for m in client.get("/v1/models").json()["data"]}
+    second = {m["id"]: m for m in client.get("/v1/models").json()["data"]}
+    # OpenAI clients diff model lists; `created` must not move between calls.
+    assert first["gpt-4o"]["created"] == second["gpt-4o"]["created"]
+    assert first["gpt-4o"]["created"] == models_route._REGISTRY_MODEL_CREATED
+
+
 def test_models_handles_proxy_failure(monkeypatch):
     async def boom():
         raise ConnectionError("down")

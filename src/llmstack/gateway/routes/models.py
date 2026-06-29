@@ -11,6 +11,12 @@ from llmstack.gateway.proxy import proxy_models
 
 router = APIRouter()
 
+# Stable "created" timestamp for provider-registry models. OpenAI's schema treats
+# `created` as the model's creation time, not "now", so it must not change between
+# calls -- clients diff model lists and a moving timestamp makes every entry look
+# changed on every poll. Stamp it once at process start.
+_REGISTRY_MODEL_CREATED = int(time.time())
+
 
 @router.get("/models")
 async def list_models():
@@ -33,7 +39,7 @@ async def list_models():
                     {
                         "id": pm.id,
                         "object": "model",
-                        "created": int(time.time()),
+                        "created": _REGISTRY_MODEL_CREATED,
                         "owned_by": pm.provider,
                         "context_length": pm.context_length,
                         "x_llmstack": {
