@@ -54,9 +54,10 @@ class _Resp:
 
 
 class _StreamCtx:
-    def __init__(self, chunks, raise_exc=None):
+    def __init__(self, chunks, raise_exc=None, mid_exc=None):
         self._chunks = chunks
         self._raise_exc = raise_exc
+        self._mid_exc = mid_exc
 
     async def __aenter__(self):
         return self
@@ -71,15 +72,27 @@ class _StreamCtx:
     async def aiter_bytes(self):
         for c in self._chunks:
             yield c
+        if self._mid_exc:
+            raise self._mid_exc
 
 
 class _FakePool:
-    def __init__(self, *, post=None, get=None, post_exc=None, stream_chunks=None, stream_exc=None):
+    def __init__(
+        self,
+        *,
+        post=None,
+        get=None,
+        post_exc=None,
+        stream_chunks=None,
+        stream_exc=None,
+        stream_mid_exc=None,
+    ):
         self._post = post
         self._get = get
         self._post_exc = post_exc
         self._stream_chunks = stream_chunks or []
         self._stream_exc = stream_exc
+        self._stream_mid_exc = stream_mid_exc
 
     async def post(self, url, json=None):
         if self._post_exc:
@@ -92,7 +105,7 @@ class _FakePool:
     def stream(self, method, url, json=None):
         if self._stream_exc and not self._stream_chunks:
             return _StreamCtx([], raise_exc=self._stream_exc)
-        return _StreamCtx(self._stream_chunks)
+        return _StreamCtx(self._stream_chunks, mid_exc=self._stream_mid_exc)
 
 
 @pytest.fixture
@@ -186,6 +199,21 @@ class TestChatCompletion:
             async for _ in gen:
                 pass
         assert breaker.failures == 1
+
+    async def test_stream_failure_after_first_chunk_is_not_a_success(self, wiring, monkeypatch):
+        breaker, _, _ = wiring
+        monkeypatch.setattr(
+            proxy,
+            "_get_pool",
+            lambda: _FakePool(stream_chunks=[b"x"], stream_mid_exc=httpx.ReadTimeout("t")),
+        )
+        gen = await proxy.proxy_chat_completion({"model": "m"}, stream=True)
+        with pytest.raises(httpx.ReadTimeout):
+            async for _ in gen:
+                pass
+        # A stream that dies mid-flight is a failure only -- not also a success.
+        assert breaker.failures == 1
+        assert breaker.successes == 0
 
 
 class TestProviderRouting:

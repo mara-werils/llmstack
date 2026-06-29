@@ -200,9 +200,12 @@ async def _stream_response(
         client = _get_pool()
         async with client.stream("POST", url, json=payload) as resp:
             resp.raise_for_status()
-            breaker.record_success()
             async for chunk in resp.aiter_bytes():
                 yield chunk
+            # Only count a success once the whole stream was delivered. Recording
+            # it up front (right after raise_for_status) marked a request that
+            # failed mid-stream as both a success and a failure.
+            breaker.record_success()
     except (httpx.ConnectError, httpx.ReadTimeout, httpx.ConnectTimeout):
         breaker.record_failure()
         raise
