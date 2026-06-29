@@ -70,6 +70,20 @@ def test_effective_monthly_without_annual() -> None:
     assert plan.effective_monthly_usd == 19.0
 
 
+def test_subscription_rejects_nonpositive_monthly() -> None:
+    with pytest.raises(ValueError):
+        SubscriptionPlan("k", "n", "v", 0.0, "https://example.com")
+    with pytest.raises(ValueError):
+        SubscriptionPlan("k", "n", "v", -1.0, "https://example.com")
+
+
+def test_subscription_rejects_nonpositive_annual() -> None:
+    with pytest.raises(ValueError):
+        SubscriptionPlan("k", "n", "v", 10.0, "https://example.com", annual_usd=0.0)
+    with pytest.raises(ValueError):
+        SubscriptionPlan("k", "n", "v", 10.0, "https://example.com", annual_usd=-5.0)
+
+
 def test_lookups_raise_on_unknown() -> None:
     with pytest.raises(KeyError):
         get_subscription("does-not-exist")

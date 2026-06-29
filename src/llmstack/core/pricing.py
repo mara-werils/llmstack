@@ -36,6 +36,16 @@ class SubscriptionPlan:
     annual_usd: float | None = None
     as_of: str = PRICING_AS_OF
 
+    def __post_init__(self) -> None:
+        # A non-positive price is a catalog data-entry error: it makes the
+        # "months of subscription covered" comparison meaningless (and risks a
+        # divide-by-zero), so reject it at construction rather than silently
+        # producing a bogus savings figure.
+        if self.monthly_usd <= 0:
+            raise ValueError(f"monthly_usd must be positive (got {self.monthly_usd})")
+        if self.annual_usd is not None and self.annual_usd <= 0:
+            raise ValueError(f"annual_usd must be positive when set (got {self.annual_usd})")
+
     @property
     def effective_monthly_usd(self) -> float:
         """Monthly cost, using the annual plan's per-month rate when cheaper."""
