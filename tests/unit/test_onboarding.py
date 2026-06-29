@@ -260,9 +260,7 @@ def test_readiness_summary_ready_and_not_ready():
 
 def test_assess_readiness_honours_explicit_models():
     status = OllamaStatus(running=True, models=("mistral:latest", "bge-m3:latest"))
-    report = assess_readiness(
-        _hw(ram_gb=8), status, chat_model="mistral", embed_model="bge-m3"
-    )
+    report = assess_readiness(_hw(ram_gb=8), status, chat_model="mistral", embed_model="bge-m3")
     assert report.ready is True
     assert report.chat_model == "mistral"
     assert report.embed_model == "bge-m3"

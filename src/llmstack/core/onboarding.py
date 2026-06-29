@@ -135,9 +135,7 @@ def probe_ollama(
     try:
         resp = client.get(f"{ollama_url}/api/tags", timeout=timeout)
         resp.raise_for_status()
-        models = tuple(
-            name for m in resp.json().get("models", []) if (name := m.get("name"))
-        )
+        models = tuple(name for m in resp.json().get("models", []) if (name := m.get("name")))
         return OllamaStatus(running=True, models=models)
     except Exception as exc:  # noqa: BLE001 - any failure means "not reachable"
         return OllamaStatus(running=False, error=str(exc))

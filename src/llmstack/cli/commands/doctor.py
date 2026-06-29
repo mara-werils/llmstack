@@ -209,10 +209,7 @@ def doctor() -> None:
 
     report = assess_readiness(hw, probe_ollama(ollama_url))
     if report.ready:
-        success(
-            f"Ready for zero-key local inference "
-            f"({report.chat_model} + {report.embed_model})"
-        )
+        success(f"Ready for zero-key local inference ({report.chat_model} + {report.embed_model})")
     else:
         warn("Not ready yet for zero-key local inference -- run: llmstack quickstart")
         warnings += 1

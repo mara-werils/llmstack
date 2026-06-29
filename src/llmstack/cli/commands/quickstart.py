@@ -42,7 +42,9 @@ def quickstart(
         rec = recommend_model(hw)
         model = rec.name
         success(f"Recommended model: {rec.label} -- {rec.reason}")
-        console.print(f"  [muted]~{rec.approx_download_gb:.1f} GB download - override with --model[/]")
+        console.print(
+            f"  [muted]~{rec.approx_download_gb:.1f} GB download - override with --model[/]"
+        )
     else:
         success(f"Using model: {model}")
 
@@ -81,7 +83,9 @@ def quickstart(
             console.print(f"  [highlight]{result.reply}[/]")
         else:
             warn(f"Could not verify a completion: {result.error or 'empty response'}")
-            console.print("  [muted]Ollama is up; the model may still be loading. Try: llmstack chat[/]")
+            console.print(
+                "  [muted]Ollama is up; the model may still be loading. Try: llmstack chat[/]"
+            )
     else:
         console.print("  [muted]Skipped[/]")
 
@@ -95,14 +99,20 @@ def quickstart(
     banner("Ready", "You are running a private, local AI -- zero keys, zero egress")
     console.print()
     console.print("  [muted]Try it now:[/]")
-    console.print("  [highlight]llmstack ask 'How does auth work?' ./src/[/]   chat with your codebase")
+    console.print(
+        "  [highlight]llmstack ask 'How does auth work?' ./src/[/]   chat with your codebase"
+    )
     console.print("  [highlight]llmstack chat[/]                               interactive chat")
-    console.print("  [highlight]llmstack savings[/]                            what you save vs cloud")
+    console.print(
+        "  [highlight]llmstack savings[/]                            what you save vs cloud"
+    )
     console.print()
     console.print("  [muted]In your editor (VS Code / Cursor / VSCodium):[/]")
     console.print("  [highlight]code --install-extension llmstack.llmstack-vscode[/]")
     console.print("  [muted]Open VSX: https://open-vsx.org/extension/llmstack/llmstack-vscode[/]")
     console.print()
-    console.print("  [muted]Optional -- the full gateway stack (routing, RAG, dashboard) uses Docker:[/]")
+    console.print(
+        "  [muted]Optional -- the full gateway stack (routing, RAG, dashboard) uses Docker:[/]"
+    )
     console.print("  [highlight]llmstack up[/]")
     console.print()
