@@ -186,6 +186,7 @@ class TestToolsList:
         assert "llmstack_ask" in names
         assert "llmstack_savings" in names
         assert "llmstack_onboarding" in names
+        assert "llmstack_models" in names
 
     async def test_agent_tool_schema_mapped(self):
         srv = MCPServer(tools=_registry(_FakeTool("echo")))
@@ -281,9 +282,7 @@ class TestToolsCall:
         )
         monkeypatch.setattr(onboarding, "probe_ollama", lambda *a, **k: ready)
         srv = MCPServer(tools=_registry())
-        result = await srv._handle_tools_call(
-            {"name": "llmstack_onboarding", "arguments": {}}
-        )
+        result = await srv._handle_tools_call({"name": "llmstack_onboarding", "arguments": {}})
         assert "Ready for zero-key local inference" in result["content"][0]["text"]
         assert not result.get("isError")
 
@@ -293,10 +292,29 @@ class TestToolsCall:
         down = onboarding.OllamaStatus(running=False)
         monkeypatch.setattr(onboarding, "probe_ollama", lambda *a, **k: down)
         srv = MCPServer(tools=_registry())
-        result = await srv._handle_tools_call(
-            {"name": "llmstack_onboarding", "arguments": {}}
-        )
+        result = await srv._handle_tools_call({"name": "llmstack_onboarding", "arguments": {}})
         assert "Not ready yet" in result["content"][0]["text"]
+
+    async def test_dispatches_llmstack_models(self, monkeypatch):
+        import llmstack.core.onboarding as onboarding
+
+        status = onboarding.OllamaStatus(running=True, models=("llama3.2", "nomic-embed-text"))
+        monkeypatch.setattr(onboarding, "probe_ollama", lambda *a, **k: status)
+        srv = MCPServer(tools=_registry())
+        result = await srv._handle_tools_call({"name": "llmstack_models", "arguments": {}})
+        text = result["content"][0]["text"]
+        assert "llama3.2" in text and "nomic-embed-text" in text
+        assert not result.get("isError")
+
+    async def test_llmstack_models_when_ollama_down(self, monkeypatch):
+        import llmstack.core.onboarding as onboarding
+
+        down = onboarding.OllamaStatus(running=False, error="connection refused")
+        monkeypatch.setattr(onboarding, "probe_ollama", lambda *a, **k: down)
+        srv = MCPServer(tools=_registry())
+        result = await srv._handle_tools_call({"name": "llmstack_models", "arguments": {}})
+        assert result["isError"] is True
+        assert "not reachable" in result["content"][0]["text"]
 
     async def test_dispatches_llmstack_ask(self, monkeypatch):
         engine = _install_fake_ask_engine(monkeypatch, answer="ans", sources=[])

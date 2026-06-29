@@ -208,6 +208,15 @@ class MCPServer:
             }
         )
 
+        tools.append(
+            {
+                "name": "llmstack_models",
+                "description": "List the local models currently installed in Ollama, so the "
+                "client can pick a valid model before calling llmstack_chat or llmstack_ask.",
+                "inputSchema": {"type": "object", "properties": {}},
+            }
+        )
+
         return {"tools": tools}
 
     async def _handle_tools_call(self, params: dict) -> dict:
@@ -224,6 +233,8 @@ class MCPServer:
             return await self._tool_savings(arguments)
         if tool_name == "llmstack_onboarding":
             return await self._tool_onboarding(arguments)
+        if tool_name == "llmstack_models":
+            return await self._tool_models(arguments)
 
         # Handle agent tools
         tool = self.tools.get(tool_name)
@@ -304,6 +315,30 @@ class MCPServer:
         else:
             steps = "\n".join(f"  - {hint}" for hint in report.hints)
             text = "Not ready yet for local inference. Next steps:\n" + steps
+        return {"content": [{"type": "text", "text": text}]}
+
+    async def _tool_models(self, args: dict) -> dict:
+        """Handle llmstack_models tool — list locally installed Ollama models."""
+        from llmstack.core.onboarding import probe_ollama
+
+        status = probe_ollama(self.ollama_url)
+        if not status.running:
+            return {
+                "content": [
+                    {
+                        "type": "text",
+                        "text": f"Ollama is not reachable at {self.ollama_url}: {status.error}",
+                    }
+                ],
+                "isError": True,
+            }
+        if not status.models:
+            return {
+                "content": [
+                    {"type": "text", "text": "No local models installed. Try: llmstack quickstart"}
+                ]
+            }
+        text = "Installed local models:\n" + "\n".join(f"  - {m}" for m in status.models)
         return {"content": [{"type": "text", "text": text}]}
 
     async def _tool_ask(self, args: dict) -> dict:
