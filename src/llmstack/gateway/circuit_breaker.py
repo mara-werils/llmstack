@@ -9,8 +9,8 @@ by failing fast instead of timing out on every request.
 
 from __future__ import annotations
 
-import asyncio
 import logging
+import threading
 import time
 from enum import Enum
 
@@ -68,7 +68,10 @@ class CircuitBreaker:
         self._last_failure_time = 0.0
         self._half_open_calls = 0
         self._consecutive_opens = 0
-        self._lock = asyncio.Lock()
+        # State is mutated by check()/record_*; these run synchronously and may be
+        # called from the inference proxy and from threadpool callers (e.g. metrics
+        # scraping), so guard the read-modify-write sequences with a reentrant lock.
+        self._lock = threading.RLock()
 
         # Metrics
         self._total_failures = 0
@@ -109,87 +112,92 @@ class CircuitBreaker:
 
     def check(self) -> None:
         """Check if a request is allowed. Raises CircuitBreakerError if not."""
-        if self._state == CircuitState.CLOSED:
-            return
-
-        if self._state == CircuitState.OPEN:
-            elapsed = time.monotonic() - self._last_failure_time
-            if elapsed >= self.current_recovery_timeout:
-                # Transition to half-open
-                self._state = CircuitState.HALF_OPEN
-                self._half_open_calls = 0
-                self._last_state_change = time.monotonic()
+        with self._lock:
+            if self._state == CircuitState.CLOSED:
                 return
 
-            retry_after = self.current_recovery_timeout - elapsed
-            self._total_rejections += 1
-            raise CircuitBreakerError(retry_after=retry_after)
+            if self._state == CircuitState.OPEN:
+                elapsed = time.monotonic() - self._last_failure_time
+                if elapsed >= self.current_recovery_timeout:
+                    # Transition to half-open
+                    self._state = CircuitState.HALF_OPEN
+                    self._half_open_calls = 0
+                    self._last_state_change = time.monotonic()
+                    return
 
-        if self._state == CircuitState.HALF_OPEN:
-            if self._half_open_calls >= self.half_open_max_calls:
-                # Too many half-open calls pending, reject
+                retry_after = self.current_recovery_timeout - elapsed
                 self._total_rejections += 1
-                raise CircuitBreakerError(retry_after=5.0)
-            self._half_open_calls += 1
+                raise CircuitBreakerError(retry_after=retry_after)
+
+            if self._state == CircuitState.HALF_OPEN:
+                if self._half_open_calls >= self.half_open_max_calls:
+                    # Too many half-open calls pending, reject
+                    self._total_rejections += 1
+                    raise CircuitBreakerError(retry_after=5.0)
+                self._half_open_calls += 1
 
     def record_success(self) -> None:
         """Record a successful request."""
-        self._total_successes += 1
+        with self._lock:
+            self._total_successes += 1
 
-        if self._state == CircuitState.HALF_OPEN:
-            self._success_count += 1
-            # Recovered — close the circuit
-            self._state = CircuitState.CLOSED
-            self._failure_count = 0
-            self._success_count = 0
-            self._consecutive_opens = 0
-            self._last_state_change = time.monotonic()
-        elif self._state == CircuitState.CLOSED:
-            # Reset failure count on success
-            self._failure_count = 0
+            if self._state == CircuitState.HALF_OPEN:
+                self._success_count += 1
+                # Recovered — close the circuit
+                self._state = CircuitState.CLOSED
+                self._failure_count = 0
+                self._success_count = 0
+                self._consecutive_opens = 0
+                self._last_state_change = time.monotonic()
+            elif self._state == CircuitState.CLOSED:
+                # Reset failure count on success
+                self._failure_count = 0
 
     def record_failure(self) -> None:
         """Record a failed request."""
-        self._total_failures += 1
-        self._failure_count += 1
-        self._last_failure_time = time.monotonic()
+        with self._lock:
+            self._total_failures += 1
+            self._failure_count += 1
+            self._last_failure_time = time.monotonic()
 
-        if self._state == CircuitState.HALF_OPEN:
-            # Probe failed — back to open with longer timeout
-            self._state = CircuitState.OPEN
-            self._consecutive_opens += 1
-            self._last_state_change = time.monotonic()
-        elif self._state == CircuitState.CLOSED:
-            if self._failure_count >= self.failure_threshold:
+            if self._state == CircuitState.HALF_OPEN:
+                # Probe failed — back to open with longer timeout
                 self._state = CircuitState.OPEN
                 self._consecutive_opens += 1
                 self._last_state_change = time.monotonic()
+            elif self._state == CircuitState.CLOSED:
+                if self._failure_count >= self.failure_threshold:
+                    self._state = CircuitState.OPEN
+                    self._consecutive_opens += 1
+                    self._last_state_change = time.monotonic()
 
     def reset(self) -> None:
         """Manually reset the circuit breaker to closed state."""
-        self._state = CircuitState.CLOSED
-        self._failure_count = 0
-        self._success_count = 0
-        self._half_open_calls = 0
-        self._consecutive_opens = 0
-        self._last_state_change = time.monotonic()
+        with self._lock:
+            self._state = CircuitState.CLOSED
+            self._failure_count = 0
+            self._success_count = 0
+            self._half_open_calls = 0
+            self._consecutive_opens = 0
+            self._last_state_change = time.monotonic()
         logger.info("Circuit breaker manually reset to CLOSED state")
 
     def metrics(self) -> dict:
         """Return circuit breaker metrics."""
-        total = self._total_successes + self._total_failures
-        failure_rate = self._total_failures / total if total > 0 else 0.0
-        return {
-            "state": self._state.value,
-            "failure_count": self._failure_count,
-            "consecutive_opens": self._consecutive_opens,
-            "current_recovery_timeout_s": round(self.current_recovery_timeout, 1),
-            "total_successes": self._total_successes,
-            "total_failures": self._total_failures,
-            "total_rejections": self._total_rejections,
-            "failure_rate": round(failure_rate, 4),
-            "time_in_state_s": round(time.monotonic() - self._last_state_change, 1),
-        }
+        with self._lock:
+            total = self._total_successes + self._total_failures
+            failure_rate = self._total_failures / total if total > 0 else 0.0
+            return {
+                "state": self._state.value,
+                "failure_count": self._failure_count,
+                "consecutive_opens": self._consecutive_opens,
+                "current_recovery_timeout_s": round(self.current_recovery_timeout, 1),
+                "total_successes": self._total_successes,
+                "total_failures": self._total_failures,
+                "total_rejections": self._total_rejections,
+                "failure_rate": round(failure_rate, 4),
+                "time_in_state_s": round(time.monotonic() - self._last_state_change, 1),
+            }
 
 
 # Module-level singleton for the inference backend

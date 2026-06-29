@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import threading
+
 import pytest
 
 from llmstack.gateway.circuit_breaker import (
@@ -10,6 +12,36 @@ from llmstack.gateway.circuit_breaker import (
     CircuitState,
     get_inference_breaker,
 )
+
+
+class TestCircuitBreakerThreadSafety:
+    """The lock guards the read-modify-write counter updates."""
+
+    def test_concurrent_records_do_not_lose_updates(self):
+        # Huge threshold keeps the circuit CLOSED so we only exercise counting.
+        cb = CircuitBreaker(failure_threshold=10**9)
+        threads_n, per_thread = 8, 2000
+        start = threading.Barrier(threads_n)
+
+        def worker(record_success: bool):
+            start.wait()
+            for _ in range(per_thread):
+                if record_success:
+                    cb.record_success()
+                else:
+                    cb.record_failure()
+
+        threads = [threading.Thread(target=worker, args=(i % 2 == 0,)) for i in range(threads_n)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        m = cb.metrics()
+        # Every call must be counted exactly once -- no lost increments.
+        assert m["total_successes"] + m["total_failures"] == threads_n * per_thread
+        assert m["total_successes"] == (threads_n // 2) * per_thread
+        assert m["total_failures"] == (threads_n // 2) * per_thread
 
 
 class TestCircuitBreakerStates:
