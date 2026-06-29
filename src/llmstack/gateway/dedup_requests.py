@@ -104,11 +104,15 @@ class RequestDeduplicator:
         with self._lock:
             now = time.time()
             active = sum(1 for c in self._cache.values() if (now - c.created_at) < self.config.ttl)
+            total = self._hits + self._misses
             return {
                 "total_cached": len(self._cache),
                 "active_entries": active,
                 "max_entries": self.config.max_entries,
                 "ttl_seconds": self.config.ttl,
+                "hits": self._hits,
+                "misses": self._misses,
+                "hit_rate": round(self._hits / total, 4) if total > 0 else 0.0,
             }
 
     def clear(self) -> int:
@@ -119,7 +123,15 @@ class RequestDeduplicator:
             return count
 
     def _evict_if_needed(self) -> None:
-        """Evict oldest entries if over max."""
+        """Drop expired entries, then evict the oldest if still over max.
+
+        Without the TTL sweep, entries that are never looked up again linger
+        until the cache hits max_entries, wasting memory on dead responses.
+        """
+        now = time.time()
+        expired = [k for k, c in self._cache.items() if (now - c.created_at) >= self.config.ttl]
+        for k in expired:
+            del self._cache[k]
         while len(self._cache) > self.config.max_entries:
             oldest_key = min(self._cache, key=lambda k: self._cache[k].created_at)
             del self._cache[oldest_key]

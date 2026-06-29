@@ -67,6 +67,25 @@ class TestRequestDeduplicator:
         assert "ttl_seconds" in stats
         assert "max_entries" in stats
 
+    def test_stats_includes_hit_metrics(self, dedup):
+        dedup.cache_response("k1", 200, {})
+        dedup.get_cached("k1")  # hit
+        dedup.get_cached("missing")  # miss
+        stats = dedup.get_stats()
+        assert stats["hits"] == 1
+        assert stats["misses"] == 1
+        assert stats["hit_rate"] == 0.5
+
+    def test_expired_entries_purged_on_write(self):
+        config = DedupConfig(ttl=0.01)
+        dedup = RequestDeduplicator(config)
+        dedup.cache_response("old", 200, {})
+        time.sleep(0.02)  # let "old" expire
+        dedup.cache_response("new", 200, {})
+        # Writing a new entry sweeps the expired one out instead of leaving it.
+        assert dedup.cache_size == 1
+        assert dedup.get_cached("new") is not None
+
     def test_overwrite_cached(self, dedup):
         dedup.cache_response("k1", 200, {"v": 1})
         dedup.cache_response("k1", 201, {"v": 2})
