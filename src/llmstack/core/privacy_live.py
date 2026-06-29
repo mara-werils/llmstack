@@ -63,8 +63,13 @@ async def _probe_live_providers(client: httpx.AsyncClient, base_url: str) -> lis
 
     external: set[str] = set()
     for model in data.get("data", []):
-        provider = model.get("owned_by") or model.get("x_llmstack", {}).get("provider") or ""
-        provider = provider.lower()
+        # A malformed /v1/models payload (non-dict entries) must not crash the
+        # live privacy probe with an AttributeError -- skip anything unexpected.
+        if not isinstance(model, dict):
+            continue
+        x_llmstack = model.get("x_llmstack")
+        x_provider = x_llmstack.get("provider") if isinstance(x_llmstack, dict) else None
+        provider = (model.get("owned_by") or x_provider or "").lower()
         if provider and provider not in LOCAL_PROVIDERS:
             external.add(provider)
 

@@ -158,6 +158,28 @@ class TestProbeLiveProviders:
         assert "anthropic" in findings[0].detail
 
     @pytest.mark.asyncio
+    async def test_malformed_model_entries_are_skipped(self):
+        # A non-dict entry (or null x_llmstack) must not crash the probe.
+        client = _FakeAsyncClient(
+            get_map={
+                f"{BASE_URL}/v1/models": _FakeResponse(
+                    200,
+                    json_data={
+                        "data": [
+                            None,
+                            "not-a-dict",
+                            {"id": "x", "x_llmstack": None},
+                            {"id": "gpt-4o", "owned_by": "openai"},
+                        ]
+                    },
+                )
+            }
+        )
+        findings = await _probe_live_providers(client, BASE_URL)
+        assert len(findings) == 1
+        assert "openai" in findings[0].detail
+
+    @pytest.mark.asyncio
     async def test_models_endpoint_failure_returns_empty(self):
         client = _FakeAsyncClient(fail_all=True)
         findings = await _probe_live_providers(client, BASE_URL)
