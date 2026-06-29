@@ -147,7 +147,11 @@ class ResponseCache:
             cached = json.loads(raw)
             # Mark response as cached
             cached["_cached"] = True
-            cached["_cache_age_s"] = int(time.time() - cached.get("_cached_at", 0))
+            # Without a stored _cached_at (e.g. a legacy/externally-written entry)
+            # defaulting to 0 would report an age of ~epoch (~55 years). Report an
+            # unknown age as None instead of a nonsense number.
+            cached_at = cached.get("_cached_at")
+            cached["_cache_age_s"] = int(time.time() - cached_at) if cached_at else None
             return cached
         except Exception:
             self._stats.record_miss()

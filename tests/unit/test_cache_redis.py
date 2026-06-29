@@ -92,6 +92,23 @@ class TestGetPut:
         assert await connected.get("m", MSGS, 0.0) is None
         assert connected.stats.misses == 1
 
+    async def test_cache_age_none_when_cached_at_missing(self, connected, fake_redis):
+        import json
+
+        # A legacy/externally-written entry with no _cached_at marker.
+        key = ResponseCache._build_cache_key("m", MSGS, 0.0)
+        await fake_redis.set(key, json.dumps({"answer": 1}))
+        got = await connected.get("m", MSGS, 0.0)
+        assert got["answer"] == 1
+        # Unknown age must be None, not ~55 years (time.time() - 0).
+        assert got["_cache_age_s"] is None
+
+    async def test_cache_age_is_small_for_fresh_put(self, connected):
+        await connected.put("m", MSGS, {"answer": 2}, 0.0)
+        got = await connected.get("m", MSGS, 0.0)
+        assert got["_cache_age_s"] is not None
+        assert 0 <= got["_cache_age_s"] < 5
+
 
 class TestInvalidate:
     async def test_invalidate_deletes_matching(self, connected):
