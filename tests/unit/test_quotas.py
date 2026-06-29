@@ -111,6 +111,18 @@ class TestQuotaManager:
         assert usage["gpt-4o"]["total"]["requests"] == 2
         assert usage["gpt-4o"]["total"]["tokens"] == 300
 
+    def test_get_usage_excludes_wildcard_aggregate(self, manager):
+        # Two models also populate the internal ":*" aggregate bucket. get_usage
+        # must report only real models, so a per-model sum doesn't double-count.
+        manager.record_usage("key1", model="gpt-4o", tokens=100)
+        manager.record_usage("key1", model="claude-sonnet-4", tokens=50)
+
+        usage = manager.get_usage("key1")
+        assert set(usage) == {"gpt-4o", "claude-sonnet-4"}
+        assert "*" not in usage
+        total = sum(m["total"]["tokens"] for m in usage.values())
+        assert total == 150
+
     def test_remove_limits(self, manager):
         manager.add_limit(QuotaLimit(api_key="key1", max_requests=1))
         removed = manager.remove_limits("key1")

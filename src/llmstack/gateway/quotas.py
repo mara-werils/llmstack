@@ -151,6 +151,12 @@ class QuotaManager:
             for key, usage in self._usage.items():
                 if key.startswith(f"{api_key}:"):
                     model_part = key.split(":", 1)[1]
+                    # ":*" is the internal cross-model aggregate that record_usage
+                    # mirrors every model'd request into (used only for all-models
+                    # quota checks). Reporting it here as a model named "*" makes
+                    # naive per-model sums double-count, so skip it.
+                    if model_part == "*":
+                        continue
                     daily_r, daily_t, daily_c = usage.get_usage_in_period(QuotaPeriod.DAILY)
                     monthly_r, monthly_t, monthly_c = usage.get_usage_in_period(QuotaPeriod.MONTHLY)
                     results[model_part] = {
