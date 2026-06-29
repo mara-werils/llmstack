@@ -182,6 +182,22 @@ def test_reset_user_clears_counters():
     assert usage["concurrent_active"] == 0
 
 
+def test_reset_user_clears_request_windows():
+    limiter = AdvancedRateLimiter()
+    limiter.set_tier("key1", RateLimitTier.FREE)
+    # Exhaust the per-minute window (FREE capacity = 10 + 5 burst = 15),
+    # releasing each slot so the concurrency limit never trips.
+    for _ in range(15):
+        assert limiter.check("key1", endpoint="chat").allowed
+        limiter.release("key1")
+    assert not limiter.check("key1", endpoint="chat").allowed  # window is full
+
+    limiter.reset_user("key1")
+
+    # The per-endpoint sliding window must be cleared, not just token/concurrent.
+    assert limiter.check("key1", endpoint="chat").allowed
+
+
 def test_release_on_zero_concurrent_is_noop():
     limiter = AdvancedRateLimiter()
     limiter.release("never-checked-in")  # should not raise or go negative

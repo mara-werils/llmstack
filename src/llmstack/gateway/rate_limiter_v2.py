@@ -240,7 +240,12 @@ class AdvancedRateLimiter:
 
     def reset_user(self, key: str) -> None:
         """Clear all counters for a given API key (e.g. after account upgrade)."""
-        self._windows.pop(key, None)
+        # Request windows are stored per endpoint under f"{key}:{endpoint}", so a
+        # bare pop(key) left every sliding window in place and the user stayed
+        # rate-limited after a reset. Clear all windows belonging to this key.
+        prefix = f"{key}:"
+        for window_key in [k for k in self._windows if k == key or k.startswith(prefix)]:
+            self._windows.pop(window_key, None)
         self._token_usage.pop(key, None)
         self._token_reset.pop(key, None)
         self._concurrent[key] = 0
