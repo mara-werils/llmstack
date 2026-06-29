@@ -49,6 +49,18 @@ class TestCostCalculation:
         )
         assert cost == 0.15
 
+    def test_custom_pricing_prefix_match(self, tracker):
+        # A versioned variant of a custom-priced model inherits the custom price.
+        tracker.set_pricing("acme-llm", 1.0, 2.0)
+        cost = tracker.calculate_cost("acme-llm-v2-2026", input_tokens=1_000_000, output_tokens=0)
+        assert cost == 1.0
+
+    def test_custom_pricing_overrides_builtin_prefix(self, tracker):
+        # Custom pricing wins over a built-in entry sharing the same prefix.
+        tracker.set_pricing("gpt-4o", 0.01, 0.02)
+        cost = tracker.calculate_cost("gpt-4o-custom-tag", input_tokens=1_000_000, output_tokens=0)
+        assert cost == 0.01
+
 
 class TestCostRecording:
     def test_record_entry(self, tracker):

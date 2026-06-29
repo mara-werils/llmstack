@@ -134,10 +134,12 @@ class CostTracker:
         if pricing is None:
             # Try prefix matching (e.g., "gpt-4o-2024-..." -> "gpt-4o"), longest
             # key first so a versioned "gpt-4o-mini-..." matches "gpt-4o-mini"
-            # rather than the shorter, far pricier "gpt-4o" prefix.
-            for key in sorted(MODEL_PRICING, key=len, reverse=True):
+            # rather than the shorter, far pricier "gpt-4o" prefix. Custom pricing
+            # participates too (and overrides a built-in with the same prefix).
+            candidates = {**MODEL_PRICING, **self._custom_pricing}
+            for key in sorted(candidates, key=len, reverse=True):
                 if model.startswith(key):
-                    pricing = MODEL_PRICING[key]
+                    pricing = candidates[key]
                     break
         if pricing is None:
             return 0.0
