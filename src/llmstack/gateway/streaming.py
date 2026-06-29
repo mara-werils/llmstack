@@ -12,8 +12,16 @@ _MAX_STREAM_BYTES = 50 * 1024 * 1024  # 50 MB default cap
 _CHUNK_TIMEOUT = 30.0  # seconds
 
 
-class StreamTimeoutError(Exception):
+class StreamError(Exception):
+    """Base class for streaming failures (timeout, size cap, …)."""
+
+
+class StreamTimeoutError(StreamError):
     """Raised when no data is received within the chunk timeout."""
+
+
+class StreamSizeError(StreamError):
+    """Raised when a stream exceeds the maximum allowed byte size."""
 
 
 @dataclass
@@ -105,7 +113,7 @@ class StreamProcessor:
             self.metrics.bytes_sent += len(formatted.encode())
             if self.metrics.bytes_sent > self.max_bytes:
                 self.metrics.errors += 1
-                raise StreamTimeoutError(f"Stream exceeded max size of {self.max_bytes} bytes")
+                raise StreamSizeError(f"Stream exceeded max size of {self.max_bytes} bytes")
             yield formatted
 
         # Send final metrics

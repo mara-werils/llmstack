@@ -1,7 +1,36 @@
 """Tests for enhanced streaming support."""
 
 import pytest
-from llmstack.gateway.streaming import StreamProcessor, StreamBuffer, StreamMultiplexer
+from llmstack.gateway.streaming import (
+    StreamBuffer,
+    StreamError,
+    StreamMultiplexer,
+    StreamProcessor,
+    StreamSizeError,
+    StreamTimeoutError,
+)
+
+
+@pytest.mark.asyncio
+async def test_stream_size_cap_raises_size_error():
+    async def token_source():
+        for _ in range(100):
+            yield "x" * 100
+
+    # Tiny cap so the first formatted chunk trips the limit.
+    processor = StreamProcessor(model="m", request_id="r", max_bytes=10)
+    with pytest.raises(StreamSizeError):
+        async for _ in processor.process_stream(token_source(), format="sse"):
+            pass
+    assert processor.metrics.errors == 1
+
+
+def test_stream_errors_share_a_base():
+    # Callers can catch both failure modes via the shared base, but the size
+    # cap is no longer misreported as a timeout.
+    assert issubclass(StreamSizeError, StreamError)
+    assert issubclass(StreamTimeoutError, StreamError)
+    assert not issubclass(StreamSizeError, StreamTimeoutError)
 
 
 @pytest.mark.asyncio
