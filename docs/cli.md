@@ -2,6 +2,60 @@
 
 llmstack provides a command-line interface built with [Typer](https://typer.tiangolo.com/) and [Rich](https://rich.readthedocs.io/). All commands are available under the `llmstack` binary after installation.
 
+## `llmstack quickstart`
+
+Zero to a working local completion in one command -- no API key, no Docker. Picks a model sized to your hardware, pulls it if needed, and proves first value with a real local completion.
+
+```bash
+llmstack quickstart [OPTIONS]
+```
+
+**Options**
+
+| Option | Default | Description |
+|---|---|---|
+| `--model`, `-m` | sized to your hardware | Chat model to use |
+| `--embed-model` | sized to your hardware | Embedding model for `ask`/RAG |
+| `--ollama-url` | `http://localhost:11434` | Ollama API URL |
+| `--skip-pull` | `false` | Skip the model pull check |
+| `--verify` / `--no-verify` | `--verify` | Prove first value with a real local completion |
+
+## `llmstack ready`
+
+Fast first-run readiness check. Reports whether the machine is ready for zero-key local inference and **exits non-zero when not ready**, so it is CI-gateable.
+
+```bash
+llmstack ready [OPTIONS]
+```
+
+**Options**
+
+| Option | Default | Description |
+|---|---|---|
+| `--ollama-url` | `http://localhost:11434` | Ollama API URL |
+| `--json` | `false` | Machine-readable JSON output |
+
+## `llmstack verify-private`
+
+Prove the stack runs 100% locally -- audits `llmstack.yaml` for any external egress (cloud providers, external webhooks, network-capable tools, wildcard CORS, disabled auth). Exits non-zero when not private, so it is CI-gateable.
+
+```bash
+llmstack verify-private [TARGET] [OPTIONS]
+```
+
+**Arguments**
+
+| Argument | Required | Description |
+|---|---|---|
+| `TARGET` | No | Directory containing `llmstack.yaml` (defaults to the current directory) |
+
+**Options**
+
+| Option | Default | Description |
+|---|---|---|
+| `--json` | `false` | Emit machine-readable JSON |
+| `--live` | `false` | Also probe the running gateway, not just `llmstack.yaml` |
+
 ## `llmstack ask`
 
 Ask questions about local files and directories using a local LLM. No Docker, no server, no config needed -- just Ollama running locally.
