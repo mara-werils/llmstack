@@ -733,3 +733,18 @@ class TestAsyncClient:
                 deltas = [d async for d in result]
         assert len(deltas) == 2
         assert deltas[1].sources == ["a.py"]
+
+
+class TestLearnNamespace:
+    def test_learn_returns_learn_client_bound_to_base_url(self) -> None:
+        from llmstack.sdk.learn_client import LearnClient
+
+        with Client(base_url="http://gw:9000", api_key="sk-abc") as c:
+            assert isinstance(c.learn, LearnClient)
+            assert c.learn._base_url == "http://gw:9000"
+            # Auth header is propagated to the learn namespace.
+            assert c.learn._headers.get("Authorization") == "Bearer sk-abc"
+
+    def test_learn_is_cached(self) -> None:
+        with Client() as c:
+            assert c.learn is c.learn

@@ -7,6 +7,7 @@ from typing import Any, Generator, AsyncGenerator
 
 import httpx
 
+from llmstack.sdk.learn_client import LearnClient
 from llmstack.sdk.retry import RetryConfig, async_retry, sync_retry
 from llmstack.sdk.types import (
     ChatResponse,
@@ -98,11 +99,23 @@ class Client:
         self.base_url = base_url.rstrip("/")
         self.api_key = api_key
         self._retry = retry or RetryConfig()
+        self._learn = None
         self._client = httpx.Client(
             base_url=self.base_url,
             headers=_build_headers(api_key),
             timeout=timeout,
         )
+
+    @property
+    def learn(self) -> LearnClient:
+        """Namespace for the adaptive-learning API (feedback, training, versions).
+
+        Lazily constructed and bound to this client's base URL and auth headers,
+        so ``client.learn.thumbs_up(...)`` just works.
+        """
+        if self._learn is None:
+            self._learn = LearnClient(self.base_url, _build_headers(self.api_key))
+        return self._learn
 
     def __repr__(self) -> str:
         return f"Client(base_url={self.base_url!r}, api_key={'***' if self.api_key else None!r})"
