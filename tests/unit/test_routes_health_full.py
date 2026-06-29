@@ -41,6 +41,17 @@ def make_client():
 # ---------------------------------------------------------------------------
 
 
+def test_inference_base_strips_only_trailing_v1():
+    base = health_route._inference_base
+    assert base("http://localhost:11434/v1") == "http://localhost:11434"
+    assert base("http://localhost:8000/v1/") == "http://localhost:8000"
+    # No trailing /v1 -> unchanged.
+    assert base("http://localhost:11434") == "http://localhost:11434"
+    # A /v1 that is not the suffix must be preserved (only the tail is stripped).
+    assert base("http://v1.example.com/v1") == "http://v1.example.com"
+    assert base("http://host/v1/extra") == "http://host/v1/extra"
+
+
 def test_health_alias_returns_alive(make_client):
     client = make_client()
     resp = client.get("/health")

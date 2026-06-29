@@ -20,6 +20,16 @@ REDIS_URL = os.getenv("LLMSTACK_REDIS_URL", "")
 _START_TIME = time.monotonic()
 
 
+def _inference_base(url: str) -> str:
+    """Server base for inference health probes, stripping a trailing ``/v1``.
+
+    Use ``removesuffix`` rather than ``replace('/v1', '')`` so a ``/v1`` that
+    appears earlier in the URL (a host like ``v1.example.com`` or a longer path)
+    is left intact and only the OpenAI-style ``/v1`` suffix is removed.
+    """
+    return url.rstrip("/").removesuffix("/v1")
+
+
 async def _check_url(url: str) -> bool:
     if not url:
         return False
@@ -37,7 +47,7 @@ async def healthz():
 
     if INFERENCE_URL:
         # Ollama uses / as health, vLLM uses /health
-        health_url = INFERENCE_URL.replace("/v1", "")
+        health_url = _inference_base(INFERENCE_URL)
         checks["inference"] = await _check_url(health_url) or await _check_url(
             health_url + "/health"
         )
@@ -149,7 +159,7 @@ async def readiness():
     checks = {}
 
     if INFERENCE_URL:
-        health_url = INFERENCE_URL.replace("/v1", "")
+        health_url = _inference_base(INFERENCE_URL)
         checks["inference"] = await _check_url(health_url) or await _check_url(
             health_url + "/health"
         )
