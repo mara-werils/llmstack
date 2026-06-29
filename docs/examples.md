@@ -89,6 +89,57 @@ for chunk in stream:
 print()
 ```
 
+## Python (native llmstack SDK)
+
+The bundled `llmstack` package ships a typed client with convenience helpers and
+a sync and async variant.
+
+### One-liners
+
+```python
+from llmstack import Client
+
+client = Client(base_url="http://localhost:8000", api_key="YOUR_KEY")
+
+# Single question -> reply text
+print(client.ask("What is machine learning?"))
+
+# Prompt with a system message
+print(client.complete("Refactor this loop", system="You are a senior engineer."))
+
+# Is the machine ready for zero-key local inference?
+if client.ready():
+    print(client.savings(plan="cursor-pro"))   # dollars saved vs a cloud plan
+print(client.rag_status())                      # RAG collection stats
+```
+
+### Async
+
+```python
+import asyncio
+from llmstack import AsyncClient
+
+
+async def main():
+    async with AsyncClient() as client:
+        print(await client.ask("Summarize REST in one sentence."))
+
+
+asyncio.run(main())
+```
+
+### Batch processing
+
+```python
+from llmstack.sdk.batch import BatchProcessor, BatchItem
+
+processor = BatchProcessor(base_url="http://localhost:8000", concurrency=5)
+summary = processor.run_sync(
+    [BatchItem(id=i, prompt=q) for i, q in enumerate(questions)]
+)
+print(f"{summary.completed}/{summary.total} done in {summary.total_duration:.1f}s")
+```
+
 ## RAG Pipeline
 
 Build a document Q&A system using llmstack's built-in RAG endpoints:
