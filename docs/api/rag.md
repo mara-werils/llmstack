@@ -195,19 +195,21 @@ curl http://localhost:8000/v1/rag/status \
 
 ```json
 {
-  "collection": "llmstack",
-  "points": 1234,
-  "vectors_size": 1024,
-  "status": "green"
+  "status": "green",
+  "points_count": 1234,
+  "vectors_count": 1234,
+  "segments_count": 2
 }
 ```
 
 | Field | Description |
 |---|---|
-| `collection` | Qdrant collection name |
-| `points` | Total number of stored vectors (chunks) |
-| `vectors_size` | Embedding dimension size |
-| `status` | Collection health (`green`, `yellow`, `red`) |
+| `status` | Collection health (`green`, `yellow`, `red`), or `not_found` if nothing has been ingested |
+| `points_count` | Total number of stored points (chunks) |
+| `vectors_count` | Number of vectors in the collection |
+| `segments_count` | Number of Qdrant storage segments |
+
+When the collection does not yet exist, the endpoint returns `{"status": "not_found", "points_count": 0}`.
 
 ## Tips
 
