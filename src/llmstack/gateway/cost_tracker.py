@@ -132,10 +132,12 @@ class CostTracker:
         """Calculate cost for a request based on token counts."""
         pricing = self._custom_pricing.get(model) or MODEL_PRICING.get(model)
         if pricing is None:
-            # Try prefix matching (e.g., "gpt-4o-2024-..." -> "gpt-4o")
-            for key, val in MODEL_PRICING.items():
+            # Try prefix matching (e.g., "gpt-4o-2024-..." -> "gpt-4o"), longest
+            # key first so a versioned "gpt-4o-mini-..." matches "gpt-4o-mini"
+            # rather than the shorter, far pricier "gpt-4o" prefix.
+            for key in sorted(MODEL_PRICING, key=len, reverse=True):
                 if model.startswith(key):
-                    pricing = val
+                    pricing = MODEL_PRICING[key]
                     break
         if pricing is None:
             return 0.0

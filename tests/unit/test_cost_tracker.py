@@ -41,6 +41,14 @@ class TestCostCalculation:
         cost = tracker.calculate_cost("gpt-4o-2024-08-06", input_tokens=1_000_000, output_tokens=0)
         assert cost == 2.50
 
+    def test_prefix_matching_prefers_longest_key(self, tracker):
+        # "gpt-4o-mini-2024-..." must match gpt-4o-mini ($0.15/1M), not the
+        # shorter, 16x-pricier gpt-4o prefix ($2.50/1M).
+        cost = tracker.calculate_cost(
+            "gpt-4o-mini-2024-07-18", input_tokens=1_000_000, output_tokens=0
+        )
+        assert cost == 0.15
+
 
 class TestCostRecording:
     def test_record_entry(self, tracker):
