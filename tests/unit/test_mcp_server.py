@@ -187,6 +187,7 @@ class TestToolsList:
         assert "llmstack_savings" in names
         assert "llmstack_onboarding" in names
         assert "llmstack_models" in names
+        assert "llmstack_embed" in names
 
     async def test_agent_tool_schema_mapped(self):
         srv = MCPServer(tools=_registry(_FakeTool("echo")))
@@ -315,6 +316,24 @@ class TestToolsCall:
         result = await srv._handle_tools_call({"name": "llmstack_models", "arguments": {}})
         assert result["isError"] is True
         assert "not reachable" in result["content"][0]["text"]
+
+    async def test_dispatches_llmstack_embed(self, monkeypatch):
+        capture = {}
+        _patch_httpx(monkeypatch, post=_Resp({"embedding": [0.1, 0.2, 0.3]}), capture=capture)
+        srv = MCPServer(tools=_registry())
+        result = await srv._handle_tools_call(
+            {"name": "llmstack_embed", "arguments": {"input": "hello", "model": "nomic-embed-text"}}
+        )
+        assert not result.get("isError")
+        payload = json.loads(result["content"][0]["text"])
+        assert payload["dimensions"] == 3
+        assert capture["url"].endswith("/api/embeddings")
+        assert capture["json"]["prompt"] == "hello"
+
+    async def test_llmstack_embed_requires_input(self):
+        srv = MCPServer(tools=_registry())
+        result = await srv._handle_tools_call({"name": "llmstack_embed", "arguments": {}})
+        assert result["isError"] is True
 
     async def test_dispatches_llmstack_ask(self, monkeypatch):
         engine = _install_fake_ask_engine(monkeypatch, answer="ans", sources=[])

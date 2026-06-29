@@ -217,6 +217,25 @@ class MCPServer:
             }
         )
 
+        tools.append(
+            {
+                "name": "llmstack_embed",
+                "description": "Embed text with a local embedding model and return the vector. "
+                "Runs fully locally with zero egress.",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "input": {"type": "string", "description": "Text to embed"},
+                        "model": {
+                            "type": "string",
+                            "description": "Embedding model (default: nomic-embed-text)",
+                        },
+                    },
+                    "required": ["input"],
+                },
+            }
+        )
+
         return {"tools": tools}
 
     async def _handle_tools_call(self, params: dict) -> dict:
@@ -235,6 +254,8 @@ class MCPServer:
             return await self._tool_onboarding(arguments)
         if tool_name == "llmstack_models":
             return await self._tool_models(arguments)
+        if tool_name == "llmstack_embed":
+            return await self._tool_embed(arguments)
 
         # Handle agent tools
         tool = self.tools.get(tool_name)
@@ -340,6 +361,33 @@ class MCPServer:
             }
         text = "Installed local models:\n" + "\n".join(f"  - {m}" for m in status.models)
         return {"content": [{"type": "text", "text": text}]}
+
+    async def _tool_embed(self, args: dict) -> dict:
+        """Handle llmstack_embed tool — embed text with a local model."""
+        import httpx
+
+        text = args.get("input", "")
+        model = args.get("model", "nomic-embed-text")
+        if not text:
+            return {
+                "content": [{"type": "text", "text": "Provide 'input' text to embed."}],
+                "isError": True,
+            }
+        try:
+            async with httpx.AsyncClient(timeout=120) as client:
+                resp = await client.post(
+                    f"{self.ollama_url}/api/embeddings",
+                    json={"model": model, "prompt": text},
+                )
+                resp.raise_for_status()
+                embedding = resp.json().get("embedding", [])
+                payload = {"model": model, "dimensions": len(embedding), "embedding": embedding}
+                return {"content": [{"type": "text", "text": json.dumps(payload)}]}
+        except Exception as exc:
+            return {
+                "content": [{"type": "text", "text": f"Embedding error: {exc}"}],
+                "isError": True,
+            }
 
     async def _tool_ask(self, args: dict) -> dict:
         """Handle llmstack_ask tool — RAG over local files."""
