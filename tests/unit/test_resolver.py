@@ -99,3 +99,17 @@ def test_auto_quantizes_8b_on_small_gpu():
     hw = _make_hw(gpu_vendor="nvidia", gpu_vram_mb=4000)
     model = ModelSpec(name="model-8b", backend="auto")
     assert resolve_quantization(model, hw) == "q4_k_m"
+
+
+def test_size_lookalike_does_not_trigger_quantization():
+    # "70bit" mentions "70b" only as a substring, not a 70B parameter count.
+    hw = _make_hw(gpu_vendor="nvidia", gpu_vram_mb=8000)
+    model = ModelSpec(name="coder-70bit", backend="auto")
+    assert resolve_quantization(model, hw) is None
+
+
+def test_size_with_tag_suffix_still_quantizes():
+    # A real 70B tag with an instruct/quant suffix is still a 70B model.
+    hw = _make_hw(gpu_vendor="nvidia", gpu_vram_mb=24576)
+    model = ModelSpec(name="llama3.3:70b-instruct-q4_K_M", backend="auto")
+    assert resolve_quantization(model, hw) == "q4_k_m"
