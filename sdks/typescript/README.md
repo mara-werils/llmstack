@@ -198,6 +198,30 @@ if (!(await client.ready())) {
 }
 ```
 
+### `client.ask(question, model?)` / `client.complete(prompt, model?, system?)`
+
+One-liner helpers that return the reply text directly.
+
+```typescript
+const answer = await client.ask("What is machine learning?");
+const code = await client.complete("Refactor this loop", "llama3.2", "You are a senior engineer.");
+```
+
+### `BatchProcessor`
+
+Run many prompts concurrently with a bounded concurrency.
+
+```typescript
+import { LLMStackClient, BatchProcessor } from "@llmstack/client";
+
+const processor = new BatchProcessor(new LLMStackClient(), 5);
+const summary = await processor.run([
+  { id: 1, prompt: "Summarize REST." },
+  { id: 2, prompt: "What is a closure?" },
+]);
+console.log(`${summary.completed}/${summary.total} done`);
+```
+
 ## Cancellation
 
 Every request accepts an `AbortSignal`:
