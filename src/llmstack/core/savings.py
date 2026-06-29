@@ -63,6 +63,8 @@ class SavingsCalculator:
         """
         if input_tokens < 0 or output_tokens < 0:
             raise ValueError("token counts must be non-negative")
+        if local_cost_usd < 0:
+            raise ValueError("local_cost_usd must be non-negative")
         cloud_cost = self._baseline.cost_usd(input_tokens, output_tokens)
         saved = max(0.0, cloud_cost - local_cost_usd)
         return SavingsEstimate(

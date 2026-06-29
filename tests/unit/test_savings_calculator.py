@@ -49,6 +49,13 @@ def test_negative_tokens_rejected() -> None:
         calc.estimate(0, -5)
 
 
+def test_negative_local_cost_rejected() -> None:
+    # A negative local cost would inflate the saving above the real cloud cost.
+    calc = SavingsCalculator()
+    with pytest.raises(ValueError):
+        calc.estimate(1000, 1000, local_cost_usd=-0.01)
+
+
 def test_estimate_as_dict_roundtrips_fields() -> None:
     est = SavingsCalculator().estimate(10, 20)
     d = est.as_dict()
