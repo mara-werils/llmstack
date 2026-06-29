@@ -154,6 +154,12 @@ class TestSimpleHandlers:
         assert result["serverInfo"] == SERVER_INFO
         assert "tools" in result["capabilities"]
 
+    def test_server_version_matches_package(self):
+        from llmstack import __version__
+
+        # serverInfo must track the real package version, not a stale literal.
+        assert SERVER_INFO["version"] == __version__
+
     async def test_initialized_and_ping_empty(self):
         srv = MCPServer(tools=_registry())
         assert await srv._handle_initialized({}) == {}

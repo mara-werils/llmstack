@@ -15,15 +15,17 @@ import sys
 from dataclasses import dataclass, field
 from typing import Any
 
+from llmstack import __version__
 from llmstack.agent.tools import ToolRegistry, create_default_registry
 
 logger = logging.getLogger(__name__)
 
 MCP_PROTOCOL_VERSION = "2024-11-05"
 
+# Report the actual package version so MCP clients never see a stale hardcoded one.
 SERVER_INFO = {
     "name": "llmstack",
-    "version": "0.6.0",
+    "version": __version__,
 }
 
 
