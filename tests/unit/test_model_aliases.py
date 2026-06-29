@@ -59,6 +59,20 @@ class TestModelAliasResolver:
         resolver = ModelAliasResolver(config=config)
         assert resolver.resolve("fast") == "my-fast-model"
 
+    def test_partial_match_disabled_by_default(self, resolver):
+        # Default config: an unknown name passes through untouched.
+        assert resolver.resolve("llama3.1") == "llama3.1"
+
+    def test_partial_match_resolves_target_prefix(self):
+        config = AliasConfig(partial_match=True)
+        resolver = ModelAliasResolver(config=config)
+        # "llama3.1" is a prefix of the "smart" alias target "llama3.1:8b".
+        assert resolver.resolve("llama3.1") == "llama3.1:8b"
+        # Exact aliases still win over partial matching.
+        assert resolver.resolve("fast") == "llama3.2:1b"
+        # A name matching nothing still passes through.
+        assert resolver.resolve("gpt-4o") == "gpt-4o"
+
     def test_stats(self, resolver):
         stats = resolver.get_stats()
         assert stats["total_aliases"] == len(DEFAULT_ALIASES)

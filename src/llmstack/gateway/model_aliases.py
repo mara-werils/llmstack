@@ -34,7 +34,8 @@ class AliasConfig:
     # Whether to include default aliases
     include_defaults: bool = True
 
-    # Allow partial matching (e.g., "llama3" matches "llama3.2:3b")
+    # Allow partial matching: an unknown name that is a prefix of an alias
+    # target resolves to that target (e.g. "llama3.1" -> "llama3.1:8b").
     partial_match: bool = False
 
 
@@ -69,10 +70,19 @@ class ModelAliasResolver:
         If not found, returns the original model name unchanged.
         """
         # Direct alias match
-        resolved = self._aliases.get(model.lower())
+        key = model.lower()
+        resolved = self._aliases.get(key)
         if resolved:
             logger.debug("Resolved alias '%s' → '%s'", model, resolved)
             return resolved
+
+        # Opt-in partial matching: resolve to the first alias target whose model
+        # id starts with the query (e.g. "llama3.1" -> "llama3.1:8b").
+        if self.config.partial_match:
+            for target in self._aliases.values():
+                if target.lower().startswith(key):
+                    logger.debug("Partial-matched '%s' → '%s'", model, target)
+                    return target
 
         return model
 
