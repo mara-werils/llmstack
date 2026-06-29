@@ -1,6 +1,8 @@
 export { LLMStackClient, LLMStackError, createClient } from "./client.js";
 export type { RequestOptions } from "./client.js";
 export { parseSSEStream } from "./streaming.js";
+export { BatchProcessor } from "./batch.js";
+export type { BatchItem, BatchResult, BatchSummary } from "./batch.js";
 export type {
   LLMStackClientOptions,
   // Chat
