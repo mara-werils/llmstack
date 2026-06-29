@@ -304,6 +304,17 @@ class TestSyncClient:
                 c.savings()
                 assert mock_get.call_args.kwargs["params"] is None
 
+    def test_rag_status(self) -> None:
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = {"documents": 3, "chunks": 42}
+
+        with Client() as c:
+            with patch.object(c._client, "get", return_value=mock_resp) as mock_get:
+                status = c.rag_status()
+                assert status == {"documents": 3, "chunks": 42}
+                assert mock_get.call_args.args[0] == "/v1/rag/status"
+
     def test_onboarding(self) -> None:
         mock_resp = MagicMock()
         mock_resp.status_code = 200
@@ -594,6 +605,17 @@ class TestAsyncClient:
             with patch.object(c._client, "get", new_callable=AsyncMock, return_value=mock_resp):
                 summary = await c.savings()
                 assert summary["total_saved_usd"] == 2.5
+
+    @pytest.mark.asyncio
+    async def test_rag_status(self) -> None:
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = {"documents": 1, "chunks": 7}
+
+        async with AsyncClient() as c:
+            with patch.object(c._client, "get", new_callable=AsyncMock, return_value=mock_resp):
+                status = await c.rag_status()
+                assert status == {"documents": 1, "chunks": 7}
 
     @pytest.mark.asyncio
     async def test_onboarding(self) -> None:

@@ -265,6 +265,15 @@ class Client:
                     sources=data.get("sources", []),
                 )
 
+    def rag_status(self) -> dict[str, Any]:
+        """Return RAG collection statistics (document/chunk counts, etc.).
+
+        Mirrors the TypeScript SDK's ``client.rag.status()``.
+        """
+        resp = self._get("/v1/rag/status")
+        _raise_for_error(resp)
+        return resp.json()
+
     # -- models -----------------------------------------------------------
 
     def models(self) -> ModelsResponse:
@@ -575,6 +584,15 @@ class AsyncClient:
                     done=data.get("done", False),
                     sources=data.get("sources", []),
                 )
+
+    async def rag_status(self) -> dict[str, Any]:
+        """Return RAG collection statistics (document/chunk counts, etc.).
+
+        Mirrors the TypeScript SDK's ``client.rag.status()``.
+        """
+        resp = await self._get("/v1/rag/status")
+        _raise_for_error(resp)
+        return resp.json()
 
     # -- models -----------------------------------------------------------
 
