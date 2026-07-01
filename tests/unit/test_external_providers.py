@@ -131,6 +131,13 @@ class TestOpenAIProvider:
                 pass
         assert ei.value.retryable is True
 
+    async def test_stream_connect_error(self, monkeypatch):
+        _patch(monkeypatch, stream=_StreamCtx(raise_exc=httpx.ConnectError("x")))
+        with pytest.raises(ProviderError) as ei:
+            async for _ in OpenAIProvider().chat_stream({"model": "gpt-4o"}):
+                pass
+        assert ei.value.retryable is True
+
     async def test_list_models_defaults(self):
         models = await OpenAIProvider().list_models()
         assert any(m.id == "gpt-4o" for m in models)
@@ -220,6 +227,53 @@ class TestGoogleProvider:
             ):
                 pass
         assert ei.value.retryable is True
+
+    async def test_stream_maps_assistant_role_to_model(self, monkeypatch):
+        """The stream request body must translate 'assistant' to Gemini's
+        'model' role, same as the non-streaming _openai_to_gemini path."""
+        event = {"candidates": [{"content": {"parts": [{"text": "hi"}]}}]}
+        captured: dict = {}
+
+        class _CapturingClient(_FakeClient):
+            def stream(self, method, url, json=None, headers=None):
+                captured["body"] = json
+                return self._stream
+
+        monkeypatch.setattr(
+            httpx,
+            "AsyncClient",
+            lambda *a, **k: _CapturingClient(
+                stream=_StreamCtx(lines=[f"data: {json.dumps(event)}"])
+            ),
+        )
+        messages = [
+            {"role": "user", "content": "u"},
+            {"role": "assistant", "content": "a"},
+        ]
+        out = [
+            c
+            async for c in GoogleProvider(api_key="k").chat_stream(
+                {"model": "gemini-2.5-flash", "messages": messages}
+            )
+        ]
+        assert b"".join(out)
+        assert captured["body"]["contents"][1]["role"] == "model"
+
+    async def test_stream_skips_events_without_candidates(self, monkeypatch):
+        """An SSE event with an empty candidates list (e.g. a safety block)
+        must be skipped rather than raising or emitting empty text."""
+        empty = {"candidates": []}
+        event = {"candidates": [{"content": {"parts": [{"text": "hi"}]}}]}
+        lines = [f"data: {json.dumps(empty)}", f"data: {json.dumps(event)}"]
+        _patch(monkeypatch, stream=_StreamCtx(lines=lines))
+        out = [
+            c
+            async for c in GoogleProvider(api_key="k").chat_stream(
+                {"model": "gemini-2.5-flash", "messages": []}
+            )
+        ]
+        body = b"".join(out).decode()
+        assert "hi" in body
 
     async def test_list_models(self):
         models = await GoogleProvider(api_key="k").list_models()
