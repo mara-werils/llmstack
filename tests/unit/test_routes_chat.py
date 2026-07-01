@@ -593,3 +593,12 @@ class TestSavingsAccrual:
         # Non-dict result and malformed usage must not raise.
         chat_route._record_savings("not-a-dict", 0.0)
         chat_route._record_savings({"usage": None}, 0.0)
+
+    def test_record_savings_swallows_tracker_failure(self, monkeypatch):
+        import llmstack.gateway.savings as gw_savings
+
+        def _boom():
+            raise RuntimeError("tracker unavailable")
+
+        monkeypatch.setattr(gw_savings, "get_savings_tracker", _boom)
+        chat_route._record_savings({"usage": {"prompt_tokens": 1, "completion_tokens": 1}}, 0.0)
