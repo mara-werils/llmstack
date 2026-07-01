@@ -72,6 +72,21 @@ class TestCostRoutes:
         assert resp.json()["updated"] is True
 
 
+class TestCostLazySingleton:
+    def test_get_tracker_lazily_creates_and_reuses(self, monkeypatch):
+        monkeypatch.setattr(cost_route, "_tracker", None)
+        first = cost_route.get_tracker()
+        assert cost_route.get_tracker() is first
+
+    def test_init_cost_tracker_sets_module_tracker(self, monkeypatch):
+        # monkeypatch restores the pre-test `_tracker` value on teardown even
+        # though init_cost_tracker() mutates the module global directly.
+        monkeypatch.setattr(cost_route, "_tracker", None)
+        tracker = CostTracker()
+        cost_route.init_cost_tracker(tracker)
+        assert cost_route.get_tracker() is tracker
+
+
 # --------------------------------------------------------------------------- #
 # /leaderboard
 # --------------------------------------------------------------------------- #
@@ -93,6 +108,14 @@ class TestLeaderboardRoutes:
     def test_model_not_found(self, lb_client):
         assert lb_client.get("/leaderboard/models/ghost").status_code == 404
 
+    def test_model_found(self, lb_client, monkeypatch):
+        lb = Leaderboard()
+        lb.record("llama3", provider="local", latency_ms=10.0, tokens=5)
+        monkeypatch.setattr(lb_route, "_leaderboard", lb)
+        resp = lb_client.get("/leaderboard/models/llama3")
+        assert resp.status_code == 200
+        assert resp.json()["model"] == "llama3"
+
     def test_compare_requires_models(self, lb_client):
         assert lb_client.get("/leaderboard/compare").status_code == 400
 
@@ -100,6 +123,19 @@ class TestLeaderboardRoutes:
         resp = lb_client.get("/leaderboard/compare?models=a,b")
         assert resp.status_code == 200
         assert "comparison" in resp.json()
+
+
+class TestLeaderboardLazySingleton:
+    def test_get_leaderboard_lazily_creates_and_reuses(self, monkeypatch):
+        monkeypatch.setattr(lb_route, "_leaderboard", None)
+        first = lb_route.get_leaderboard()
+        assert lb_route.get_leaderboard() is first
+
+    def test_init_leaderboard_sets_module_leaderboard(self, monkeypatch):
+        monkeypatch.setattr(lb_route, "_leaderboard", None)
+        lb = Leaderboard()
+        lb_route.init_leaderboard(lb)
+        assert lb_route.get_leaderboard() is lb
 
 
 # --------------------------------------------------------------------------- #
