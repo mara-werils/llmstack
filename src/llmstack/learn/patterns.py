@@ -318,12 +318,12 @@ class PatternLearner:
         """Classify an identifier's naming convention."""
         if "_" in identifier and identifier.islower():
             return "snake_case"
+        if identifier.isupper() and "_" in identifier:
+            return "UPPER_SNAKE"
         if identifier[0].islower() and any(c.isupper() for c in identifier[1:]):
             return "camelCase"
         if identifier[0].isupper() and any(c.isupper() for c in identifier[1:]):
             return "PascalCase"
-        if identifier.isupper() and "_" in identifier:
-            return "UPPER_SNAKE"
         return None
 
     def _load(self) -> CodeStyleProfile:

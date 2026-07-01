@@ -224,9 +224,7 @@ class TestClassifyNaming:
             ("my_value", "snake_case"),
             ("myValue", "camelCase"),
             ("MyClass", "PascalCase"),
-            # All-caps with an underscore is matched by the PascalCase branch
-            # first (it appears before the UPPER_SNAKE branch in the source).
-            ("MAX_SIZE", "PascalCase"),
+            ("MAX_SIZE", "UPPER_SNAKE"),
             ("value", None),
             ("data", None),
         ],
