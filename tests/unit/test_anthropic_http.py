@@ -182,6 +182,13 @@ class TestChatStream:
                 pass
         assert ei.value.retryable is True
 
+    async def test_stream_connect_error(self, monkeypatch):
+        _patch(monkeypatch, stream=_StreamCtx(raise_exc=httpx.ConnectError("x")))
+        with pytest.raises(ProviderError) as ei:
+            async for _ in AnthropicProvider(api_key="k").chat_stream({"messages": []}):
+                pass
+        assert ei.value.retryable is True
+
     async def test_list_models(self):
         models = await AnthropicProvider(api_key="k").list_models()
         assert any("claude" in m.id for m in models)
