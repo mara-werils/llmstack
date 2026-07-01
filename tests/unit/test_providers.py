@@ -115,6 +115,18 @@ class TestProviderBase:
         assert ci == 0.0
         assert co == 0.0
 
+    async def test_health_check_true_when_list_models_succeeds(self):
+        assert await MockProvider().health_check() is True
+
+    async def test_health_check_false_on_exception(self, monkeypatch):
+        p = MockProvider()
+
+        async def _boom():
+            raise RuntimeError("unreachable")
+
+        monkeypatch.setattr(p, "list_models", _boom)
+        assert await p.health_check() is False
+
 
 class TestProviderResponse:
     def test_to_openai_dict_with_raw(self):
