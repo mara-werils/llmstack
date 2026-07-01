@@ -300,6 +300,7 @@ class TestClassifyQuery:
             ("refactor the handler", "review"),
             ("add test coverage", "generation"),
             ("write a spec for this", "generation"),
+            ("What's our code coverage?", "testing"),
             ("Random unrelated sentence", "general"),
         ],
     )
