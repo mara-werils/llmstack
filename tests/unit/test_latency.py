@@ -78,3 +78,22 @@ class TestLatencyTracker:
         time.sleep(0.02)
         # Old samples should be excluded
         assert tracker.percentile(50) == 0.0
+
+    def test_zero_window_seconds_means_all_time(self):
+        config = LatencyConfig(window_seconds=0)
+        tracker = LatencyTracker(config)
+        tracker.record(100.0)
+        import time
+
+        time.sleep(0.02)
+        # window_seconds=0 disables time-based filtering entirely.
+        assert tracker.percentile(50) == 100.0
+
+    def test_sample_count_and_mean_latency_properties(self, tracker):
+        assert tracker.sample_count == 0
+        assert tracker.mean_latency == 0.0
+
+        tracker.record(10.0)
+        tracker.record(30.0)
+        assert tracker.sample_count == 2
+        assert tracker.mean_latency == 20.0
