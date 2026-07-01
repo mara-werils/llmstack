@@ -102,6 +102,21 @@ class TestWarmupAll:
         assert report.success_count == 1
         assert report.failure_count == 1
 
+    async def test_malformed_model_config_captured_as_failure(self):
+        """A model dict missing "name" raises KeyError before warmup_model()
+        is even reached; warmup_all must still record it as a failure
+        instead of letting the gather() exception propagate."""
+
+        async def handler(payload):
+            return {"ok": True}
+
+        models = [{"name": "good"}, {"provider": "local"}]  # second has no "name"
+        report = await warmup_all(models, handler)
+        assert report.success_count == 1
+        assert report.failure_count == 1
+        failed = [r for r in report.results if not r.success][0]
+        assert failed.model == "unknown"
+
 
 class TestWarmupManager:
     def test_init_copies_models(self):
