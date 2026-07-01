@@ -46,6 +46,11 @@ class TestABTestResult:
         assert d["avg_latency_a_ms"] == 100.8  # rounded to 1 decimal place
         assert d["avg_cost_a_usd"] == 0.001234  # rounded to 6 decimal places
 
+    def test_total_requests_and_quality_delta(self) -> None:
+        r = ABTestResult(requests_a=10, requests_b=15, avg_quality_a=0.6, avg_quality_b=0.8)
+        assert r.total_requests == 25
+        assert r.quality_delta == pytest.approx(0.2)
+
 
 # ---------------------------------------------------------------------------
 # ABTest
@@ -179,6 +184,16 @@ class TestABTestManager:
         manager.create_test(ABTest(name="t2", model_a="c", model_b="d"))
         tests = manager.list_tests()
         assert len(tests) == 2
+
+    def test_test_count_and_active_test_count(self, manager: ABTestManager) -> None:
+        assert manager.test_count == 0
+        assert manager.active_test_count == 0
+
+        manager.create_test(ABTest(name="active1", model_a="a", model_b="b"))
+        manager.create_test(ABTest(name="inactive1", model_a="c", model_b="d", active=False))
+
+        assert manager.test_count == 2
+        assert manager.active_test_count == 1
 
     def test_select_model(self, manager: ABTestManager, test_with_manager: ABTest) -> None:
         model = manager.select_model("exp1", "req-1")
