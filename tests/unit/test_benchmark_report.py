@@ -88,6 +88,11 @@ def test_build_report_with_all_failures_has_no_metrics() -> None:
     report = build_report(run, _env(), compare(run), pricing_as_of="2026-06")
     assert report.latency is None
     assert report.throughput is None
+    # to_dict()/to_json() must handle None latency/throughput, not crash.
+    d = report.to_dict()
+    assert d["latency_ms"] is None
+    assert d["throughput"] is None
+    assert json.loads(report.to_json())["latency_ms"] is None
 
 
 def test_ttft_only_counts_reported_values() -> None:
