@@ -67,6 +67,17 @@ class TestChunking:
         chunks = self.store._chunk_text(text)
         assert chunks[0].metadata["word_count"] == 5
 
+    def test_degenerate_chunk_size_breaks_instead_of_looping(self, monkeypatch):
+        """A misconfigured CHUNK_SIZE of 0 would slice out an empty chunk on
+        every iteration; the defensive `break` must stop the loop instead of
+        appending empty chunks forever."""
+        import llmstack.gateway.rag.store as store_module
+
+        monkeypatch.setattr(store_module, "CHUNK_SIZE", 0)
+        monkeypatch.setattr(store_module, "CHUNK_OVERLAP", -1)
+        chunks = self.store._chunk_text("word0 word1 word2")
+        assert chunks == []
+
 
 class TestSearchResult:
     """Test SearchResult dataclass."""
