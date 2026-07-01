@@ -28,6 +28,9 @@ class TestIsLocalUrl:
             "http://llmstack-ollama:11434/v1",
             "http://myhost.local",
             "localhost:1234",
+            # No authority at all -> empty hostname, treated as local rather
+            # than crashing or misclassifying as external.
+            "http://",
         ],
     )
     def test_local(self, url):
