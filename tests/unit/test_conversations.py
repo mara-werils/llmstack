@@ -121,3 +121,9 @@ class TestConversationStore:
         d = conv.to_dict()
         assert d["title"] == "Test"
         assert "id" in d
+
+    def test_age_days(self):
+        import time
+
+        conv = Conversation(title="Old", created_at=time.time() - 86400 * 2)
+        assert conv.age_days == pytest.approx(2.0, abs=0.01)
