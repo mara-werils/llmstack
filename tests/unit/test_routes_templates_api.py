@@ -38,6 +38,18 @@ class TestGetStore:
         assert store.get("code-review") is not None
         assert store.count >= 5
 
+    def test_survives_a_duplicate_builtin_name(self, monkeypatch):
+        """BUILTIN_TEMPLATES has no duplicate names today, but the loader
+        still guards against one: a name collision must not crash startup."""
+        from llmstack.gateway.prompt_templates import BUILTIN_TEMPLATES
+
+        dupe_name = BUILTIN_TEMPLATES[0]["name"]
+        duplicated = [*BUILTIN_TEMPLATES, {**BUILTIN_TEMPLATES[0], "name": dupe_name}]
+        monkeypatch.setattr(templates_route, "BUILTIN_TEMPLATES", duplicated)
+        monkeypatch.setattr(templates_route, "_store", None)
+        store = templates_route.get_store()
+        assert store.get(dupe_name) is not None
+
 
 # --- list_templates (lines 61-66) ---
 
