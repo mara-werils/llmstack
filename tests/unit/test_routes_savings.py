@@ -78,3 +78,13 @@ def test_route_falls_back_to_process_tracker(monkeypatch, tmp_path) -> None:
     assert client.get("/v1/savings/summary").status_code == 200
     monkeypatch.setattr(gw_savings, "_tracker", None)
     monkeypatch.setattr(core_savings, "_ledger", None)
+
+
+def test_init_savings_route_overrides_process_tracker(monkeypatch, tmp_path) -> None:
+    monkeypatch.setattr(savings_route, "_tracker", None)
+    tracker = SavingsTracker(
+        calculator=SavingsCalculator("gpt-4o"),
+        ledger=SavingsLedger(path=tmp_path / "savings.json"),
+    )
+    savings_route.init_savings_route(tracker)
+    assert savings_route.get_tracker() is tracker
