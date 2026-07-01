@@ -128,6 +128,25 @@ class TestConversationRoutes:
         assert conv_client.delete(f"/conversations/{cid}").json()["deleted"] is True
         assert conv_client.get(f"/conversations/{cid}").status_code == 404
 
+
+# --------------------------------------------------------------------------- #
+# Lazy singleton getters — tests above inject fixtures directly, bypassing
+# get_manager()/get_store()'s own lazy-init branch.
+# --------------------------------------------------------------------------- #
+class TestLazySingletonGetters:
+    def test_webhooks_get_manager_lazily_creates_and_reuses(self, monkeypatch):
+        monkeypatch.setattr(webhooks_route, "_manager", None)
+        first = webhooks_route.get_manager()
+        assert webhooks_route.get_manager() is first
+
+    def test_conversations_get_store_lazily_creates_and_reuses(self, monkeypatch, tmp_path):
+        from llmstack.gateway import conversations as conversations_mod
+
+        monkeypatch.setattr(conversations_mod, "DEFAULT_DB_PATH", tmp_path / "conv.db")
+        monkeypatch.setattr(conv_route, "_store", None)
+        first = conv_route.get_store()
+        assert conv_route.get_store() is first
+
     def test_add_message_missing_conversation_404(self, conv_client):
         resp = conv_client.post(
             "/conversations/ghost/messages", json={"role": "user", "content": "x"}
