@@ -130,8 +130,8 @@
 - [x] Comprehensive test coverage (>90%) — currently 95%+ (`fail_under = 95`)
 - [x] Performance benchmarks vs alternatives — reproducible `llmstack benchmark`
       harness (cost + latency + privacy), methodology-hashed and CI-gated
-- [ ] Kubernetes Helm chart
-- [ ] Official Docker images on GHCR
+- [x] Kubernetes Helm chart — `deploy/helm/llmstack`
+- [x] Official Docker images on GHCR — published on release via `docker.yml`
 - [ ] Plugin marketplace
 
 ---
