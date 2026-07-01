@@ -98,6 +98,12 @@ def test_tei_container_spec_gpu():
     assert "device_requests" in spec
 
 
+def test_tei_health_url():
+    svc = TEIService(EmbeddingSpec(name="bge-m3"), _cpu_hw())
+    assert "health" in svc.health_url()
+    assert str(svc.host_port) in svc.health_url()
+
+
 # ── Qdrant ──────────────────────────────────────────────────────
 
 
@@ -121,6 +127,11 @@ def test_redis_spec():
     spec = svc.container_spec()
     assert spec["image"] == "redis:7-alpine"
     assert "512mb" in spec["command"]
+
+
+def test_redis_health_url():
+    svc = RedisService(CacheConfig(port=6379))
+    assert "6379" in svc.health_url()
 
 
 # ── Gateway ─────────────────────────────────────────────────────
