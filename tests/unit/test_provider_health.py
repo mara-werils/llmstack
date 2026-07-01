@@ -82,3 +82,22 @@ class TestProviderHealthChecker:
     def test_unknown_provider_health(self, checker):
         health = checker.get_health("nonexistent")
         assert health["status"] == "unknown"
+
+
+class TestProviderHealthRecord:
+    def test_success_rate_zero_checks(self):
+        from llmstack.gateway.provider_health import ProviderHealthRecord
+
+        record = ProviderHealthRecord(provider="openai")
+        assert record.success_rate == 0.0
+        assert record.uptime_pct == 0.0
+
+    def test_is_available_for_healthy_and_degraded(self):
+        from llmstack.gateway.provider_health import ProviderHealthRecord
+
+        healthy = ProviderHealthRecord(provider="a", status=HealthStatus.HEALTHY)
+        degraded = ProviderHealthRecord(provider="b", status=HealthStatus.DEGRADED)
+        unhealthy = ProviderHealthRecord(provider="c", status=HealthStatus.UNHEALTHY)
+        assert healthy.is_available is True
+        assert degraded.is_available is True
+        assert unhealthy.is_available is False
