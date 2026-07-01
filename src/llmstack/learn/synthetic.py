@@ -270,7 +270,7 @@ class SyntheticAugmenter:
         ]
 
         valid_contexts = [c for c in contexts if c is not None]
-        if not valid_contexts:
+        if not valid_contexts:  # pragma: no cover - the middle entry above is never None
             return None
 
         new_query = self._rng.choice(valid_contexts)
