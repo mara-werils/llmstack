@@ -77,3 +77,13 @@ class TestModelAliasResolver:
         stats = resolver.get_stats()
         assert stats["total_aliases"] == len(DEFAULT_ALIASES)
         assert "aliases" in stats
+
+    def test_alias_count(self, resolver):
+        assert resolver.alias_count == len(DEFAULT_ALIASES)
+        resolver.add_alias("temp", "some-model")
+        assert resolver.alias_count == len(DEFAULT_ALIASES) + 1
+
+    def test_is_alias(self, resolver):
+        assert resolver.is_alias("fast") is True
+        assert resolver.is_alias("FAST") is True
+        assert resolver.is_alias("gpt-4o") is False
