@@ -187,10 +187,7 @@ class QualityScorer:
             return 0.0
 
         unique = set(sentences)
-        if len(sentences) > 0:
-            dup_ratio = 1.0 - (len(unique) / len(sentences))
-        else:
-            dup_ratio = 0.0
+        dup_ratio = 1.0 - (len(unique) / len(sentences))
 
         # Check for repeated n-grams (3-grams)
         words = response.lower().split()
