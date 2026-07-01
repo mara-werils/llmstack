@@ -56,6 +56,21 @@ class TestRouterRoutes:
         assert body["tier"] == "complex"
         assert body["suggested_model"] == "llama3.1:70b"
 
+    def test_stats_exception_treated_as_disabled(self, router_client, monkeypatch):
+        def _boom():
+            raise RuntimeError("router state unavailable")
+
+        monkeypatch.setattr(router_state, "get_stats", _boom)
+        assert router_client.get("/router/stats").status_code == 404
+
+    def test_classify_exception_treated_as_disabled(self, router_client, monkeypatch):
+        def _boom():
+            raise RuntimeError("router state unavailable")
+
+        monkeypatch.setattr(router_state, "get_router", _boom)
+        resp = router_client.post("/router/classify", json={"messages": []})
+        assert resp.status_code == 404
+
 
 @pytest.fixture
 def health_client(monkeypatch):
