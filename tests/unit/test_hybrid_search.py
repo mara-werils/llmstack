@@ -114,6 +114,10 @@ class TestBM25:
         assert bm25._n_docs == len(chunks)
         assert bm25._avg_dl > 0
 
+    def test_doc_count_and_vocabulary_size(self, bm25: BM25, chunks: list[TextChunk]) -> None:
+        assert bm25.doc_count == len(chunks)
+        assert bm25.vocabulary_size > 0
+
     def test_search_returns_relevant_docs(self, bm25: BM25) -> None:
         results = bm25.search("Python programming")
         assert len(results) >= 1
