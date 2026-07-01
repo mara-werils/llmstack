@@ -177,6 +177,31 @@ class TestAskEngineLoad:
             # No exception should have been raised
 
     @pytest.mark.asyncio
+    async def test_load_skips_file_that_raises_while_parsing(
+        self, tmp_path: Path, engine: AskEngine
+    ) -> None:
+        """A collected file that raises during parse_file() must be skipped,
+        not abort the whole load()."""
+        (tmp_path / "broken.txt").write_text("will raise")
+        (tmp_path / "good.txt").write_text("some text content here\n\nmore content")
+
+        import llmstack.ask.engine as engine_mod
+
+        real_parse_file = engine_mod.parse_file
+
+        def _flaky_parse(fpath):
+            if fpath.name == "broken.txt":
+                raise ValueError("boom")
+            return real_parse_file(fpath)
+
+        with (
+            patch.object(engine_mod, "parse_file", side_effect=_flaky_parse),
+            patch.object(engine.embeddings, "index", new_callable=AsyncMock),
+        ):
+            await engine.load([tmp_path])
+            assert engine.total_chunks > 0
+
+    @pytest.mark.asyncio
     async def test_load_with_progress_callback(self, tmp_path: Path, engine: AskEngine) -> None:
         (tmp_path / "a.py").write_text("x = 1")
         callback = MagicMock()
