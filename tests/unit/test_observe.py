@@ -11,7 +11,7 @@ import pytest
 
 from llmstack.observe.scoring import QualityScorer, QualityScore
 from llmstack.observe.traces import Trace, TraceStore
-from llmstack.observe.tracker import QualityTracker, QualityAlert
+from llmstack.observe.tracker import QualityTracker, QualityAlert, _QualityWindow
 from llmstack.observe.ab_testing import ABTest, ABTestManager, ABTestResult
 
 
@@ -384,6 +384,21 @@ class TestQualityTracker:
         assert "global" in s
         assert "by_model" in s
         assert "alerts" in s
+
+    def test_empty_window_mean_is_zero(self):
+        assert _QualityWindow().mean() == 0.0
+
+    def test_diagnostic_properties(self):
+        tracker = QualityTracker()
+        assert tracker.total_alerts_count == 0
+        assert tracker.tracked_metrics == []
+        assert tracker.tracked_model_count == 0
+
+        tracker.record({"overall": 0.8, "coherence": 0.9}, model="gpt-4o")
+        tracker.record({"overall": 0.6}, model="claude")
+
+        assert set(tracker.tracked_metrics) == {"overall", "coherence"}
+        assert tracker.tracked_model_count == 2
 
 
 class TestQualityAlert:
