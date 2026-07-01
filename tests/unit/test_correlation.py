@@ -70,3 +70,15 @@ class TestCorrelationMiddleware:
         scope = {"type": "http", "headers": [], "method": "GET", "path": "/"}
         request = Request(scope)
         assert get_correlation_id(request) == "unknown"
+
+    def test_get_correlation_id_no_request_uses_contextvar(self):
+        # Background work (no request object) falls back to the context-var
+        # the middleware sets during dispatch.
+        from llmstack.gateway.middleware.correlation import _current_request_id
+
+        assert get_correlation_id() == "unknown"
+        token = _current_request_id.set("bg-job-123")
+        try:
+            assert get_correlation_id() == "bg-job-123"
+        finally:
+            _current_request_id.reset(token)
