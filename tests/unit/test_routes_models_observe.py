@@ -57,6 +57,19 @@ def test_models_created_timestamp_is_stable(models_client):
     assert first["gpt-4o"]["created"] == models_route._REGISTRY_MODEL_CREATED
 
 
+def test_models_survives_registry_lookup_failure(models_client):
+    """A broken provider registry must not take down /v1/models entirely —
+    local models should still be returned."""
+    app, monkeypatch = models_client
+
+    def boom():
+        raise RuntimeError("registry unavailable")
+
+    monkeypatch.setattr(registry_mod, "get_registry", boom)
+    data = TestClient(app).get("/v1/models").json()["data"]
+    assert [m["id"] for m in data] == ["llama3"]
+
+
 def test_models_handles_proxy_failure(monkeypatch):
     async def boom():
         raise ConnectionError("down")
@@ -153,6 +166,10 @@ class TestObserveEnabled:
         assert body["total"] == 1
         assert body["traces"] == [{"id": "t1"}]
         assert store.last_kwargs == {"limit": 50, "model": "llama3", "provider": "local"}
+
+    def test_traces_summary_enabled(self, observe_client, monkeypatch):
+        monkeypatch.setattr(observe_state, "get_trace_store", lambda: _FakeStore())
+        assert observe_client.get("/observe/traces/summary").json() == {"count": 1}
 
     def test_quality_and_alerts(self, observe_client, monkeypatch):
         monkeypatch.setattr(observe_state, "get_tracker", lambda: _FakeTracker())
