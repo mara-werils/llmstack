@@ -84,9 +84,20 @@ class TestBatchRoutes:
     def test_cancel_missing_400(self, batch_client):
         assert batch_client.post("/batch/jobs/ghost/cancel").status_code == 400
 
+    def test_cancel_pending_job_succeeds(self, batch_client):
+        job_id = batch_client.post(
+            "/batch/jobs", json={"requests": [{"model": "m", "messages": []}]}
+        ).json()["id"]
+        assert batch_client.post(f"/batch/jobs/{job_id}/cancel").json() == {"cancelled": True}
+
     def test_create_too_many_400(self, batch_client):
         big = [{"model": "m", "messages": []}] * 5000
         assert batch_client.post("/batch/jobs", json={"requests": big}).status_code == 400
+
+    def test_get_processor_lazily_creates_and_reuses(self, monkeypatch):
+        monkeypatch.setattr(batch_route, "_processor", None)
+        first = batch_route.get_processor()
+        assert batch_route.get_processor() is first
 
 
 # --------------------------------------------------------------------------- #
