@@ -250,6 +250,15 @@ class TestTraceStore:
         results = store.query(provider="openai")
         assert len(results) == 2
 
+    def test_query_by_min_latency(self):
+        store = TraceStore()
+        store.add(Trace(model="fast", latency_ms=10.0))
+        store.add(Trace(model="slow", latency_ms=500.0))
+
+        results = store.query(min_latency_ms=100.0)
+        assert len(results) == 1
+        assert results[0].model == "slow"
+
     def test_query_with_error_filter(self):
         store = TraceStore()
         store.add(Trace(model="a", error="timeout"))
