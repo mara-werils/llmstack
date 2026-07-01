@@ -29,3 +29,16 @@ class TestAuditLogger:
             al.log_auth_failure(client_ip=f"1.2.3.{i}")
         events = al.get_recent_events(limit=3)
         assert len(events) == 3
+
+    def test_log_guardrail_violation(self):
+        al = AuditLogger.get_instance()
+        al.log_guardrail_violation(client_ip="1.2.3.4", details="blocked prompt")
+        events = al.get_recent_events(limit=1)
+        assert events[0]["event_type"] == "guardrail_violation"
+        assert events[0]["outcome"] == "blocked"
+
+    def test_log_admin_action(self):
+        al = AuditLogger.get_instance()
+        al.log_admin_action(client_ip="1.2.3.4", action="reset_budget")
+        events = al.get_recent_events(limit=1)
+        assert events[0]["event_type"] == "admin_action"
